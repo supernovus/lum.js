@@ -1,0 +1,9 @@
+*.swp
+sync*
+scripts/nano/jsmin*
+scripts/nano/compiler.jar
+scripts/nano/jquery.js
+scripts/nano/json2.js
+scripts/nano/*.min.js
+scripts/nano/*.cc.js
+

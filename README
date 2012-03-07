@@ -1,0 +1,46 @@
+Nano.js
+-----------------------------------------------------------------------------
+
+Does for Javascript what the Nano Framework does for PHP.
+In other words, it's a bunch of common stuff that makes life easier.
+
+It uses jQuery where possible, and most of its functionality is provided
+as jQuery plugins.
+
+Installation is simple: copy or link everything from "scripts" into your own
+"scripts" directory, and type "make".
+
+From then on out, build your javascript files, and compile them easily.
+
+Say you created "mylib.js" and you want to compile it into a smaller file.
+
+Well, you can use jsmin to do so using:
+
+  make mylib.min.js
+
+Or you could use the Google Closure Compiler by using:
+
+  make mylib.cc.js
+
+It's literally that simple.
+
+The Makefile will automatically download jQuery, the JSON library, jsmin
+and the Closure Compiler. Easy as pie.
+
+Requirements:
+
+ * make          This is the tool that powers the magic.
+ * gcc           Needed for jsmin, along with the standard C libraries.
+ * unzip         Needed for Closure Compiler.
+ * java          Needed for Closure Compiler.
+
+Author:
+
+  Timothy Totten
+  <2010@totten.ca>
+
+Last updated:
+
+  2012-03-28
+
+~

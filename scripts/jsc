@@ -1,0 +1,11 @@
+#!/bin/sh
+
+[ $# -lt 1 ] && echo "must specify file to compile." && exit 1
+
+SOURCE=$1
+BASEFILE=`basename $SOURCE .js`
+TARGET="$BASEFILE.cc.js"
+
+echo "$SOURCE => $TARGET"
+
+java -jar compiler.jar --js=$SOURCE --js_output_file=$TARGET
