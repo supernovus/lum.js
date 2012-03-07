@@ -4,6 +4,7 @@ scripts/jsmin*
 scripts/compiler.jar
 scripts/jquery.js
 scripts/json2.js
+scripts/underscore.js
 scripts/*.min.js
 scripts/*.cc.js
 

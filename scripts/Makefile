@@ -16,9 +16,13 @@ jsmin: jsmin.c
 jquery.js:
 	wget -O jquery.js http://code.jquery.com/jquery.min.js
 
-## Download 'json2'.
+## Download 'json2'. It's not minified, so feel free to do so.
 json2.js:
 	wget https://raw.github.com/douglascrockford/JSON-js/master/json2.js
+
+## Download 'underscore'. An optional component, this is pre-minified.
+underscore.js:
+	wget -O underscore.js http://documentcloud.github.com/underscore/underscore-min.js
 
 ## Download 'compiler.jar'. Requires 'unzip'.
 compiler.jar:
