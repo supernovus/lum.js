@@ -1,4 +1,5 @@
 #!/bin/sh
+## A wrapper to Closure Compiler.
 
 [ $# -lt 1 ] && echo "must specify file to compile." && exit 1
 
@@ -9,3 +10,4 @@ TARGET="$BASEFILE.cc.js"
 echo "$SOURCE => $TARGET"
 
 java -jar compiler.jar --js=$SOURCE --js_output_file=$TARGET
+
