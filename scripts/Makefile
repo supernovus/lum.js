@@ -40,8 +40,8 @@ compiler.jar:
 
 ## Remove all .min.js and .cc.js files.
 clean:
-	rm -v *.min.js
-	rm -v *.cc.js
+	rm -vf *.min.js
+	rm -vf *.cc.js
 
 ## Remove everything that was downloaded or compiled.
 distclean: clean
