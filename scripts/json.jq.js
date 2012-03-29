@@ -1,6 +1,6 @@
 /*
  * A jQuery plugin that adds the ability to load and save JSON from form
- * fields. It's designed with <input type="hidden" /> type fields in mind
+ * fields. It's designed with <input/> or <textarea/> type fields in mind
  * and uses val() to get and/or set the value.
  *
  * To load JSON from the field: $('#element').JSON();
