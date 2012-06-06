@@ -31,6 +31,8 @@ oQuery.find = function (query, objarr, single)
       matched.push(item);
     }
   }
+  if (single)
+    return null;
   return matched;
 }
 
