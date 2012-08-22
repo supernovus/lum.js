@@ -24,6 +24,10 @@ json2.js:
 underscore.js:
 	wget -O underscore.js http://documentcloud.github.com/underscore/underscore-min.js
 
+## Download 'less.js'. Like jQuery, it's already minified.
+less.js:
+	wget -O less.js http://lesscss.googlecode.com/files/less-1.3.0.min.js
+
 ## Download 'compiler.jar'. Requires 'unzip'.
 compiler.jar:
 	wget http://closure-compiler.googlecode.com/files/compiler-latest.zip
