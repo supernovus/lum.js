@@ -51,5 +51,7 @@ clean:
 distclean: clean
 	rm -v jsmin*
 	rm -v jquery.js
-	rm -v json2.js
+	rm -v json2.jsa
+	rm -fv underscore.js
+	rm -fv less.js
 
