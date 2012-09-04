@@ -2,7 +2,7 @@
 
 var oQuery = {};
 
-oQuery.find = function (query, objarr, single)
+oQuery.find = function (query, objarr, single, returnindex)
 {
 //  console.log("we're in oQuery.find()");
   var matched = [];
@@ -26,9 +26,23 @@ oQuery.find = function (query, objarr, single)
       if (single)
       {
 //        console.log("returning the single item");
-        return item;
+        if (returnindex)
+        {
+          return i;
+        }
+        else
+        {
+          return item;
+        }
       }
-      matched.push(item);
+      if (returnindex)
+      {
+        matched.push(i);
+      }
+      else
+      {
+        matched.push(item);
+      }
     }
   }
   if (single)
