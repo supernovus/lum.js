@@ -22,11 +22,12 @@
  * Adds (single/multiple) options to a select box (or series of select boxes)
  *
  * @name     addOption
- * @author   Sam Collett (http://www.texotela.co.uk)
+ * @author   Sam Collett (http://www.texotela.co.uk), original function.
+ * @author   Tim Totten (http://huri.net), changed selection style.
  * @type     jQuery
- * @example  $("#myselect").addOption("Value", "Text"); // add single value (will be selected)
- * @example  $("#myselect").addOption("Value 2", "Text 2", false); // add single value (won't be selected)
- * @example  $("#myselect").addOption({"foo":"bar","bar":"baz"}, false); // add multiple values, but don't select
+ * @example  $("#myselect").addOption("Value", "Text"); // add single value (won't be selected)
+ * @example  $("#myselect").addOption("Value 2", "Text 2", true); // add single value (will be selected)
+ * @example  $("#myselect").addOption({"foo":"bar","bar":"baz"}); // add multiple values, but don't select
  *
  */
 $.fn.addOption = function()
@@ -152,7 +153,8 @@ $.fn.ajaxAddOption = function(url, params, select, fn, args)
  * Removes an option (by value or index) from a select box (or series of select boxes)
  *
  * @name     removeOption
- * @author   Sam Collett (http://www.texotela.co.uk)
+ * @author   Sam Collett (http://www.texotela.co.uk), original functon
+ * @author   Tim Totten (http://huri.net/), added fast clear usage.
  * @type     jQuery
  * @param    String|RegExp|Number what  Option to remove
  * @param    Boolean selectedOnly       (optional) Remove only if it has been selected (default false)   
