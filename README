@@ -1,7 +1,7 @@
 Nano.js
 -----------------------------------------------------------------------------
 
-Does for Javascript what the Nano Framework does for PHP.
+Does for Javascript what the Nano.php does for PHP.
 In other words, it's a bunch of common stuff that makes life easier.
 
 It uses jQuery where possible, and most of its functionality is provided
@@ -25,7 +25,7 @@ Or you could use the Google Closure Compiler by using:
 It's literally that simple.
 
 The Makefile will automatically download jQuery, the JSON library, jsmin
-and the Closure Compiler. Easy as pie.
+and the Closure Compiler, as well as some extra external libraries.  Easy as pie.
 
 Requirements:
 
@@ -41,6 +41,6 @@ Author:
 
 Last updated:
 
-  2012-03-28
+  2012-09-07
 
 ~

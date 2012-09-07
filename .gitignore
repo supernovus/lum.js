@@ -2,10 +2,10 @@
 sync*
 scripts/jsmin*
 scripts/compiler.jar
-scripts/jquery.js
+scripts/jquery.dist.js
 scripts/json2.js
-scripts/underscore.js
-scripts/less.js
+scripts/underscore.dist.js
+scripts/less.dist.js
 scripts/*.min.js
 scripts/*.cc.js
 
