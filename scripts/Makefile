@@ -15,7 +15,7 @@
 ##############################################################################
 
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json2.js underscore.dist.js less.dist.js
+BOOT_SCRIPTS = jquery.dist.js json2.js underscore.dist.js less.dist.js moment.dist.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Listings for the minify_all and compile_all targets.
@@ -29,6 +29,7 @@ JSON_URL = https://raw.github.com/douglascrockford/JSON-js/master/json2.js
 UNDERSCORE_URL = http://documentcloud.github.com/underscore/underscore-min.js
 LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://closure-compiler.googlecode.com/files/compiler-latest.zip
+MOMENT_URL = https://raw.github.com/timrwood/moment/1.7.2/min/moment.min.js
 
 ## Download all of our prerequisites.
 bootstrap: $(BOOT_DEPENDS)
@@ -56,6 +57,10 @@ underscore.dist.js:
 ## Download LESS, a CSS extension language.
 less.dist.js:
 	wget -O less.dist.js $(LESS_URL)
+
+## Download Moment, a datetime parsing/formatting library.
+moment.dist.js:
+	wget -O moment.dist.js $(MOMENT_URL)
 
 ## Download Closure Compiler. Requires 'unzip'.
 compiler.jar:
