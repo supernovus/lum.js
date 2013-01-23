@@ -1,5 +1,5 @@
 /**
- * Build a simple menu.
+ * Build a simple context menu.
  */
 
 (function($)
@@ -38,34 +38,45 @@
     }
   };
 
-  /**
-   * Display a named menu at the location of a target.
-   * Use on the target, and pass it the selector for the menu.
-   */
-  $.fn.showMenu = function (menu)
+  var display_menu = function (menu, loc, event)
   {
-    var offset = this.offset();
-    $(menu).css(
+    console.log("we're in display_menu");
+    // Clicking outside
+    $('body').one('click', function ()
+    {
+      console.log("we're hiding the menu");
+      menu.hide();
+    });
+
+    event.stopPropagation();
+
+    var offset = loc.offset();
+    menu.css(
     {
       display: 'block',
       top:     offset.top + 10,
       left:    offset.left - 5,
     });
+
+  };
+
+  /**
+   * Display a named menu at the location of a target.
+   * Use on the target, and pass it the selector for the menu.
+   */
+  $.fn.showMenu = function (menu, event)
+  {
+    console.log("going to show the menu");
+    display_menu($(menu), this, event);
   };
 
   /**
    * An alternative to showMenu.
    * Use it on the menu, and pass it the selector for the target location.
    */
-  $.fn.showMenuAt = function (loc)
+  $.fn.showMenuAt = function (loc, event)
   {
-    var offset = $(loc).offset();
-    this.css(
-    {
-      display: 'block',
-      top:     offset.top + 10,
-      left:    offset.left - 5,
-    });
+    display_menu(this, $(loc), event);
   };
 
 })(jQuery);
