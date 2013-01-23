@@ -40,11 +40,9 @@
 
   var display_menu = function (menu, loc, event)
   {
-    console.log("we're in display_menu");
     // Clicking outside
     $('body').one('click', function ()
     {
-      console.log("we're hiding the menu");
       menu.hide();
     });
 
@@ -66,7 +64,6 @@
    */
   $.fn.showMenu = function (menu, event)
   {
-    console.log("going to show the menu");
     display_menu($(menu), this, event);
   };
 
