@@ -85,7 +85,6 @@ clean:
 distclean: clean
 	rm -fv compiler.jar
 	rm -fv jsmin*
-	rm -fv json2.js
 	rm -fv *.dist.js
 
 ## Build .min files for all scripts.

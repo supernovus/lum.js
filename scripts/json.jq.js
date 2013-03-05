@@ -10,7 +10,7 @@
  * Also, when loading, we return the JSON, so chaining is unsupported.
  *
  * This expects the JSON object to be loaded, so either your browser must
- * support it, or you must load the json2.js library before using this.
+ * support it, or you must load the json3.dist.js library before using this.
  *
  */
 
