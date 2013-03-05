@@ -15,7 +15,7 @@
 ##############################################################################
 
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json2.js underscore.dist.js less.dist.js moment.dist.js
+BOOT_SCRIPTS = jquery.dist.js json3.dist.js underscore.dist.js less.dist.js moment.dist.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Listings for the minify_all and compile_all targets.
@@ -25,7 +25,7 @@ ALL_CC = $(shell ls *.js | egrep -v '.(dist|cc|min).js' | sed -e 's/\.js/.cc.js/
 ## Download URLs, update as required.
 JSMIN_URL = https://raw.github.com/douglascrockford/JSMin/master/jsmin.c
 JQUERY_URL = http://code.jquery.com/jquery.min.js
-JSON_URL = https://raw.github.com/douglascrockford/JSON-js/master/json2.js
+JSON_URL = http://cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.min.js
 UNDERSCORE_URL = http://documentcloud.github.com/underscore/underscore-min.js
 LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://closure-compiler.googlecode.com/files/compiler-latest.zip
@@ -46,9 +46,9 @@ jsmin: jsmin.c
 jquery.dist.js:
 	wget -O jquery.dist.js $(JQUERY_URL)
 
-## Download JSON2. It's not minified, so feel free to do so.
-json2.js:
-	wget $(JSON_URL)
+## Download JSON 3.
+json3.dist.js:
+	wget -O json3.dist.js $(JSON_URL)
 
 ## Download Underscore, a collection of functional programming helpers.
 underscore.dist.js:
