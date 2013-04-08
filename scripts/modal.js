@@ -85,14 +85,14 @@ ModalDialog.prototype.show = function (posElement)
   var content = this.content.element;
   var display = this.content.display;
   var offset = pos.offset();
-  if (display == 'below')
+  if (display === 'below')
   {
     content.show();
-    var x = offset.left - pos.outerWidth() + content.outerWidth();
+    var x = offset.left; // - pos.outerWidth() + content.outerWidth();
     var y = offset.top;
     content.css({ 'left': x+'px', 'top': y+'px' });
   }
-  else if (display == 'belowCenter')
+  else if (display === 'belowCenter')
   {
     content.show();
     var x = offset.left + (pos.width() - content.width()) / 2;
