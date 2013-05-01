@@ -99,6 +99,19 @@ ModalDialog.prototype.show = function (posElement)
     var y = offset.top + 10;
     content.css({ 'left': x+'px', 'top': y+'px' });
   }
+  else if (display === 'center')
+  {
+    content.show();
+    var x = Math.max(0, 
+      (($(window).height() - content.outerHeight()) / 2) + 
+        $(window).scrollTop()
+    );
+    var y = Math.max(0,
+      (($(window).width() - content.outerWidth()) / 2) +
+        $(window).scrollLeft()
+    );
+    content.css({ 'left': x+'px', 'top': y+'px' });
+  }   
   else
   {
     console.log("unknown display type, no repositioning can be done.");
