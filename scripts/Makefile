@@ -10,17 +10,23 @@
 ###  .dist.js  -- A pre-minified/compiled library from the official source.
 ###  .min.js   -- A library that we have minified using jsmin.
 ###  .cc.js    -- A library that we have compiled using Closure Compiler.
+###  .ug.js    -- A library that we have compiled using UglifyJS.
 ###  .js       -- A raw source library.
 ###
 ##############################################################################
 
+## Bootstrap stuff.
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json3.dist.js underscore.dist.js less.dist.js moment.dist.js
+BOOT_SCRIPTS = jquery.dist.js json3.dist.js 
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
+## Optional scripts.
+MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.dist.js
+
 ## Listings for the minify_all and compile_all targets.
-ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min).js' | sed -e 's/\.js/.min.js/g')
-ALL_CC = $(shell ls *.js | egrep -v '.(dist|cc|min).js' | sed -e 's/\.js/.cc.js/g')
+ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.min.js/g')
+ALL_CC = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.cc.js/g')
+ALL_UGLY = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.ug.js/g') 
 
 ## Download URLs, update as required.
 JSMIN_URL = https://raw.github.com/douglascrockford/JSMin/master/jsmin.c
@@ -30,6 +36,7 @@ UNDERSCORE_URL = http://documentcloud.github.com/underscore/underscore-min.js
 LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://closure-compiler.googlecode.com/files/compiler-latest.zip
 MOMENT_URL = https://raw.github.com/timrwood/moment/1.7.2/min/moment.min.js
+YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
 
 ## Download all of our prerequisites.
 bootstrap: $(BOOT_DEPENDS)
@@ -62,6 +69,10 @@ less.dist.js:
 moment.dist.js:
 	wget -O moment.dist.js $(MOMENT_URL)
 
+## Download YepNope, a dependency manager.
+yepnops.dist.js:
+	wget -O yepnope.dist.js $(YEPNOPE_URL)
+
 ## Download Closure Compiler. Requires 'unzip'.
 compiler.jar:
 	wget $(CC_URL)
@@ -76,10 +87,17 @@ compiler.jar:
 %.cc.js : %.js jsc compiler.jar
 	./jsc $< 
 
+## Build a Uglified script using UglifyJS2.
+## Unlike the other two, we don't install uglify for you.
+## Use 'npm install -g uglify-js' to install it.
+%.ug.js : %.js
+	uglifyjs $< -o $@
+
 ## Remove all .min.js and .cc.js files.
 clean:
 	rm -vf *.min.js
 	rm -vf *.cc.js
+	rm -vf *.ug.js
 
 ## Remove everything that was downloaded or compiled.
 distclean: clean
@@ -93,4 +111,6 @@ minify_all: $(ALL_MIN)
 ## Build .cc files for all scripts.
 compile_all: $(ALL_CC)
 
+## Build .ug files for all scripts.
+uglify_all: $(ALL_UGLY)
 

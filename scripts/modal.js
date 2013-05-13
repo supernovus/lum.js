@@ -9,7 +9,12 @@
  * Requires jQuery.
  */
 
-function ModalDialog (options)
+if (window.Nano === undefined)
+{
+  window.Nano = {};
+}
+
+Nano.ModalDialog = function (options)
 {
   if (options === undefined)
     options = {};
@@ -69,7 +74,7 @@ function ModalDialog (options)
 /**
  * Show the dialog, at a specific position relative to a passed element.
  */
-ModalDialog.prototype.show = function (posElement)
+Nano.ModalDialog.prototype.show = function (posElement)
 {
   // Sanity check.
   if (!this.content) { return; }
@@ -151,7 +156,7 @@ ModalDialog.prototype.show = function (posElement)
 /**
  * Hide the dialog.
  */
-ModalDialog.prototype.hide = function ()
+Nano.ModalDialog.prototype.hide = function ()
 {
   // Sanity check.
   if (!this.content) { return; }

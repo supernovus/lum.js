@@ -6,4 +6,5 @@ scripts/json2.js
 scripts/*.dist.js
 scripts/*.min.js
 scripts/*.cc.js
+scripts/*.ug.js
 
