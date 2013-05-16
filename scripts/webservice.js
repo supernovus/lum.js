@@ -39,24 +39,7 @@ Nano.WebService = function (options)
     for (var method_name in options.methods)
     {
       var method_handler = options.methods[method_name];
-      if (method_handler === true)
-      { // The client can set up their own .done() routine.
-        this[method_name] = function (method_data)
-        {
-          this._send_request(method_name, method_data);
-        }
-      }
-      else if (typeof method_handler === "function")
-      { // We have a method success handler.
-        this[method_name] = function (method_data)
-        {
-          this._send_request(method_name, method_data, method_handler);
-        }
-      }
-      else
-      { // Sorry, we don't support aliases or other features yet.
-        console.log("Unsupported method handler '"+method_name+"'.");
-      }
+      this._addHandler(method_name, method_handler);
     }
   }
 
@@ -65,6 +48,31 @@ Nano.WebService = function (options)
     'json' : 'application/json'
   };
 
+}
+
+/**
+ * Create an object method to handle a known API call.
+ */
+Nano.WebService.prototype._addHandler = function (method_name, method_handler)
+{
+  if (method_handler === true)
+  { // The client can set up their own .done() routine.
+    this[method_name] = function (method_data)
+    {
+      this._send_request(method_name, method_data);
+    }
+  }
+  else if (typeof method_handler === "function")
+  { // We have a method success handler.
+    this[method_name] = function (method_data)
+    {
+      this._send_request(method_name, method_data, method_handler);
+    }
+  }
+  else
+  { // Sorry, we don't support aliases or other features yet.
+    console.log("Unsupported method handler '"+method_name+"'.");
+  }
 }
 
 /**
