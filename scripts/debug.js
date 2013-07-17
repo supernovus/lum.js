@@ -13,14 +13,20 @@ if (window.Nano === undefined)
 
 Nano.debug = {};
 
-Nano.debug.say = function (obj)
+Nano.debug.log = function ()
 {
-  alert(format_json(JSON.stringify(obj)));
-}
-
-Nano.debug.log = function (obj)
-{
-  console.log(format_json(JSON.stringify(obj)));
+  for (var a in arguments)
+  {
+    var arg = arguments[a];
+    if (typeof arg == "string")
+    {
+      console.log(arg);
+    }
+    else
+    {
+      console.log(format_json(JSON.stringify(arg)));
+    }
+  }
 }
 
 Nano.debug.field = function (obj, toel)
