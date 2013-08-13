@@ -12,9 +12,16 @@ if (window.Nano === undefined)
 Nano.App = function (options)
 {
   // Set up debugging based on the existence of the Nano.debug library.
-  if (Nano.debug !== undefined)
+  if (options !== undefined && 'auto_debug' in options && options.auto_debug)
   {
-    this.debug = true;
+    if (Nano.debug !== undefined)
+    {
+      this.debug = true;
+    }
+    else
+    {
+      this.debug = false;
+    }
   }
   else
   {
