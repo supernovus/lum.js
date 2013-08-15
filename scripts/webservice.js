@@ -78,7 +78,7 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
 /**
  * Build the request data, based on a data object.
  */
-Nano.WebService.prototype._build_request = function (data)
+Nano.WebService.prototype._build_request = function (data, name)
 {
   var request = null;
   if (this._data_type == 'json')
@@ -116,10 +116,12 @@ function (method_name, method_data, method_handler)
       contentType: this._mime_types[this._data_type],
       dataType:    this._data_type,
     });
+
     if ('_onError' in this)
     {
       response.fail(this._onError);
     }
+
     if (method_handler !== undefined && typeof method_handler === "function")
     {
       if ('_onSuccess' in this)
@@ -138,6 +140,7 @@ function (method_name, method_data, method_handler)
         });
       }
     }
+
     return response;
   }
   return null;
