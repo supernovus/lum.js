@@ -136,7 +136,7 @@ function (method_name, method_data, method_handler)
       { // Call the handler directly.
         response.done(function (res, msg, jq)
         {
-          method_handler(res, msg, hq);
+          method_handler(res, msg, jq);
         });
       }
     }
