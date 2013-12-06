@@ -72,6 +72,55 @@ Nano.ModalDialog = function (options)
 }
 
 /**
+ * Globally known display types.
+ *
+ * These are registered as a global object, not as instance objects.
+ * Keep that in mind when considering extending it.
+ */
+Nano.ModalDialog.displayTypes = {};
+
+Nano.ModalDialog.displayTypes.below = function (content, offset)
+{
+  var x = offset.left;
+  var y = offset.top;
+  return {x:x, y:y};
+}
+
+Nano.ModalDialog.displayTypes.belowCenter = function (content, offset)
+{
+  var x = offset.left + (pos.width() - content.width()) / 2;
+  var y = offset.top + 10;
+  return {x:x, y:y};
+}
+
+Nano.ModalDialog.displayTypes.center = function (content, offset)
+{
+  var x = Math.max(0, 
+    (($(window).height() - content.outerHeight()) / 2) + 
+      $(window).scrollTop()
+  );
+  var y = Math.max(0,
+    (($(window).width() - content.outerWidth()) / 2) +
+      $(window).scrollLeft()
+  );
+  return {x:x, y:y};
+}
+
+Nano.ModalDialog.displayTypes.abscenter = function (content, offset)
+{
+  var marginx = (content.outerHeight() / 2) * -1;
+  var marginy = (content.outerWidth()  / 2) * -1;
+  content.css(
+  { 
+    position:      'fixed', 
+    left:          '50%', 
+    top:           '50%',
+    'margin-left':  marginx,
+    'margin-top':   marginy,
+  });
+}
+
+/**
  * Show the dialog, at a specific position relative to a passed element.
  */
 Nano.ModalDialog.prototype.show = function (posElement)
@@ -90,33 +139,21 @@ Nano.ModalDialog.prototype.show = function (posElement)
   var content = this.content.element;
   var display = this.content.display;
   var offset = pos.offset();
-  if (display === 'below')
+
+  if (display in Nano.ModalDialog.displayTypes)
   {
     content.show();
-    var x = offset.left; // - pos.outerWidth() + content.outerWidth();
-    var y = offset.top;
-    content.css({ 'left': x+'px', 'top': y+'px' });
+    var coords = Nano.ModalDialog.displayTypes[display](content, offset);
+    if (coords && 'x' in coords && 'y' in coords)
+    {
+      content.css(
+      { 
+        position: 'absolute', 
+        left:     coords.x+'px', 
+        top:      coords.y+'px' 
+      });
+    }
   }
-  else if (display === 'belowCenter')
-  {
-    content.show();
-    var x = offset.left + (pos.width() - content.width()) / 2;
-    var y = offset.top + 10;
-    content.css({ 'left': x+'px', 'top': y+'px' });
-  }
-  else if (display === 'center')
-  {
-    content.show();
-    var x = Math.max(0, 
-      (($(window).height() - content.outerHeight()) / 2) + 
-        $(window).scrollTop()
-    );
-    var y = Math.max(0,
-      (($(window).width() - content.outerWidth()) / 2) +
-        $(window).scrollLeft()
-    );
-    content.css({ 'left': x+'px', 'top': y+'px' });
-  }   
   else
   {
     console.log("unknown display type, no repositioning can be done.");
@@ -136,6 +173,7 @@ Nano.ModalDialog.prototype.show = function (posElement)
     {
       mask.show();
     }
+
     if (this.mask.show_depth)
     {
       // Save the current z-index, to reset to on close.
