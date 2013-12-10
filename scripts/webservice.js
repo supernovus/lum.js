@@ -42,6 +42,7 @@ Nano.WebService = function (options)
 
   if ('methods' in options)
   {
+    this._methods = options.methods; // Save for later.
     for (var method_name in options.methods)
     {
       var method_handler = options.methods[method_name];
@@ -61,23 +62,23 @@ Nano.WebService = function (options)
  */
 Nano.WebService.prototype._addHandler = function (method_name, method_handler)
 {
-  if (method_handler === true)
-  { // The client can set up their own .done() routine.
-    this[method_name] = function (method_data)
+  if (typeof method_handler === "string")
+  { // An alias.
+    if (method_handler in this._methods)
     {
-      this._send_request(method_name, method_data);
-    }
-  }
-  else if (typeof method_handler === "function")
-  { // We have a method success handler.
-    this[method_name] = function (method_data)
-    {
-      this._send_request(method_name, method_data, method_handler);
+      this[method_name] = function (method_data, method_path)
+      {
+        this._send_request(method_handler, method_data, method_path, 
+            this._methods[method_handler]);
+      }
     }
   }
   else
-  { // Sorry, we don't support aliases or other features yet.
-    console.log("Unsupported method handler '"+method_name+"'.");
+  { // We create a new handler function.
+    this[method_name] = function (method_data, method_path)
+    {
+      this._send_request(method_name, method_data, method_path, method_handler);
+    }
   }
 }
 
@@ -120,7 +121,7 @@ Nano.WebService.prototype._build_json_request = function (data, name)
  * .fail() and .done() respectively.
  */
 Nano.WebService.prototype._send_request = 
-function (method_name, method_data, method_handler)
+function (method_name, method_data, method_path, method_handler)
 {
   if (method_data === undefined)
   {
@@ -130,6 +131,18 @@ function (method_name, method_data, method_handler)
   if (request !== null)
   {
     var url = this._base_url.replace(/\/+$/, '') + '/' + method_name;
+    if (method_path)
+    {
+      var mtype = typeof method_path;
+      if (mtype === "string" || mtype == "number")
+      {
+        url += '/' + method_path;
+      }
+      else if ($.isArray(method_path))
+      {
+        url += '/' + method_path.join('/');
+      }
+    }
     var reqopts = 
     {
       type:        "POST",
