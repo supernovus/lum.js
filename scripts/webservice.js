@@ -55,6 +55,9 @@ Nano.WebService = function (options)
     'json' : 'application/json'
   };
 
+  // If you use debugging, ensure the Nano.debug class is loaded.
+  this._debug = 'debug' in options ? options.debug : false;
+
 }
 
 /**
@@ -128,7 +131,7 @@ function (method_name, method_data, method_path, method_handler)
     method_data = {};
   }
   var request = this._build_request(method_data, method_name);
-  if (request !== null)
+  if (request !== null || !this._auto_type)
   {
     var url = this._base_url.replace(/\/+$/, '') + '/' + method_name;
     if (method_path)
@@ -150,6 +153,11 @@ function (method_name, method_data, method_path, method_handler)
       url:         url,
       dataType:    this._data_type,
     };
+
+    if (this._debug)
+    {
+      Nano.debug.log("Sending request: ", reqopts);
+    }
 
     if (this._auto_type === true)
     { // Use an automatic content type based on our data type.
