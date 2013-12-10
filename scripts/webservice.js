@@ -22,7 +22,13 @@ Nano.WebService = function (options)
     options = {};
 
   this._base_url  = options.url;     // Specify the base URL.
-  this._data_type = 'json';          // We currently only support JSON.
+
+  // The data type and mime type are determined by the following options.
+  // If the autoType is true, we determime the encoding method and MIME
+  // type based on the data type. If it is false, we use jQuery's built in
+  // request encoder, which works with PHP and a few other bindings.
+  this._data_type = options.dataType ? options.dataType : 'json';
+  this._auto_type = (options.autoType !== undefined) ? options.autoType : true;
 
   if ('onError' in options)
   {
@@ -81,15 +87,31 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
 Nano.WebService.prototype._build_request = function (data, name)
 {
   var request = null;
-  if (this._data_type == 'json')
-  {
-    request = JSON.stringify(data);
+  if (this._auto_type === true)
+  { // We're encoding data in the desired format.
+    var method_name = "_build_" + this._data_type + "_request";
+    if (method_name in this && typeof this[method_name] === "function")
+    {
+      request = this[method_name](data, name);
+    }
+    else
+    {
+      console.log("Unknown data type.");
+    }
   }
   else
-  {
-    console.log("Unknown data type.");
+  { // We're using jQuery's request format.
+    request = data;
   }
   return request;
+}
+
+/**
+ * Build the request data in "JSON" format.
+ */
+Nano.WebService.prototype._build_json_request = function (data, name)
+{
+  return JSON.stringify(data);
 }
 
 /**
@@ -108,14 +130,20 @@ function (method_name, method_data, method_handler)
   if (request !== null)
   {
     var url = this._base_url.replace(/\/+$/, '') + '/' + method_name;
-    var response = jQuery.ajax(
+    var reqopts = 
     {
       type:        "POST",
       data:        request,
       url:         url,
-      contentType: this._mime_types[this._data_type],
       dataType:    this._data_type,
-    });
+    };
+
+    if (this._auto_type === true)
+    { // Use an automatic content type based on our data type.
+      reqopts.contentType = this._mime_types[this._data_type];
+    }
+
+    var response = jQuery.ajax(reqopts);
 
     if ('_onError' in this)
     {
@@ -143,6 +171,5 @@ function (method_name, method_data, method_handler)
 
     return response;
   }
-  return null;
 }
 
