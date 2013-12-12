@@ -35,7 +35,7 @@ JSON_URL = http://cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.min.js
 UNDERSCORE_URL = http://documentcloud.github.com/underscore/underscore-min.js
 LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://closure-compiler.googlecode.com/files/compiler-latest.zip
-MOMENT_URL = https://raw.github.com/timrwood/moment/1.7.2/min/moment.min.js
+MOMENT_URL = http://momentjs.com/downloads/moment.min.js
 YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
 
 ## Download all of our prerequisites.
