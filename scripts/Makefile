@@ -21,7 +21,7 @@ BOOT_SCRIPTS = jquery.dist.js json3.dist.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
-MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.dist.js
+MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.dist.js riot.dist.js modernizr.js
 
 ## Listings for the minify_all and compile_all targets.
 ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.min.js/g')
@@ -37,6 +37,8 @@ LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://closure-compiler.googlecode.com/files/compiler-latest.zip
 MOMENT_URL = http://momentjs.com/downloads/moment.min.js
 YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
+RIOT_URL=https://github.com/moot/riotjs/blob/master/riot.min.js
+MODERN_URL=http://modernizr.com/downloads/modernizr-latest.js
 
 ## Download all of our prerequisites.
 bootstrap: $(BOOT_DEPENDS)
@@ -72,6 +74,14 @@ moment.dist.js:
 ## Download YepNope, a dependency manager.
 yepnops.dist.js:
 	wget -O yepnope.dist.js $(YEPNOPE_URL)
+
+## Download Riot, a MVP framework.
+riot.dist.js:
+	wget -O riot.dist.js $(RIOT_URL)
+
+## Download Modernizr, a browser feature detection tool.
+modernizer.js:
+	wget -O modernizer.js $(MODERN_URL)
 
 ## Download Closure Compiler. Requires 'unzip'.
 compiler.jar:
