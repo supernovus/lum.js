@@ -7,4 +7,5 @@ scripts/*.dist.js
 scripts/*.min.js
 scripts/*.cc.js
 scripts/*.ug.js
+scripts/modernizer.js
 
