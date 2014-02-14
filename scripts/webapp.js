@@ -87,12 +87,14 @@
    */
   Nano.addProperty = function (object, pname, pfunc, opts)
   {
+    if (opts === undefined || opts === null)
+      opts = {};
     var props =
     {
       value:         pfunc,
-      enumerable:    enumerable in opts   ? opts.enumerable   : false,
-      configurable:  configurable in opts ? opts.configurable : false,
-      writable:      writable in opts     ? opts.writable     : false,
+      enumerable:    'enumerable'   in opts ? opts.enumerable   : false,
+      configurable:  'configurable' in opts ? opts.configurable : false,
+      writable:      'writable'     in opts ? opts.writable     : false,
     }; 
     Object.defineProperty(object, pname, props);
   }
@@ -129,59 +131,141 @@
     self.conf = conf;
 
     /**
+     * Debugging information. Can be a list of tags.
+     */
+    self.debugging = 'debug' in conf ? conf.debug : {};
+
+    /**
      * We can specify multiple model data sources and backend services.
      */
     for (var name in conf.sources)
     {
       var source = conf.sources[name];
-      var type = source.type;
-
-      if (type == 'ws')
-      { // Web service, requires a webservice library to be loaded.
-        var opts = source.opts;
-        var wsclass = 'class' in opts ? opts.class : Nano.WebService;
-        self.model[name] = new wsclass(opts);
-      }
-
-      else if (type == 'json')
-      { // Requires the json.jq and exists.jq jQuery extensions.
-        var elname;
-        if ('element' in opts)
-          elname = opts.element;
-        else
-          elname = '#' + name;
-
-        var element = $(elname);
-        if (element.exists())
-        {
-          var jsondata = self.model[name] = $(element).JSON();
-          var save_changes = false;
-          if (opts.enforceObject === true)
-          {
-            if ($.isArray(jsondata) || jsondata.length == 0)
-            {
-              jsondata = {};
-              save_changes = true;
-            }
-          }
-
-          // Add a special "save" function.
-          Nano.addProperty(jsondata, 'save', function (target)
-          {
-            if (!target)
-              target = elname;
-            $(target).JSON(this);
-          });
-
-          // We changed something, time to save.
-          if (save_changes)
-            jsondata.save();
-        }
-      }
-
+      self._loadModel(name, source);
     } // for (sources)
 
   } // end ModelAPI
+
+  Nano.ModelAPI.prototype.debug = function (tag, toggle)
+  {
+    if (toggle === undefined || toggle === null)
+    { // See if debugging is enabled.
+      if (tag !== undefined && tag !== null && 
+          tag in this.debugging && this.debugging[tag])
+      { // Check for the explicit tag.
+        return true;
+      }
+      else if ('*' in this.debugging && this.debugging['*'])
+      { // Check for the wildcard tag.
+        return true;
+      }
+      return false;
+    }
+    else
+    { // Changing the debugging settings.
+      if ($.isArray(tag))
+      { // An array of tags, recurse it.
+        for (var t in tag)
+        {
+          this.debug(tag[t], toggle);
+        }
+        return;
+      }
+      else
+      {
+        this.debugging[tag] = toggle;
+        var models  = this.model;
+        var sources = this.conf.sources;
+        if (tag == '*')
+        { // Wildcard. We will change all web services.
+          for (var modelname in models)
+          {
+            if (modelname in sources && sources[modelname].type == 'ws')
+            {
+              models[modelname]._debug = toggle;
+            }
+          }
+        }
+        else
+        { // Check for specific web service.
+          if (tag in models && tag in sources && sources[tag].type == 'ws')
+            models[tag]._debug = toggle;
+        }
+      }
+    }
+  }
+
+  /** 
+   * Add a model source definition, then load the model.
+   */
+  Nano.ModelAPI.prototype.addSource = function (name, source)
+  {
+    this.conf.sources[name] = source;
+    this._loadModel(name, source);
+  }
+
+  /**
+   * Load the actual model object.
+   *
+   * This is not usually called directly, but invoked either by the
+   * constructor, or the addSource() method.
+   */
+  Nano.ModelAPI.prototype._loadModel = function (name, source)
+  {
+    var type = source.type;
+
+    if (type == 'ws')
+    { // Web service, requires a webservice library to be loaded.
+      var opts = source.opts;
+      if (this.debug('loadModel')) 
+        console.log("-- Loading web service", name, opts);
+      var wsclass = 'class' in opts ? opts.class : Nano.WebService;
+      if (name in this.debugging)
+      {
+        opts.debug = this.debugging[name];
+      }
+      this.model[name] = new wsclass(opts);
+    }
+
+    else if (type == 'json')
+    { // Requires the json.jq and exists.jq jQuery extensions.
+      var elname;
+      if ('element' in source)
+        elname = source.element;
+      else
+        elname = '#' + name;
+
+      var element = $(elname);
+      if (element.exists())
+      {
+        if (this.debug('loadModel')) 
+          console.log("-- Loading JSON", name, elname);
+        var jsondata = this.model[name] = element.JSON();
+        var save_changes = false;
+        if (source.enforceObject === true)
+        {
+          if ($.isArray(jsondata) || jsondata.length == 0)
+          {
+            jsondata = {};
+            save_changes = true;
+          }
+        }
+
+        // Add a special "save" function.
+        Nano.addProperty(jsondata, 'save', function (target)
+        {
+          if (!target)
+            target = elname;
+          $(target).JSON(this);
+        });
+
+        // We changed something, time to save.
+        if (save_changes)
+          jsondata.save();
+
+      } // if element exists
+    } // if type == json
+  }
 
 })(window, $); // We are assuming browser with jQuery and Riot.js loaded.
 

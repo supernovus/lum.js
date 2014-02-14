@@ -55,7 +55,7 @@ Nano.WebService = function (options)
     'json' : 'application/json'
   };
 
-  // If you use debugging, ensure the Nano.debug class is loaded.
+  // Enable debugging.
   this._debug = 'debug' in options ? options.debug : false;
 
 }
@@ -156,7 +156,7 @@ function (method_name, method_data, method_path, method_handler)
 
     if (this._debug)
     {
-      Nano.debug.log("Sending request: ", reqopts);
+      console.log("-- Sending request: ", reqopts);
     }
 
     if (this._auto_type === true)
