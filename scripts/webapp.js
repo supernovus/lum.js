@@ -124,6 +124,11 @@
     self.model = {};
 
     /**
+     * The conf property stores a copy of our initialization data.
+     */
+    self.conf = conf;
+
+    /**
      * We can specify multiple model data sources and backend services.
      */
     for (var name in conf.sources)
