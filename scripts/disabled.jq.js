@@ -8,11 +8,13 @@
 {
   $.fn.enable = function ()
   {
-    return this.removeAttr('disabled');
+    //return this.removeAttr('disabled');
+    return this.prop('disabled', false);
   };
   $.fn.disable = function ()
   {
-    return this.attr('disabled','disabled');
+    //return this.attr('disabled','disabled');
+    return this.prop('disabled', true);
   };
 })(jQuery);
 
