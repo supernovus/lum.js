@@ -12,7 +12,7 @@
    * Set up the Nano namespace.
    */
   if (root.Nano === undefined)
-    var Nano = root.Nano = {};
+    root.Nano = {};
 
   /**
    * Promise interface, from Riot.js example app.
@@ -181,7 +181,7 @@
 
     } // for (sources)
 
-  }); // end ModelAPI
+  } // end ModelAPI
 
 })(window, $); // We are assuming browser with jQuery and Riot.js loaded.
 
