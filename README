@@ -7,25 +7,19 @@ In other words, it's a bunch of common stuff that makes life easier.
 It uses jQuery where possible, and most of its functionality is provided
 as jQuery plugins.
 
-Installation is simple: copy or link everything from "scripts" into your own
-"scripts" directory, and type "make".
+Type "make" by itself to download jsmin, Google Closure Compiler, 
+jQuery, JSON3 and Riot.js.
 
-From then on out, build your javascript files, and compile them easily.
+Type "make all" to download the above plus Underscore, LESS, Moment.js,
+YepNope and Modernizr.
 
-Say you created "mylib.js" and you want to compile it into a smaller file.
+Type "make minify_all" to make .min.js versions of any uncompiled scripts.
 
-Well, you can use jsmin to do so using:
+Type "make compile_all" to make .cc.js versions of any uncompiled scripts.
 
-  make mylib.min.js
+Type "make uglify_all" to make .ug.js versions of any uncompiled scripts.
 
-Or you could use the Google Closure Compiler by using:
-
-  make mylib.cc.js
-
-It's literally that simple.
-
-The Makefile will automatically download jQuery, the JSON library, jsmin
-and the Closure Compiler, as well as some extra external libraries.  Easy as pie.
+There are a few other features, check out the Makefile for details.
 
 Requirements:
 
@@ -33,14 +27,10 @@ Requirements:
  * gcc           Needed for jsmin, along with the standard C libraries.
  * unzip         Needed for Closure Compiler.
  * java          Needed for Closure Compiler.
+ * uglifyjs      Optional, only neeed if you want to generate .ug.js files.
 
 Author:
 
   Timothy Totten
   <2010@totten.ca>
 
-Last updated:
-
-  2012-09-07
-
-~

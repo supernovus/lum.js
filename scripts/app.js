@@ -1,5 +1,7 @@
 /**
  * UI/UX app core. Extend this to make application specific cores.
+ *
+ * This is now marked deprecated. Please migrate to the WebApp library.
  */
 
 "use strict";
@@ -49,3 +51,4 @@ Nano.App.prototype.need = function (init, options)
   this.initialize[init].call(this, options);       // Call the function.
   this._inittab[init] = true;                      // Mark it as called.
 }
+

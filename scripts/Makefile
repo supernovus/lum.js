@@ -17,11 +17,11 @@
 
 ## Bootstrap stuff.
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json3.dist.js 
+BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.dist.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
-MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.dist.js riot.dist.js modernizr.js
+MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.dist.js modernizr.js
 
 ## Listings for the minify_all and compile_all targets.
 ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.min.js/g')
@@ -37,11 +37,14 @@ LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://closure-compiler.googlecode.com/files/compiler-latest.zip
 MOMENT_URL = http://momentjs.com/downloads/moment.min.js
 YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
-RIOT_URL=https://github.com/moot/riotjs/blob/master/riot.min.js
+RIOT_URL=https://raw.github.com/moot/riotjs/master/riot.min.js
 MODERN_URL=http://modernizr.com/downloads/modernizr-latest.js
 
 ## Download all of our prerequisites.
 bootstrap: $(BOOT_DEPENDS)
+
+## Download everything.
+all: bootstrap $(MORE_SCRIPTS)
 
 ## Download the source code to jsmin.
 jsmin.c:
