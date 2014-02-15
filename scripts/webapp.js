@@ -259,6 +259,17 @@
           $(target).JSON(this);
         });
 
+        // Add a special "json" function. This requires the
+        // format_json library.
+        Nano.addProperty(jsondata, 'json', function (format)
+        {
+          var json = JSON.stringify(this);
+          if (format)
+            return format_json(json);
+          else
+            return json;
+        });
+
         // We changed something, time to save.
         if (save_changes)
           jsondata.save();

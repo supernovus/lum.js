@@ -4,57 +4,47 @@
  * Requires: jquery, JSON, json.jq, exists.jq and format_json.
  */
 
-"use strict";
-
-if (window.Nano === undefined)
+(function (root, $)
 {
-  window.Nano = {};
-}
+  "use strict";
 
-Nano.debug = {};
+  if (root.Nano === undefined)
+    root.Nano = {};
 
-Nano.debug.log = function ()
-{
-  for (var a in arguments)
+  Nano.debug = {};
+
+  // Kept for compatibility reasons.
+  Nano.debug.log = function ()
   {
-    var arg = arguments[a];
-    if (typeof arg == "string")
+    console.log.apply(console, arguments);
+  }
+
+  Nano.debug.field = function (obj, toel)
+  {
+    if (toel === undefined)
     {
-      console.log(arg);
+      toel = '#debug';
     }
-    else
+    var el = $(toel);
+    if (el.exists())
     {
-      console.log(format_json(JSON.stringify(arg)));
+      el.JSON(obj).formatJSON();
     }
   }
-}
 
-Nano.debug.field = function (obj, toel)
-{
-  if (toel === undefined)
+  Nano.debug.element = function (fromel, toel)
   {
-    toel = '#debug';
+    if (toel === undefined)
+    {
+      toel = '#debug';
+    }
+    var to   = $(toel);
+    var from = $(fromel);
+    if (to.exists() && from.exists())
+    {
+      to.val(from.val()).formatJSON();
+    }
   }
-  var el = $(toel);
-  if (el.exists())
-  {
-    el.JSON(obj).formatJSON();
-  }
-}
-
-Nano.debug.element = function (fromel, toel)
-{
-  if (toel === undefined)
-  {
-    toel = '#debug';
-  }
-  var to   = $(toel);
-  var from = $(fromel);
-  if (to.exists() && from.exists())
-  {
-    to.val(from.val()).formatJSON();
-  }
-}
 
 /**
  * Debugging buttons made easy.
@@ -68,39 +58,41 @@ Nano.debug.element = function (fromel, toel)
  * If the source is undefined, we assume an element with an id
  * of the fieldname.
  */
-Nano.debug.button = function (fieldname, source, prefix, target)
-{
-  if (prefix === undefined)
+  Nano.debug.button = function (fieldname, source, prefix, target)
   {
-    prefix = '#debug_';
+    if (prefix === undefined)
+    {
+      prefix = '#debug_';
+    }
+
+    var elname = prefix + fieldname;
+    var handler;
+    var stype = typeof source;
+    if (stype == "function")
+    {
+      handler = function ()
+      {
+        Nano.debug.field(source(), target);
+      };
+    }
+    else
+    {
+      if (stype == "undefined")
+      {
+        source = '#' + fieldname;
+      }
+      else if (stype != "string")
+      {
+        console.error("invalid source");
+        return;
+      }
+      handler = function ()
+      {
+        Nano.debug.element(source, target);
+      }
+    }
+    $(elname).on('click', handler);
   }
 
-  var elname = prefix + fieldname;
-  var handler;
-  var stype = typeof source;
-  if (stype == "function")
-  {
-    handler = function ()
-    {
-      Nano.debug.field(source(), target);
-    };
-  }
-  else
-  {
-    if (stype == "undefined")
-    {
-      source = '#' + fieldname;
-    }
-    else if (stype != "string")
-    {
-      console.log("invalid source");
-      return;
-    }
-    handler = function ()
-    {
-      Nano.debug.element(source, target);
-    }
-  }
-  $(elname).on('click', handler);
-}
+})(window, $);
 

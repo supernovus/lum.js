@@ -6,15 +6,23 @@
  * then any API-specific functionality can be added in higher level classes
  * using jQuery's $.extend() function.
  *
+ * TODO:
+ * 
+ *  - Better support for REST-based APIs:
+ *    - Support URL strings like '/api/:firm/:user/details'.
+ *    - Support different HTTP Methods on each call.
+ *    - Backwards compatibility with existing usage.
+ *
  * Requires jQuery and JSON.stringify().
  */
 
+(function (root, $) // Set here, but we're not indenting.
+{ 
+  
 "use strict";
 
-if (window.Nano === undefined)
-{
-  window.Nano = {};
-}
+if (root.Nano === undefined)
+  root.Nano = {};
 
 Nano.WebService = function (options)
 {
@@ -146,6 +154,7 @@ function (method_name, method_data, method_path, method_handler)
         url += '/' + method_path.join('/');
       }
     }
+
     var reqopts = 
     {
       type:        "POST",
@@ -193,4 +202,7 @@ function (method_name, method_data, method_path, method_handler)
     return response;
   }
 }
+
+})(window, $); // End of class.
+
 
