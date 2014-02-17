@@ -138,6 +138,9 @@ function (method_name, method_data, method_path, method_handler)
   {
     method_data = {};
   }
+  if (this._debug && method_data)
+    console.log("request_data> ", method_data);
+
   var request = this._build_request(method_data, method_name);
   if (request !== null || !this._auto_type)
   {
@@ -165,7 +168,7 @@ function (method_name, method_data, method_path, method_handler)
 
     if (this._debug)
     {
-      console.log("-- Sending request: ", reqopts);
+      console.log("request> ", reqopts);
     }
 
     if (this._auto_type === true)
