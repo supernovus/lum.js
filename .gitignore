@@ -2,10 +2,9 @@
 sync*
 scripts/jsmin*
 scripts/compiler.jar
-scripts/json2.js
 scripts/*.dist.js
 scripts/*.min.js
 scripts/*.cc.js
 scripts/*.ug.js
-scripts/modernizer.js
-
+scripts/modernizr.js
+scripts/yepnope.js
