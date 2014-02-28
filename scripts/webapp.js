@@ -4,7 +4,7 @@
  * This replaces App.js in all capacities.
  */
 
-(function(root, $)
+(function(root, $, riot)
 { 
   "use strict";
 
@@ -19,7 +19,7 @@
    */
   Nano.Promise = function Promise (fn)
   {
-    var self = $.observable(this);
+    var self = riot.observable(this);
     $.map(['done', 'fail', 'always'], function(name) 
     {
       self[name] = function(arg) 
@@ -37,7 +37,7 @@
   Nano.webApp = function (API)
   {
     var instance;
-    var app = $.observable(function (arg)
+    var app = riot.observable(function (arg)
     {
       // admin() --> return instance
       if (!arg) return instance;
@@ -118,7 +118,7 @@
     /**
      * An observable reference to ourself.
      */
-    var self = $.observable(this);
+    var self = riot.observable(this);
 
     /**
      * The model property stores our model data and backend services.
@@ -146,51 +146,75 @@
 
   } // end ModelAPI
 
+  /**
+   * Check to see if debugging is enabled on a certain tag.
+   */
+  Nano.ModelAPI.prototype.isDebug = function (tag)
+  {
+    if (tag !== undefined && tag !== null && 
+        tag in this.debugging && this.debugging[tag])
+    { // Check for the explicit tag.
+      return true;
+    }
+    else if ('*' in this.debugging && this.debugging['*'])
+    { // Check for the wildcard tag.
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Check debugging tag, and if true, send the rest of the arguments
+   * to the console log.
+   */
+  Nano.ModelAPI.prototype.onDebug = function (tag)
+  {
+    if (this.isDebug(tag))
+    {
+      var args = Array.prototype.slice.call(arguments, 1);
+      console.log.apply(console, args);
+    }
+  }
+
+  /**
+   * Toggle debugging on tags.
+   */
   Nano.ModelAPI.prototype.debug = function (tag, toggle)
   {
-    if (toggle === undefined || toggle === null)
-    { // See if debugging is enabled.
-      if (tag !== undefined && tag !== null && 
-          tag in this.debugging && this.debugging[tag])
-      { // Check for the explicit tag.
-        return true;
+    if ($.isArray(tag))
+    { // An array of tags, recurse it.
+      for (var t in tag)
+      {
+        this.debug(tag[t], toggle);
       }
-      else if ('*' in this.debugging && this.debugging['*'])
-      { // Check for the wildcard tag.
-        return true;
-      }
-      return false;
     }
     else
-    { // Changing the debugging settings.
-      if ($.isArray(tag))
-      { // An array of tags, recurse it.
-        for (var t in tag)
-        {
-          this.debug(tag[t], toggle);
-        }
-        return;
+    {
+      if (toggle === undefined || toggle === null)
+      { // Invert the current setting.
+        toggle = this.debugging[tag] ? false : true;
       }
-      else
-      {
-        this.debugging[tag] = toggle;
-        var models  = this.model;
-        var sources = this.conf.sources;
-        if (tag == '*')
-        { // Wildcard. We will change all web services.
-          for (var modelname in models)
+
+      // Update the debugging setting.
+      this.debugging[tag] = toggle;
+
+      // Check for web services that we can toggle debugging on.
+      var models  = this.model;
+      var sources = this.conf.sources;
+      if (tag == '*')
+      { // Wildcard. We will change all web services.
+        for (var modelname in models)
+        {
+          if (modelname in sources && sources[modelname].type == 'ws')
           {
-            if (modelname in sources && sources[modelname].type == 'ws')
-            {
-              models[modelname]._debug = toggle;
-            }
+            models[modelname]._debug = toggle;
           }
         }
-        else
-        { // Check for specific web service.
-          if (tag in models && tag in sources && sources[tag].type == 'ws')
-            models[tag]._debug = toggle;
-        }
+      }
+      else
+      { // Check for specific web service.
+        if (tag in models && tag in sources && sources[tag].type == 'ws')
+          models[tag]._debug = toggle;
       }
     }
   }
@@ -217,8 +241,7 @@
     if (type == 'ws')
     { // Web service, requires a webservice library to be loaded.
       var opts = source.opts;
-      if (this.debug('loadModel')) 
-        console.log("-- Loading web service", name, opts);
+      this.onDebug('loadModel', '-- Loading web service', name, opts);
       var wsclass = 'class' in opts ? opts.class : Nano.WebService;
       if (name in this.debugging)
       {
@@ -238,8 +261,7 @@
       var element = $(elname);
       if (element.exists())
       {
-        if (this.debug('loadModel')) 
-          console.log("-- Loading JSON", name, elname);
+        this.onDebug('loadModel', '-- Loading JSON', name, elname);
         var jsondata = this.model[name] = element.JSON();
         var save_changes = false;
         if (source.enforceObject === true)
@@ -278,5 +300,11 @@
     } // if type == json
   }
 
-})(window, $); // We are assuming browser with jQuery and Riot.js loaded.
+})(
+window,                          // Top level window object.
+jQuery,                          // jQuery must exist with its full name.
+window.riot ? window.riot        // If 'riot' exists, use it.
+  : jQuery.observable ? jQuery   // If jQuery has riot methods, use it.
+  : $                            // Assume a standalone $ object.
+); 
 
