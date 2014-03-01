@@ -6,13 +6,6 @@
  * then any API-specific functionality can be added in higher level classes
  * using jQuery's $.extend() function.
  *
- * TODO:
- * 
- *  - Better support for REST-based APIs:
- *    - Support URL strings like '/api/:firm/:user/details'.
- *    - Support different HTTP Methods on each call.
- *    - Backwards compatibility with existing usage.
- *
  * Requires jQuery and JSON.stringify().
  */
 
@@ -38,6 +31,25 @@ Nano.WebService = function (options)
   this._data_type = options.dataType ? options.dataType : 'json';
   this._auto_type = (options.autoType !== undefined) ? options.autoType : true;
 
+  /**
+   * The default HTTP methods.
+   *
+   * If you set 'default_http_method' it will be used by both function
+   * and object defined service methods.
+   *
+   * Otherwise, you can set 'default_http' with 'function'
+   * and 'object' properties to customize the values separately.
+   *
+   * The default is 'POST' for handlers defined as functions,
+   * and 'GET' for handlers defined as objects (that don't override it.)
+   */
+  var def_http_meth = options.default_http_method;
+  this._default_http = 'default_http' in options ? options.default_http :
+  {
+    'function' : def_http_meth ? def_http_meth : 'POST',
+    'object'   : def_http_meth ? def_http_meth : 'GET',
+  };
+
   if ('onError' in options)
   {
     this._onError = options.onError; // A global onError handler.
@@ -58,6 +70,7 @@ Nano.WebService = function (options)
     }
   }
 
+  // A data-type to MIME-type map.
   this._mime_types =
   {
     'json' : 'application/json'
@@ -94,34 +107,156 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
 }
 
 /**
- * Build the request data, based on a data object.
+ * Build the request object.
+ *
+ * This supports a wide variety of configurations, based on the many types
+ * of Web Services we've designed.
  */
-Nano.WebService.prototype._build_request = function (data, name)
+Nano.WebService.prototype._build_request = function (name, data, path, def)
 {
-  var request = null;
-  if (this._auto_type === true)
-  { // We're encoding data in the desired format.
-    var method_name = "_build_" + this._data_type + "_request";
-    if (method_name in this && typeof this[method_name] === "function")
+  // Our request object, which we will populate as needed.
+  var request = 
+  {
+    dataType: this._data_type, // Our data type (default is 'json'.)
+  };
+
+  // Set up our URL and HTTP method.
+  var deftype = typeof def;
+  var url = this._base_url.replace(/\/+$/, '');
+  if (deftype === "function")
+  { // Simple handler, works as it did before.
+    url += '/' + name;
+    request.handler = def;
+    request.type    = this._default_http['function'];
+  }
+  else if (deftype === "object")
+  {
+    request.type = this._default_http.object;
+    var url_path; 
+    if ($.isArray(def))
     {
-      request = this[method_name](data, name);
+      if (def.length == 2)
+      { // [pathspec, handler]
+        url_path        = def[0];
+        request.handler = def[1];
+      }
+      else if (def.length == 3)
+      { // [httpmethod, pathspec, handler]
+        request.type    = def[0];
+        url_path        = def[1];
+        request.handler = def[2];
+      }
+      else
+      {
+        console.log("build_request> invalid array method definition.");
+        return;
+      }
+    }
+    else
+    { // { path: uri_path, func: handler_function, http: http_method}
+      //   The 'http' parameter can be left off to use the default.
+      if ('path' in def && 'func' in def)
+      {
+        url_path        = def.path;
+        request.handler = def.func;
+        if ('http' in def)
+        {
+          request.type = def.http;
+        }
+      }
+      else
+      {
+        console.log("build_request> invalid object method definition.");
+      }
+    }
+
+    var missing = []; // Missing parameters will mean failure.
+
+    // Okay, let's do the method substitution.
+    url_path.replace(/\:([\w-]+)/g, function (match, param, offset, string)
+    {
+      if (data && param in data)
+      {
+        // The parameter was found. Extract and remove it from the data.
+        var value = data[param];
+        delete data[param];
+        return value;
+      }
+      else
+      {
+        missing.push(param);
+        return '';
+      }
+    });
+
+    if (missing.length > 0)
+    {
+      console.log("build_request> missing parameters: " + missing.join(", "));
+      return;
+    }
+
+    if (url_path.substr(0, 1) != '/')
+    {
+      url += '/';
+    }
+    url += url_path;
+  } // if deftype === object
+  else
+  {
+    console.log("build_request> unsupported method definition.");
+  }
+
+  // Handle additional path information.
+  if (path)
+  {
+    var mtype = typeof path;
+    url.replace(/\/+$/, '')
+    if (mtype === "string" || mtype === "number")
+    {
+      url += '/' + path;
+    }
+    else if ($.isArray(path))
+    {
+      url += '/' + path.join('/');
+    }
+  }
+
+  // Okay, assign our request URL.
+  request.url = url;
+
+  // Build the request data.
+  if (this._auto_type === true && data)
+  { // We're encoding data in the desired format.
+    var request_data = null;
+    var build_data = "_build_" + this._data_type + "_request_data";
+    if (build_data in this && typeof this[build_data] === "function")
+    {
+      request_data = this[build_data](data, name);
     }
     else
     {
-      console.log("Unknown data type.");
+      console.log("build_request> unknown data type, ignoring.");
+    }
+
+    // Set the request MIME type.
+    if (request_data)
+    {
+      request.data        = request_data;
+      request.contentType = this._mime_types[this._data_type];
     }
   }
-  else
+  else if (data)
   { // We're using jQuery's request format.
-    request = data;
+    request.data = data;
   }
+
   return request;
 }
 
 /**
  * Build the request data in "JSON" format.
  */
-Nano.WebService.prototype._build_json_request = function (data, name)
+Nano.WebService.prototype._build_json_request_data = function (data, name)
 {
   return JSON.stringify(data);
 }
@@ -132,80 +267,70 @@ Nano.WebService.prototype._build_json_request = function (data, name)
  * .fail() and .done() respectively.
  */
 Nano.WebService.prototype._send_request = 
-function (method_name, method_data, method_path, method_handler)
+function (method_name, method_data, method_path, method_def)
 {
-  if (method_data === undefined)
-  {
-    method_data = {};
-  }
   if (this._debug && method_data)
     console.log("request_data> ", method_data);
 
-  var request = this._build_request(method_data, method_name);
-  if (request !== null || !this._auto_type)
+  // The _build_request() function handles a lot of the internal details.
+  var request = 
+    this._build_request(method_name, method_data, method_path, method_def);
+
+  if (!request)
   {
-    var url = this._base_url.replace(/\/+$/, '') + '/' + method_name;
-    if (method_path)
-    {
-      var mtype = typeof method_path;
-      if (mtype === "string" || mtype == "number")
-      {
-        url += '/' + method_path;
-      }
-      else if ($.isArray(method_path))
-      {
-        url += '/' + method_path.join('/');
-      }
-    }
-
-    var reqopts = 
-    {
-      type:        "POST",
-      data:        request,
-      url:         url,
-      dataType:    this._data_type,
-    };
-
-    if (this._debug)
-    {
-      console.log("request> ", reqopts);
-    }
-
-    if (this._auto_type === true)
-    { // Use an automatic content type based on our data type.
-      reqopts.contentType = this._mime_types[this._data_type];
-    }
-
-    var response = jQuery.ajax(reqopts);
-
-    if ('_onError' in this)
-    {
-      response.fail(this._onError);
-    }
-
-    if (method_handler !== undefined && typeof method_handler === "function")
-    {
-      if ('_onSuccess' in this)
-      { // A wrapper around the handler.
-        var ws = this;
-        response.done(function (res, msg, jq)
-        {
-          ws._onSuccess(res, msg, jq, method_handler);
-        });
-      }
-      else
-      { // Call the handler directly.
-        response.done(function (res, msg, jq)
-        {
-          method_handler(res, msg, jq);
-        });
-      }
-    }
-
-    return response;
+    console.log("send_request> request failed to be built, cannot continue.");
+    return;
   }
+
+  // Split our handler out of the request object.
+  var method_handler = request.handler;
+  delete request.handler;
+
+  if (this._debug)
+  {
+    console.log("request> ", request);
+  }
+
+  // Send the request.
+  var response = jQuery.ajax(request);
+
+  // Create a reference to ourself to be used in callbacks.
+  var ws = this;
+
+  if (this._debug)
+  {
+    response.always(function (response, status, info)
+    {
+      console.log("response>", response, "status>", status, "info>", info);
+    });
+  }
+
+  if ('_onError' in this)
+  {
+    response.fail(function (jq, msg, http)
+    {
+      ws._onError(jq, msg, http);
+    });
+  }
+
+  if ('_onSuccess' in this)
+  { // Send the method handler to our _onSuccess wrapper.
+    response.done(function (res, msg, jq)
+    {
+      ws._onSuccess(res, msg, jq, method_handler);
+    });
+  }
+  else if (typeof method_handler === "function")
+  { // Call the method handler directly.
+    response.done(function (res, msg, jq)
+    {
+      method_handler(res, msg, jq);
+    });
+  }
+
+  // We return the response, so you can assign your own Promise events.
+  return response;
 }
 
-})(window, $); // End of class.
-
+})(window, jQuery); // End of class.
 
