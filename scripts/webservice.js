@@ -172,8 +172,11 @@ Nano.WebService.prototype._build_request = function (name, data, path, def)
 
     var missing = []; // Missing parameters will mean failure.
 
+    var self = this;
+
     // Okay, let's do the method substitution.
-    url_path.replace(/\:([\w-]+)/g, function (match, param, offset, string)
+    url_path = url_path.replace(/\:([\w-]+)/g, 
+    function (match, param, offset, string)
     {
       if (data && param in data)
       {
@@ -210,7 +213,7 @@ Nano.WebService.prototype._build_request = function (name, data, path, def)
   if (path)
   {
     var mtype = typeof path;
-    url.replace(/\/+$/, '')
+    url = url.replace(/\/+$/, '')
     if (mtype === "string" || mtype === "number")
     {
       url += '/' + path;
