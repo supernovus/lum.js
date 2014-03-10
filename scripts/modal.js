@@ -120,6 +120,16 @@ Nano.ModalDialog.displayTypes.abscenter = function (content, offset)
   });
 }
 
+Nano.ModalDialog.displayTypes.avgCenter = function (content, offset)
+{
+  content.css(
+  {
+    position: 'fixed',
+    left:     '25%',
+    top:      '25%',
+  });
+}
+
 /**
  * Show the dialog, at a specific position relative to a passed element.
  */
