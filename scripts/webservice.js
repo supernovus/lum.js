@@ -92,8 +92,14 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
     {
       this[method_name] = function (method_data, method_path)
       {
-        this._send_request(method_handler, method_data, method_path, 
-            this._methods[method_handler]);
+        var mspec =
+        {
+          name: method_handler,
+          data: method_data,
+          def:  this._methods[method_handler],
+          path: method_path,
+        };
+        this._send_request(mspec);
       }
     }
   }
@@ -101,7 +107,14 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
   { // We create a new handler function.
     this[method_name] = function (method_data, method_path)
     {
-      this._send_request(method_name, method_data, method_path, method_handler);
+      var mspec =
+      {
+        name: method_name,
+        data: method_data,
+        def:  method_handler,
+        path: method_path,
+      };
+      this._send_request(mspec);
     }
   }
 }
@@ -112,10 +125,25 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
  * This supports a wide variety of configurations, based on the many types
  * of Web Services we've designed.
  */
-Nano.WebService.prototype._build_request = function (name, data, path, def)
+Nano.WebService.prototype._build_request = function (method_spec)
 {
-  // Our request object, which we will populate as needed.
-  var request = 
+  var name = method_spec.name;
+  var data = method_spec.data;
+  var path = method_spec.path;
+  var def  = method_spec.def;
+
+  // We want a copy of the data, so we don't modify the original.
+  if (data !== undefined && data !== null)
+    data = JSON.parse(JSON.stringify(data));
+
+  // The top level request wrapper.
+  var wrapper = 
+  {
+    spec: method_spec, // keep a reference to the original spec.
+  };
+
+  // Our AJAX request parameters, which we will populate as needed.
+  var request = wrapper.request =
   {
     dataType: this._data_type, // Our data type (default is 'json'.)
   };
@@ -126,7 +154,7 @@ Nano.WebService.prototype._build_request = function (name, data, path, def)
   if (deftype === "function")
   { // Simple handler, works as it did before.
     url += '/' + name;
-    request.handler = def;
+    wrapper.handler = def;
     request.type    = this._default_http['function'];
   }
   else if (deftype === "object")
@@ -138,13 +166,13 @@ Nano.WebService.prototype._build_request = function (name, data, path, def)
       if (def.length == 2)
       { // [pathspec, handler]
         url_path        = def[0];
-        request.handler = def[1];
+        wrapper.handler = def[1];
       }
       else if (def.length == 3)
       { // [httpmethod, pathspec, handler]
         request.type    = def[0];
         url_path        = def[1];
-        request.handler = def[2];
+        wrapper.handler = def[2];
       }
       else
       {
@@ -158,7 +186,7 @@ Nano.WebService.prototype._build_request = function (name, data, path, def)
       if ('path' in def && 'func' in def)
       {
         url_path        = def.path;
-        request.handler = def.func;
+        wrapper.handler = def.func;
         if ('http' in def)
         {
           request.type = def.http;
@@ -234,7 +262,7 @@ Nano.WebService.prototype._build_request = function (name, data, path, def)
     var build_data = "_build_" + this._data_type + "_request_data";
     if (build_data in this && typeof this[build_data] === "function")
     {
-      request_data = this[build_data](data, name);
+      request_data = this[build_data](data, wrapper);
     }
     else
     {
@@ -253,13 +281,13 @@ Nano.WebService.prototype._build_request = function (name, data, path, def)
     request.data = data;
   }
 
-  return request;
+  return wrapper;
 }
 
 /**
  * Build the request data in "JSON" format.
  */
-Nano.WebService.prototype._build_json_request_data = function (data, name)
+Nano.WebService.prototype._build_json_request_data = function (data, wrapper)
 {
   return JSON.stringify(data);
 }
@@ -269,25 +297,23 @@ Nano.WebService.prototype._build_json_request_data = function (data, name)
  * handler and/or method-specific success handlers, they will be applied using
  * .fail() and .done() respectively.
  */
-Nano.WebService.prototype._send_request = 
-function (method_name, method_data, method_path, method_def)
+Nano.WebService.prototype._send_request = function (method_spec)
 {
-  if (this._debug && method_data)
-    console.log("request_data> ", method_data);
+  if (this._debug)
+    console.log("request_spec> ", method_spec);
 
   // The _build_request() function handles a lot of the internal details.
-  var request = 
-    this._build_request(method_name, method_data, method_path, method_def);
+  var request_def = this._build_request(method_spec);
 
-  if (!request)
+  if (!request_def)
   {
     console.log("send_request> request failed to be built, cannot continue.");
     return;
   }
 
-  // Split our handler out of the request object.
-  var method_handler = request.handler;
-  delete request.handler;
+  // Split our handler and request objects out.
+  var method_handler = request_def.handler;
+  var request        = request_def.request;
 
   if (this._debug)
   {
@@ -312,22 +338,23 @@ function (method_name, method_data, method_path, method_def)
   {
     response.fail(function (jq, msg, http)
     {
-      ws._onError(jq, msg, http);
+      ws._onError(jq, msg, http, request_def);
     });
   }
 
   if ('_onSuccess' in this)
   { // Send the method handler to our _onSuccess wrapper.
+    // It can get the request_def.handler to process it further.
     response.done(function (res, msg, jq)
     {
-      ws._onSuccess(res, msg, jq, method_handler);
+      ws._onSuccess(res, msg, jq, request_def);
     });
   }
   else if (typeof method_handler === "function")
   { // Call the method handler directly.
     response.done(function (res, msg, jq)
     {
-      method_handler(res, msg, jq);
+      method_handler(res, msg, jq, request_def);
     });
   }
 
