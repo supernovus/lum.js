@@ -103,7 +103,7 @@ var oq = Nano.oQuery = function (query, objarr, opts)
  */
 oq.get = function (query, objarray)
 {
-  return oQuery(query, objarray, {single: true});
+  return oq(query, objarray, {single: true});
 }
 
 /**
@@ -111,7 +111,7 @@ oq.get = function (query, objarray)
  */
 oq.pos = function (query, objarray)
 {
-  return oQuery(query, objarray, {single: true, index: true});
+  return oq(query, objarray, {single: true, index: true});
 }
 
 /**
@@ -119,7 +119,7 @@ oq.pos = function (query, objarray)
  */
 oq.indexes = function (query, objarray)
 {
-  return oQuery(query, objarray, {index: true});
+  return oq(query, objarray, {index: true});
 }
 
 })(window);
