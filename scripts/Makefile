@@ -53,39 +53,43 @@ jsmin.c:
 
 ## Compile jsmin from the source code. Requires 'gcc'.
 jsmin: jsmin.c
-	gcc -o jsmin jsmin.c
+	gcc -o $@ $<
 
 ## Download jQuery, our primary Javascript framework.
 jquery.dist.js:
-	wget -O jquery.dist.js $(JQUERY_URL)
+	wget -O $@ $(JQUERY_URL)
 
 ## Download JSON 3.
 json3.dist.js:
-	wget -O json3.dist.js $(JSON_URL)
+	wget -O $@ $(JSON_URL)
 
 ## Download Underscore, a collection of functional programming helpers.
 underscore.dist.js:
-	wget -O underscore.dist.js $(UNDERSCORE_URL)
+	wget -O $@ $(UNDERSCORE_URL)
 
 ## Download LESS, a CSS extension language.
 less.dist.js:
-	wget -O less.dist.js $(LESS_URL)
+	wget -O $@ $(LESS_URL)
 
 ## Download Moment, a datetime parsing/formatting library.
 moment.dist.js:
-	wget -O moment.dist.js $(MOMENT_URL)
+	wget -O $@ $(MOMENT_URL)
 
 ## Download YepNope, a dependency manager.
 yepnope.js:
-	wget -O yepnope.js $(YEPNOPE_URL)
+	wget -O $@ $(YEPNOPE_URL)
 
 ## Download Modernizr, a feature testing library.
 modernizr.js:
-	wget -O modernizr.js $(MODERNIZR_URL)
+	wget -O $@ $(MODERNIZR_URL)
+
+## Download sprintf.
+sprintf.js:
+	wget -O $@ $(SPRINTF_URL)
 
 ## Download Riot, a MVP framework.
 riot.dist.js:
-	wget -O riot.dist.js $(RIOT_URL)
+	wget -O $@ $(RIOT_URL)
 
 ## Download Closure Compiler. Requires 'unzip'.
 compiler.jar:
