@@ -8,3 +8,4 @@ scripts/*.cc.js
 scripts/*.ug.js
 scripts/modernizr.js
 scripts/yepnope.js
+scripts/sprintf.js

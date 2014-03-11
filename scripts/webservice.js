@@ -6,7 +6,7 @@
  * then any API-specific functionality can be added in higher level classes
  * using jQuery's $.extend() function.
  *
- * Requires jQuery and JSON.stringify().
+ * Requires jQuery, JSON and the coreutils library.
  */
 
 (function (root, $) // Set here, but we're not indenting.
@@ -15,7 +15,10 @@
 "use strict";
 
 if (root.Nano === undefined)
-  root.Nano = {};
+{
+  console.log("fatal error: the Nano namespace was not defined");
+  return;
+}
 
 Nano.WebService = function (options)
 {
@@ -134,7 +137,7 @@ Nano.WebService.prototype._build_request = function (method_spec)
 
   // We want a copy of the data, so we don't modify the original.
   if (data !== undefined && data !== null)
-    data = JSON.parse(JSON.stringify(data));
+    data = Nano.clone(data);
 
   // The top level request wrapper.
   var wrapper = 

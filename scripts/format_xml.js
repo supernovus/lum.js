@@ -1,6 +1,13 @@
+(function (root, $)
+{
+  "use strict";
+
+  if (root.Nano === undefined)
+    root.Nano = {};
+
 // Based on a script from:
 // http://stackoverflow.com/questions/376373/pretty-printing-xml-with-javascript
-var format_xml = this.format_xml = function (xml) 
+Nano.format_xml = function format_xml (xml) 
 {
   var reg = /(>)(<)(\/*)/g;
   var wsexp = / *(.*) +\n/g;
@@ -62,9 +69,7 @@ var format_xml = this.format_xml = function (xml)
   return formatted;
 };
 
-// A quick jQuery wrapper by me. Expects XML text to be in the field.
-(function ($)
-{ 
+  // A quick jQuery wrapper by me. Expects XML text to be in the field.
   $.fn.formatXML = function ()
   { 
     return this.each(function ()
@@ -87,5 +92,6 @@ var format_xml = this.format_xml = function (xml)
         $this.text(newval);
     });
   };
-})(jQuery);
+
+})(window, jQuery);
 

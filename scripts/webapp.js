@@ -1,6 +1,9 @@
 /**
  * A new web app core using Riot.js and jQuery as the core foundations.
  *
+ * This requires coreutils.js to initialize the namespace and add core
+ * utilities.
+ *
  * This replaces App.js in all capacities.
  */
 
@@ -8,11 +11,11 @@
 { 
   "use strict";
 
-  /** 
-   * Set up the Nano namespace.
-   */
   if (root.Nano === undefined)
-    root.Nano = {};
+  {
+    console.log("fatal error: missing Nano global namespace");
+    return;
+  }
 
   /**
    * Promise interface, from Riot.js example app.
@@ -62,49 +65,6 @@
     });
 
     return app;
-  }
-
-  /**
-   * Extend function. 
-   */
-  Nano.extend = function (base, sub, methods)
-  {
-    sub.prototype = Object.create(base.prototype);
-    if (methods)
-    {
-      for (var name in methods)
-      {
-        sub.prototype[name] = methods[name];
-      }
-    }
-    return sub;
-  }
-
-  /**
-   * Add a "magical" function to a JS object.
-   * These functions are marked as indomitable, do not affect
-   * enumeration, and are ignored by JSON.
-   */
-  Nano.addProperty = function (object, pname, pfunc, opts)
-  {
-    if (opts === undefined || opts === null)
-      opts = {};
-    var props =
-    {
-      value:         pfunc,
-      enumerable:    'enumerable'   in opts ? opts.enumerable   : false,
-      configurable:  'configurable' in opts ? opts.configurable : false,
-      writable:      'writable'     in opts ? opts.writable     : false,
-    }; 
-    Object.defineProperty(object, pname, props);
-  }
-
-  /**
-   * Clone a simple object, using a simple JSON chain.
-   */
-  Nano.clone = function clone (object)
-  {
-    return JSON.parse(JSON.stringify(object));
   }
 
   /**
@@ -282,12 +242,12 @@
         });
 
         // Add a special "json" function. This requires the
-        // format_json library.
+        // format_json library to have been loaded.
         Nano.addProperty(jsondata, 'json', function (format)
         {
           var json = JSON.stringify(this);
           if (format)
-            return format_json(json);
+            return Nano.format_json(json);
           else
             return json;
         });

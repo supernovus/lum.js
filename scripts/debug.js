@@ -9,7 +9,10 @@
   "use strict";
 
   if (root.Nano === undefined)
-    root.Nano = {};
+  {
+    console.log("fatal error: missing Nano global namespace");
+    return;
+  }
 
   Nano.debug = {};
 
@@ -94,5 +97,5 @@
     $(elname).on('click', handler);
   }
 
-})(window, $);
+})(window, jQuery);
 

@@ -2,40 +2,60 @@
  * Cross platform, fast versions of indexOf and contains.
  */
 
-if (window.Nano === undefined)
+(function (root)
 {
-  window.Nano = {};
-}
+  "use strict";
 
-Nano.array = {};
+  if (root.Nano === undefined)
+    root.Nano = {};
 
-Nano.array.indexOf = function (array, value)
-{
-  var index  = -1,
-      length = array.length;
+  Nano.array = {};
 
-  while (++index < length)
+  Nano.array.indexOf = function (array, value)
   {
-    if (array[index] === value)
+    var index  = -1,
+        length = array.length;
+
+    while (++index < length)
     {
-      return index;
+      if (array[index] === value)
+      {
+        return index;
+      }
     }
+    return -1;
   }
-  return -1;
-}
 
-Nano.array.contains = function (array, value)
-{
-  var index  = -1,
-      length = array.length;
-
-  while (++index < length)
+  Nano.array.contains = function (array, value)
   {
-    if (array[index] === value)
+    var index  = -1,
+        length = array.length;
+
+    while (++index < length)
     {
-      return true;
+      if (array[index] === value)
+      {
+        return true;
+      }
     }
+    return false;
   }
-  return false;
-}
+
+  Nano.array.powerset = function (ary) 
+  {
+    var ps = new Array(new Array());
+    for (var i=0; i < ary.length; i++) 
+    {
+      // we modify the ps array in the next loop,
+      // so can't use the ps.length property directly in the loop condition.
+      var current_length = ps.length;
+      for (var j = 0; j < current_length; j++) 
+      {
+        ps.push(ps[j].concat(ary[i]));
+      }
+    }
+    return ps;
+  }
+
+})(window);
 

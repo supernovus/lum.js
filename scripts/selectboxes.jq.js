@@ -16,7 +16,7 @@
  *
  */
  
-;(function($) {
+(function($) {
  
 /**
  * Adds (single/multiple) options to a select box (or series of select boxes)

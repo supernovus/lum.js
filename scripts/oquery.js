@@ -1,12 +1,32 @@
 /**
- * oQuery, searches for objects within an array matching certain
- * property values. This is the new API, which takes named options.
+ * oQuery: a way of searching through an array of objects for objects
+ * matching certain property values.
+ */
+
+(function (root)
+{
+  "use strict";
+
+  if (root.Nano === undefined)
+    root.Nano = {};
+
+/**
+ * Search through an array of objects.
+ *
+ * @param Mixed  query      Either an array of property values, or a string.
+ * @param Array  objarray   An Array of Objects to search through.
+ * @param Object opts       Options to change return values:
  *
  *  single   if true, we return the first matching object.
  *  index    if true, we return the index position in the array.
  *
+ * If the query parameter is a string, then single will be forced on, and
+ * we will search for a property called 'id' with that value.
+ *
+ * @return Mixed    Either an array of matches, or a single matching object.
+ *                  If single was true, and nothing matched, we return null.
  */
-var oQuery = function (query, objarr, opts)
+var oq = Nano.oQuery = function (query, objarr, opts)
 {
 //  console.log("we're in oQuery()");
 
@@ -77,17 +97,9 @@ var oQuery = function (query, objarr, opts)
 }
 
 /**
- * Compatibility wrapper for the older API.
- */
-oQuery.find = function (query, objarray, single, returnindex)
-{
-  return oQuery(query, objarray, {single: single, index: returnindex});
-}
-
-/**
  * Get a single object from a container.
  */
-oQuery.get = function (query, objarray)
+oq.get = function (query, objarray)
 {
   return oQuery(query, objarray, {single: true});
 }
@@ -95,7 +107,7 @@ oQuery.get = function (query, objarray)
 /**
  * Get the index of a single object in a container.
  */
-oQuery.pos = function (query, objarray)
+oq.pos = function (query, objarray)
 {
   return oQuery(query, objarray, {single: true, index: true});
 }
@@ -103,8 +115,10 @@ oQuery.pos = function (query, objarray)
 /**
  * Get the index of multiple objects in a container.
  */
-oQuery.indexes = function (query, objarray)
+oq.indexes = function (query, objarray)
 {
   return oQuery(query, objarray, {index: true});
 }
+
+})(window);
 

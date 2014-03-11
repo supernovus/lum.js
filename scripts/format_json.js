@@ -1,52 +1,61 @@
-// Based on http://ketanjetty.com/coldfusion/javascript/format-json/
-function format_json (val)
-{ 
-  var retval = '';
-  var str = val;
-  var pos = 0;
-  var strLen = str.length;
-  var indentStr = '  ';
-  var newLine = "\n";
-  var curchar = '';
+/**
+ * A function and jQuery wrapper for formatting JSON text in a friendly way.
+ */
 
-  for (var i=0; i<strLen; i++)
-  { 
-    curchar = str.substring(i, i+1);
-
-    if (curchar == '}' || curchar == ']')
-    { 
-      retval = retval + newLine;
-      pos = pos - 1;
-
-      for (var j=0; j<pos; j++)
-      { 
-        retval = retval + indentStr;
-      }
-    }
-
-    retval = retval + curchar;
-
-    if (curchar == '{' || curchar == '[' || curchar == ',')
-    { 
-      retval = retval + newLine;
-
-      if (curchar == '{' || curchar == '[')
-      { 
-        pos = pos + 1;
-      }
-
-      for (var k=0; k<pos; k++)
-      { 
-        retval = retval + indentStr;
-      }
-    }
-  }
-  return retval;
-}
-
-// A quick jQuery wrapper by me. Expects JSON text to be in the field.
-(function ($)
+(function (root, $)
 {
+  "use strict";
+
+  if (root.Nano === undefined)
+    root.Nano = {};
+
+  // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
+  Nano.format_json = function format_json (val)
+  { 
+    var retval = '';
+    var str = val;
+    var pos = 0;
+    var strLen = str.length;
+    var indentStr = '  ';
+    var newLine = "\n";
+    var curchar = '';
+
+    for (var i=0; i<strLen; i++)
+    { 
+      curchar = str.substring(i, i+1);
+
+      if (curchar == '}' || curchar == ']')
+      { 
+        retval = retval + newLine;
+        pos = pos - 1;
+
+        for (var j=0; j<pos; j++)
+        { 
+          retval = retval + indentStr;
+        }
+      }
+
+      retval = retval + curchar;
+
+      if (curchar == '{' || curchar == '[' || curchar == ',')
+      { 
+        retval = retval + newLine;
+
+        if (curchar == '{' || curchar == '[')
+        { 
+          pos = pos + 1;
+        }
+
+        for (var k=0; k<pos; k++)
+        { 
+          retval = retval + indentStr;
+        }
+      }
+    }
+    return retval;
+  }
+
+  // A quick jQuery wrapper by me. Expects JSON text to be in the field.
   $.fn.formatJSON = function ()
   {
     return this.each(function ()
@@ -69,5 +78,6 @@ function format_json (val)
         $this.text(newval);
     });
   };
-})(jQuery);
+
+})(window, jQuery);
 
