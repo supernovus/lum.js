@@ -37,17 +37,19 @@ var oq = Nano.oQuery = function (query, objarr, opts)
     opts = {};
   }
 
-  if (typeof query != 'object')
+  var qtype = typeof query;
+  if (qtype === 'string')
   {
+    query = { id: query };
+    opts.single = true;
+  }
+  else if (qtype !== 'object')
+  {
+    console.log("Invalid query passed to oQuery()");
     if (opts.single === true)
-    { // The query will be matched against the 'id' property.
-      query = { id: query };
-    }
+      return null;
     else
-    {
-      console.log("Invalid query passed to oQuery()");
       return matched;
-    }
   }
 
   for (var i in objarr)
