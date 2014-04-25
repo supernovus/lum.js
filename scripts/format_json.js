@@ -70,7 +70,7 @@
       else
         return; // We currently only support <textarea/> and <pre/>.
 
-      var newval = format_json(oldval);
+      var newval = Nano.format_json(oldval);
 
       if (mytype == "textarea")
         $this.val(newval);
