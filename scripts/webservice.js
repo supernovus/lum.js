@@ -31,8 +31,12 @@ Nano.WebService = function (options)
   // If the autoType is true, we determime the encoding method and MIME
   // type based on the data type. If it is false, we use jQuery's built in
   // request encoder, which works with PHP and a few other bindings.
+  // If autoGet is true (new default) then if the request type is GET, we
+  // force the use of the jQuery request encoder instead of the one used for
+  // PUT, POST, etc.
   this._data_type = options.dataType ? options.dataType : 'json';
   this._auto_type = (options.autoType !== undefined) ? options.autoType : true;
+  this._auto_get  = (options.autoGet  !== undefined) ? options.autoGet  : true;
 
   /**
    * The default HTTP methods.
@@ -102,7 +106,7 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
           def:  this._methods[method_handler],
           path: method_path,
         };
-        this._send_request(mspec);
+        return this._send_request(mspec);
       }
     }
   }
@@ -117,7 +121,7 @@ Nano.WebService.prototype._addHandler = function (method_name, method_handler)
         def:  method_handler,
         path: method_path,
       };
-      this._send_request(mspec);
+      return this._send_request(mspec);
     }
   }
 }
@@ -261,22 +265,31 @@ Nano.WebService.prototype._build_request = function (method_spec)
   // Build the request data.
   if (this._auto_type === true && data)
   { // We're encoding data in the desired format.
-    var request_data = null;
-    var build_data = "_build_" + this._data_type + "_request_data";
-    if (build_data in this && typeof this[build_data] === "function")
-    {
-      request_data = this[build_data](data, wrapper);
+    if (this._auto_get === true && request.type == 'GET')
+    { // Use the jQuery request data format.
+      request.data = data;
     }
     else
-    {
-      console.log("build_request> unknown data type, ignoring.");
-    }
+    { // Auto-content generation.
+      var noEmpty = (request.type == 'GET' || request.type == 'DELETE')
+        ? true : false;
+      var request_data = null;
+      var build_data = "_build_" + this._data_type + "_request_data";
+      if (build_data in this && typeof this[build_data] === "function")
+      {
+        request_data = this[build_data](data, wrapper, noEmpty);
+      }
+      else
+      {
+        console.log("build_request> unknown data type, ignoring.");
+      }
 
-    // Set the request MIME type.
-    if (request_data)
-    {
-      request.data        = request_data;
-      request.contentType = this._mime_types[this._data_type];
+      // Set the request MIME type.
+      if (request_data)
+      {
+        request.data        = request_data;
+        request.contentType = this._mime_types[this._data_type];
+      }
     }
   }
   else if (data)
@@ -290,9 +303,18 @@ Nano.WebService.prototype._build_request = function (method_spec)
 /**
  * Build the request data in "JSON" format.
  */
-Nano.WebService.prototype._build_json_request_data = function (data, wrapper)
+Nano.WebService.prototype._build_json_request_data = 
+function (data, wrapper, noEmpty)
 {
-  return JSON.stringify(data);
+  var data = JSON.stringify(data);
+  if (noEmpty)
+  {
+    if (data == '{}' || data == '[]' || data == 'null')
+    {
+      return null;
+    }
+  }
+  return data;
 }
 
 /**
