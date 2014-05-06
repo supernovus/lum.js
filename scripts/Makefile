@@ -21,7 +21,7 @@ BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.dist.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
-MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.js modernizr.js sprintf.js
+MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.js modernizr.js sprintf.js bowser.dist.js
 
 ## Listings for the minify_all and compile_all targets.
 ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.min.js/g')
@@ -40,6 +40,7 @@ YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
 RIOT_URL=https://raw.github.com/moot/riotjs/master/riot.min.js
 MODERNIZR_URL=http://modernizr.com/downloads/modernizr-latest.js
 SPRINTF_URL=https://raw.github.com/alexei/sprintf.js/master/src/sprintf.js
+BOWSER_URL=https://raw.githubusercontent.com/ded/bowser/master/bowser.min.js
 
 ## Download all of our prerequisites.
 bootstrap: $(BOOT_DEPENDS)
@@ -90,6 +91,10 @@ sprintf.js:
 ## Download Riot, a MVP framework.
 riot.dist.js:
 	wget -O $@ $(RIOT_URL)
+
+## Download bowser, a browser detection library.
+bowser.dist.js:
+	wget -O $@ $(BOWSER_URL)
 
 ## Download Closure Compiler. Requires 'unzip'.
 compiler.jar:
