@@ -20,7 +20,7 @@
   /**
    * Promise interface, from Riot.js example app.
    */
-  Nano.Promise = function Promise (fn)
+  Nano.Promise = function (fn)
   {
     var self = riot.observable(this);
     $.map(['done', 'fail', 'always'], function(name) 
@@ -193,71 +193,96 @@
    *
    * This is not usually called directly, but invoked either by the
    * constructor, or the addSource() method.
+   *
+   * This is now a stub function, that extracts the source type, and
+   * looks for a _load_{type}_model() function, and calls it.
    */
   Nano.ModelAPI.prototype._loadModel = function (name, source)
   {
     var type = source.type;
 
-    if (type == 'ws')
-    { // Web service, requires a webservice library to be loaded.
-      var opts = source.opts;
-      this.onDebug('loadModel', '-- Loading web service', name, opts);
-      var wsclass = 'class' in opts ? opts.class : Nano.WebService;
-      if (name in this.debugging)
-      {
-        opts.debug = this.debugging[name];
-      }
-      this.model[name] = new wsclass(opts);
+    var loader = '_load_'+type+'_model';
+
+    if (typeof this[loader] === 'function')
+    {
+      this[loader](name, source);
     }
 
-    else if (type == 'json')
-    { // Requires the json.jq and exists.jq jQuery extensions.
-      var elname;
-      if ('element' in source)
-        elname = source.element;
-      else
-        elname = '#' + name;
+  }
 
-      var element = $(elname);
-      if (element.exists())
+  /**
+   * Load a Web Service model.
+   * Requires the 'webservice' library to be loaded.
+   */
+  Nano.ModelAPI.prototype._load_ws_model = function (name, source)
+  {
+    var opts = source.opts;
+    this.onDebug('loadModel', '-- Loading web service', name, opts);
+    var wsclass = 'class' in opts ? opts.class : Nano.WebService;
+    if (name in this.debugging)
+    {
+      opts.debug = this.debugging[name];
+    }
+    this.model[name] = new wsclass(opts);
+  }
+
+  /**
+   * Load a JSON data structure from a hidden element.
+   *
+   * We will add some magical methods to the object, including a save()
+   * function that will save any changes back to the hidden element.
+   *
+   * Requires the json.jq and exists.jq jQuery extensions.
+   */
+  Nano.ModelAPI.prototype._load_json_model = function (name, source)
+  {
+    var elname;
+    if ('element' in source)
+      elname = source.element;
+    else
+      elname = '#' + name;
+
+    var element = $(elname);
+    if (element.exists())
+    {
+      this.onDebug('loadModel', '-- Loading JSON', name, elname);
+      var jsondata = element.JSON();
+      var save_changes = false;
+      if (source.enforceObject === true)
       {
-        this.onDebug('loadModel', '-- Loading JSON', name, elname);
-        var jsondata = this.model[name] = element.JSON();
-        var save_changes = false;
-        if (source.enforceObject === true)
+        if ($.isArray(jsondata) || jsondata.length == 0)
         {
-          if ($.isArray(jsondata) || jsondata.length == 0)
-          {
-            jsondata = {};
-            save_changes = true;
-          }
+          jsondata = {};
+          save_changes = true;
         }
+      }
 
-        // Add a special "save" function.
-        Nano.addProperty(jsondata, 'save', function (target)
-        {
-          if (!target)
-            target = elname;
-          $(target).JSON(this);
-        });
+      // Add a special "save" function.
+      Nano.addProperty(jsondata, 'save', function (target)
+      {
+        if (!target)
+          target = elname;
+        $(target).JSON(this);
+      });
 
-        // Add a special "json" function. This requires the
-        // format_json library to have been loaded.
-        Nano.addProperty(jsondata, 'json', function (format)
-        {
-          var json = JSON.stringify(this);
-          if (format)
-            return Nano.format_json(json);
-          else
-            return json;
-        });
+      // Add a special "json" function. This requires the
+      // format_json library to have been loaded.
+      Nano.addProperty(jsondata, 'json', function (format)
+      {
+        var json = JSON.stringify(this);
+        if (format)
+          return Nano.format_json(json);
+        else
+          return json;
+      });
 
-        // We changed something, time to save.
-        if (save_changes)
-          jsondata.save();
+      // We changed something, time to save.
+      if (save_changes)
+        jsondata.save();
 
-      } // if element exists
-    } // if type == json
+      // Assign it to our model structure.
+      this.model[name] = jsondata;
+    } // if element exists
   }
 
 })(
