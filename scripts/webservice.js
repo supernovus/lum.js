@@ -9,7 +9,7 @@
  * Requires jQuery, JSON and the coreutils library.
  */
 
-(function (root, $) // Set here, but we're not indenting.
+(function (root, $, document) // Set here, but we're not indenting.
 { 
   
 "use strict";
@@ -25,7 +25,11 @@ Nano.WebService = function (options)
   if (options === undefined)
     options = {};
 
-  this._base_url  = options.url;     // Specify the base URL.
+  this._base_url = options.url;     // Specify the base URL.
+  if (this._base_url === true)
+  { // We'll use the current URL as a base for the rest.
+    this._base_url = document.URL;
+  }
 
   // The data type and mime type are determined by the following options.
   // If the autoType is true, we determime the encoding method and MIME
@@ -387,5 +391,5 @@ Nano.WebService.prototype._send_request = function (method_spec)
   return response;
 }
 
-})(window, jQuery); // End of class.
+})(window, jQuery, document); // End of class.
 
