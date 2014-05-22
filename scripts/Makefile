@@ -17,7 +17,7 @@
 
 ## Bootstrap stuff.
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.dist.js
+BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.dist.js riot.min.js.map
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
@@ -37,7 +37,8 @@ LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://closure-compiler.googlecode.com/files/compiler-latest.zip
 MOMENT_URL = http://momentjs.com/downloads/moment.min.js
 YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
-RIOT_URL=https://raw.github.com/moot/riotjs/master/riot.min.js
+RIOT_URL=https://raw.github.com/muut/riotjs/master/riot.min.js
+RIOT_MAP_URL=https://raw.github.com/muut/riotjs/master/riot.min.js.map
 MODERNIZR_URL=http://modernizr.com/downloads/modernizr-latest.js
 SPRINTF_URL=https://raw.github.com/alexei/sprintf.js/master/src/sprintf.js
 BOWSER_URL=https://raw.githubusercontent.com/ded/bowser/master/bowser.min.js
@@ -92,6 +93,10 @@ sprintf.js:
 riot.dist.js:
 	wget -O $@ $(RIOT_URL)
 
+## Download the map file for Riot.
+riot.min.js.map:
+	wget -O $@ $(RIOT_MAP_URL)
+
 ## Download bowser, a browser detection library.
 bowser.dist.js:
 	wget -O $@ $(BOWSER_URL)
@@ -127,6 +132,7 @@ distclean: clean
 	rm -fv compiler.jar
 	rm -fv jsmin*
 	rm -fv *.dist.js
+	rm -fv *.map
 	rm -fv modernizr.js
 	rm -fv yepnope.js
 

@@ -6,6 +6,7 @@ scripts/*.dist.js
 scripts/*.min.js
 scripts/*.cc.js
 scripts/*.ug.js
+scripts/*.map
 scripts/modernizr.js
 scripts/yepnope.js
 scripts/sprintf.js
