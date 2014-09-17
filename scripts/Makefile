@@ -1,5 +1,5 @@
 .PHONY: DEFAULT clean distclean bootstrap minify_all compile_all
-.DEFAULT: bootstrap
+.DEFAULT: help
 
 ###############################################################################
 ###
@@ -42,6 +42,10 @@ RIOT_MAP_URL=https://raw.github.com/muut/riotjs/master/riot.min.js.map
 MODERNIZR_URL=http://modernizr.com/downloads/modernizr-latest.js
 SPRINTF_URL=https://raw.github.com/alexei/sprintf.js/master/src/sprintf.js
 BOWSER_URL=https://raw.githubusercontent.com/ded/bowser/master/bowser.min.js
+
+## Show the makefile in all its glory.
+help:
+	less Makefile
 
 ## Download all of our prerequisites.
 bootstrap: $(BOOT_DEPENDS)
