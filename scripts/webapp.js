@@ -321,7 +321,7 @@
     }
 
     // Create our Nano.webApp instance.
-    this.webApp = Nano.webApp(API);
+    this.webApp = Nano.webApp(this.API);
   }
 
   Nano.WebApp.prototype.addAPI = function (name, func)
