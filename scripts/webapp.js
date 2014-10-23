@@ -285,6 +285,67 @@
     } // if element exists
   }
 
+  /**
+   * An optional wrapper around the webApp and ModelAPI classes.
+   * Note, this is WebApp, not webApp, and is meant as an object instance,
+   * not a method call.
+   *
+   * Usage:
+   *
+   *   var app = new Nano.WebApp();
+   *   app.addAPI('method_name', function () { // do something in the API });
+   *   app.listen(function (api) { // do something in the App });
+   *   app.start();
+   *
+   */
+  Nano.WebApp = function (appConf)
+  { // Our global configuration.
+    if (appConf === undefined)
+      appConf = {};
+    this.appConf = appConf;
+
+    // Get the API base class, if not specified, use Nano.ModelAPI
+    var apiClass = 'apiClass' in appConf ? appConf.apiClass : Nano.ModelAPI;
+
+    // Create our API class. This is the class object, not the instance.
+    this.API = function (apiConf)
+    {
+      apiClass.call(this, apiConf);
+    }
+    Nano.extend(apiClass, this.API);
+
+    // A short cut to starting the application.
+    this.API.prototype.start = function ()
+    {
+      this.trigger("ready");
+    }
+
+    // Create our Nano.webApp instance.
+    this.webApp = Nano.webApp(API);
+  }
+
+  Nano.WebApp.prototype.addAPI = function (name, func)
+  {
+    this.API.prototype[name] = func;
+  }
+
+  Nano.WebApp.prototype.listen = function (func)
+  {
+    if ($.isFunction(func))
+    {
+      this.webApp(func);
+    }
+    else
+    {
+      console.log("warning: only functions should be passed to listen()");
+    }
+  }
+
+  Nano.WebApp.prototype.start = function ()
+  {
+    this.webApp(this.appConf).start();
+  }
+
 })(
 window,                          // Top level window object.
 jQuery,                          // jQuery must exist with its full name.
