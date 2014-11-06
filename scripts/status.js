@@ -32,6 +32,8 @@
         ? options.uiElement
         : '#alerts';
 
+    this.onShow = options.onShow;
+
     var default_symbols = {"error":"!", "warning":"?", "message":"*"};
   
     this.symbols = options.symbols !== undefined
@@ -45,6 +47,10 @@
       + '<span class="'+type+'">'+this.symbols[type]+'</span>'
       + '<span class="statusmessage">'+message+'</span>'
       + '</div>';
+    if (this.onShow !== undefined && this.onShow !== null)
+    {
+      this.onShow(type, message, tag);
+    }
     $(this.alerts).show().append(html);
   }
   
