@@ -203,6 +203,8 @@
 
     var loader = '_load_'+type+'_model';
 
+    this.onDebug('loadModel', ' -- Calling', loader);
+
     if (typeof this[loader] === 'function')
     {
       this[loader](name, source);
