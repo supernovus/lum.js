@@ -173,7 +173,7 @@ riot.control.js:
 ## Unlike the other two, we don't install uglify for you.
 ## Use 'npm install -g uglify-js' to install it.
 %.ug.js : %.js
-	uglifyjs $< -o $@
+	uglifyjs $< -m -o $@
 
 ## Remove all .min.js and .cc.js files.
 clean:
