@@ -1,4 +1,5 @@
-(function(riot)
+
+;(function(riot)
 {
   "use strict";
 
