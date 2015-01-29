@@ -17,7 +17,7 @@
 
 ## Bootstrap stuff.
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.dist.js riot.min.js.map
+BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.full.js riot.stub.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
@@ -37,11 +37,20 @@ LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://dl.google.com/closure-compiler/compiler-latest.zip 
 MOMENT_URL = http://momentjs.com/downloads/moment.min.js
 YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
-RIOT_URL=https://github.com/muut/riotjs/blob/30f1dc8c8f216b2784dd332823716a888841325c/riot.min.js
-RIOT_MAP_URL=https://raw.github.com/muut/riotjs/master/riot.min.js.map
 MODERNIZR_URL=http://modernizr.com/downloads/modernizr-latest.js
 SPRINTF_URL=https://raw.github.com/alexei/sprintf.js/master/src/sprintf.js
 BOWSER_URL=https://raw.githubusercontent.com/ded/bowser/master/bowser.min.js
+
+## riot.js specific files
+RIOT_URL=https://raw.githubusercontent.com/muut/riotjs/master/
+RIOT_PKG_FILE=package.json
+RIOT_PREFIX=make/prefix.js
+RIOT_SUFFIX=make/suffix.js
+RIOT_COMPILER=lib/compiler.js
+RIOT_OBSERVABLE=lib/observable.js
+RIOT_ROUTER=lib/router.js
+RIOT_TMPL=lib/tmpl.js
+RIOT_VIEW=lib/view.js
 
 ## Show the makefile in all its glory.
 help:
@@ -93,14 +102,6 @@ modernizr.js:
 sprintf.js:
 	wget -O $@ $(SPRINTF_URL)
 
-## Download Riot, a MVP framework.
-riot.dist.js:
-	wget -O $@ $(RIOT_URL)
-
-## Download the map file for Riot.
-riot.min.js.map:
-	wget -O $@ $(RIOT_MAP_URL)
-
 ## Download bowser, a browser detection library.
 bowser.dist.js:
 	wget -O $@ $(BOWSER_URL)
@@ -110,6 +111,50 @@ compiler.jar:
 	wget $(CC_URL)
 	unzip compiler-latest.zip compiler.jar
 	rm compiler-latest.zip
+
+## riot.js components, requires node.js
+
+## a full riot bundle, including compiler and 1.x style render() plugin.
+riot.full.js: riot.default.js riot.compiler.js riot.render.js
+	cat riot.default.js riot.compiler.js riot.render.js > $@
+
+## default riot.js as per the distribution.
+riot.default.js: riot.prefix.inc riot.suffix.inc riot.observable.js riot.router.js riot.tmpl.js riot.view.js
+	cat riot.prefix.inc riot.observable.js riot.router.js riot.tmpl.js riot.view.js riot.suffix.inc > $@
+
+## a stub for using riot components individually.
+riot.stub.js: riot.prefix.inc riot.suffix.inc
+	cat riot.prefix.inc riot.suffix.inc > $@
+
+## the riot prefix file.
+riot.prefix.inc:
+	wget -O $@ $(RIOT_URL)$(RIOT_PREFIX)
+	wget -O riot_package.json $(RIOT_URL)$(RIOT_PKG_FILE)
+	./build_riot_prefix.sh
+
+## the riot suffix file
+riot.suffix.inc:
+	wget -O $@ $(RIOT_URL)$(RIOT_SUFFIX)
+
+## the riot tag compiler (for use with custom tag engine)
+riot.compiler.js:
+	wget -O $@ $(RIOT_URL)$(RIOT_COMPILER)
+
+## the riot observable library
+riot.observable.js:
+	wget -O $@ $(RIOT_URL)$(RIOT_OBSERVABLE)
+
+## the riot router library
+riot.router.js:
+	wget -O $@ $(RIOT_URL)$(RIOT_ROUTER)
+
+## the riot 2.0 template engine
+riot.tmpl.js:
+	wget -O $@ $(RIOT_URL)$(RIOT_TMPL)
+
+## the riot 2.0 custom tag engine (requires template engine)
+riot.view.js:
+	wget -O $@ $(RIOT_URL)$(RIOT_VIEW)
 
 ## Build a minified script using jsmin.
 %.min.js : %.js jsmin
@@ -139,6 +184,9 @@ distclean: clean
 	rm -fv *.map
 	rm -fv modernizr.js
 	rm -fv yepnope.js
+	rm -fv riot.*.inc riot.full.js riot.default.js riot.stub.js
+	rm -fv riot.compiler.js riot.observable.js riot.router.js 
+	rm -fv riot.tmpl.js riot.view.js
 
 ## Build .min files for all scripts.
 minify_all: $(ALL_MIN)

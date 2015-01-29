@@ -10,3 +10,7 @@ scripts/*.map
 scripts/modernizr.js
 scripts/yepnope.js
 scripts/sprintf.js
+scripts/riot.*.inc
+scripts/riot.*.js
+scripts/riot_package.json
+
