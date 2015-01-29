@@ -33,7 +33,8 @@
   }
 
   /**
-   * A factory function to build your own modular applications.
+   * A factory function to build riot 1.x style modular applications.
+   *
    * Pass it the API class object (not an instance!)
    * Assign the returned value to a root level name for use everywhere.
    */
@@ -96,15 +97,93 @@
     self.debugging = 'debug' in conf ? conf.debug : {};
 
     /**
-     * We can specify multiple model data sources and backend services.
+     * See if we have debugging in the hash.
      */
+    if (location.hash === '#debug')
+    { // Enable all debugging.
+      self.debugging['*'] = true;
+    }
+
+    /**
+     * TODO: query string debugging, more flexible than #hash style.
+     */
+
+    /**
+     * Stuff to do before loading our sources.
+     */
+    self.pre_init(conf);
+    
+    /**
+     * Load our sources, and other such features.
+     */
+    self.init(conf);
+
+    /**
+     * Stuff to do after loading our sources.
+     */
+    self.post_init(conf);
+
+  } // end ModelAPI
+
+  /**
+   * Call an initialization method, but only once.
+   */
+  Nano.ModelAPI.prototype.need = function (group, func, conf)
+  {
+    if (group._inittab && group._inittab[func]) return; // Already called.
+    if (group[func] === undefined)              return; // Invalid function.
+    group[func].call(this, conf);                       // Call it.
+    if (group._inittab === undefined) 
+      group._inittab = {};
+    group._inittab[func] = true;                        // Mark it as called.
+  }
+
+  /**
+   * Call an entire group of initialization methods.
+   */
+  Nano.ModelAPI.prototype._init = function (initgroup, conf)
+  {
+    for (var initfunc in this[initgroup])
+    {
+      if (initfunc === '_inittab' || initfunc === 'prototype') continue;
+
+      this.need(this[initgroup], initfunc, conf);
+    }
+  }
+
+  // predefined init groups.
+
+  Nano.ModelAPI.prototype.pre_init = function (conf)
+  {
+    this._init('pre_init', conf);
+  }
+
+  Nano.ModelAPI.prototype.init = function (conf)
+  {
+    this._init('init', conf);
+  }
+
+  Nano.ModelAPI.prototype.post_init = function (conf)
+  {
+    this._init('post_init', conf);
+  }
+
+  /**
+   * Load a bunch of models at once.
+   */
+  Nano.ModelAPI.prototype.init.loadSources = function (conf)
+  {
+    if (conf.sources === undefined || conf.sources === null)
+    {
+      return;
+    }
+
     for (var name in conf.sources)
     {
       var source = conf.sources[name];
-      self._loadModel(name, source);
+      this._loadModel(name, source);
     } // for (sources)
-
-  } // end ModelAPI
+  }
 
   /**
    * Check to see if debugging is enabled on a certain tag.
@@ -288,33 +367,43 @@
   }
 
   /**
+   * A quick method to get an empty API class, ready to be populated.
+   */
+  Nano.makeAPI = function (apiClass)
+  {
+    if (apiClass === undefined || apiClass === null)
+      apiClass = Nano.ModelAPI;
+
+    var API = function (apiConf)
+    {
+      apiClass.call(this, apiConf);
+    }
+    Nano.extend(apiClass, API);
+
+    return API;
+  }
+
+  /**
    * An optional wrapper around the webApp and ModelAPI classes.
-   * Note, this is WebApp, not webApp, and is meant as an object instance,
-   * not a method call.
    *
    * Usage:
    *
-   *   var app = new Nano.WebApp();
+   *   var app = new Nano.EasyWebApp();
    *   app.addAPI('method_name', function () { // do something in the API });
    *   app.listen(function (api) { // do something in the App });
    *   app.start();
    *
    */
-  Nano.WebApp = function (appConf)
+  Nano.EasyWebApp = function (appConf)
   { // Our global configuration.
     if (appConf === undefined)
       appConf = {};
+
+    // Save the appConf for later reference.
     this.appConf = appConf;
 
-    // Get the API base class, if not specified, use Nano.ModelAPI
-    var apiClass = 'apiClass' in appConf ? appConf.apiClass : Nano.ModelAPI;
-
     // Create our API class. This is the class object, not the instance.
-    this.API = function (apiConf)
-    {
-      apiClass.call(this, apiConf);
-    }
-    Nano.extend(apiClass, this.API);
+    this.API = Nano.makeAPI(appConf.apiClass);
 
     // A short cut to starting the application.
     this.API.prototype.start = function ()
@@ -326,12 +415,12 @@
     this.webApp = Nano.webApp(this.API);
   }
 
-  Nano.WebApp.prototype.addAPI = function (name, func)
+  Nano.EasyWebApp.prototype.addAPI = function (name, func)
   {
     this.API.prototype[name] = func;
   }
 
-  Nano.WebApp.prototype.listen = function (func)
+  Nano.EasyWebApp.prototype.listen = function (func)
   {
     if ($.isFunction(func))
     {
@@ -343,7 +432,7 @@
     }
   }
 
-  Nano.WebApp.prototype.start = function ()
+  Nano.EasyWebApp.prototype.start = function ()
   {
     this.webApp(this.appConf).start();
   }
