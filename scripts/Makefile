@@ -17,11 +17,11 @@
 
 ## Bootstrap stuff.
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.full.js riot.stub.js riot.control.js
+BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.full.js riot.stub.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
-MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.js modernizr.js sprintf.js bowser.dist.js
+MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.js modernizr.js sprintf.js bowser.dist.js riot.control.js uri.dist.js uri.jq.dist.js
 
 ## Listings for the minify_all and compile_all targets.
 ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.min.js/g')
@@ -40,6 +40,8 @@ YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
 MODERNIZR_URL=http://modernizr.com/downloads/modernizr-latest.js
 SPRINTF_URL=https://raw.github.com/alexei/sprintf.js/master/src/sprintf.js
 BOWSER_URL=https://raw.githubusercontent.com/ded/bowser/master/bowser.min.js
+URI_URL=https://raw.githubusercontent.com/medialize/URI.js/gh-pages/src/URI.min.js
+URI_JQ_URL=https://raw.githubusercontent.com/medialize/URI.js/gh-pages/src/jquery.URI.min.js
 
 ## riot.js specific files
 RIOT_URL=https://raw.githubusercontent.com/muut/riotjs/master/
@@ -102,6 +104,14 @@ modernizr.js:
 ## Download sprintf.
 sprintf.js:
 	wget -O $@ $(SPRINTF_URL)
+
+## Download URI.js
+uri.dist.js:
+	wget -O $@ $(URI_URL)
+
+## Download URI jQuery plugin (requires URI)
+uri.jq.dist.js:
+	wget -O $@ $(URI_JQ_URL)
 
 ## Download bowser, a browser detection library.
 bowser.dist.js:
