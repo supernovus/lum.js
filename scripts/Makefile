@@ -17,7 +17,7 @@
 
 ## Bootstrap stuff.
 BOOT_COMPILERS = jsmin compiler.jar
-BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.full.js riot.stub.js
+BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.full.js riot.stub.js riot.control.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
@@ -51,6 +51,7 @@ RIOT_OBSERVABLE=lib/observable.js
 RIOT_ROUTER=lib/router.js
 RIOT_TMPL=lib/tmpl.js
 RIOT_VIEW=lib/view.js
+RIOT_CONTROL_URL=https://raw.githubusercontent.com/jimsparkman/RiotControl/master/riotcontrol.js
 
 ## Show the makefile in all its glory.
 help:
@@ -155,6 +156,10 @@ riot.tmpl.js:
 ## the riot 2.0 custom tag engine (requires template engine)
 riot.view.js:
 	wget -O $@ $(RIOT_URL)$(RIOT_VIEW)
+
+## RiotControl
+riot.control.js:
+	wget -O $@ $(RIOT_CONTROL_URL)
 
 ## Build a minified script using jsmin.
 %.min.js : %.js jsmin
