@@ -48,14 +48,24 @@
 
     event.stopPropagation();
 
-    var offset = loc.offset();
-    menu.css(
+    if (jQuery.ui)
     {
-      display: 'block',
-      top:     offset.top + 10,
-      left:    offset.left - 5,
-    });
-
+      menu.css({display: 'block'}).position(
+      {
+        my: "left-10 top+10",
+        of: loc
+      });
+    }
+    else
+    {
+      var offset = loc.offset();
+      menu.css(
+      {
+        display: 'block',
+        top:     offset.top + 10,
+        left:    offset.left - 5,
+      });
+    }
   };
 
   /**

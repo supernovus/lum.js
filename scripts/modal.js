@@ -131,6 +131,36 @@
     });
   }
 
+  Modal.displayTypes.uiElementCenter = function (content, offset, pos)
+  {
+    if (jQuery.ui)
+    {
+      content.position(
+      {
+        of: pos
+      });
+    }
+    else
+    {
+      return Modal.displayTypes.belowCenter(content, offset);
+    }
+  }
+
+  Modal.displayTypes.uiWindowCenter = function (content, offset, pos)
+  {
+    if (jQuery.ui)
+    {
+      content.position(
+      {
+        of: window
+      });
+    }
+    else
+    {
+      return Modal.displayTypes.abscenter(content, offset);
+    }
+  }
+
 /**
  * Show the dialog, at a specific position relative to a passed element.
  */
@@ -154,7 +184,7 @@
     if (display in Modal.displayTypes)
     {
       content.show();
-      var coords = Modal.displayTypes[display](content, offset);
+      var coords = Modal.displayTypes[display](content, offset, pos);
       if (coords && 'x' in coords && 'y' in coords)
       {
         content.css(
