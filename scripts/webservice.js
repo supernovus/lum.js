@@ -81,6 +81,11 @@ Nano.WebService = function (options)
     }
   }
 
+  if ('reqOptions' in options)
+  {
+    this._request_options = options.reqOptions;
+  }
+
   // A data-type to MIME-type map.
   this._mime_types =
   {
@@ -248,18 +253,35 @@ Nano.WebService.prototype._build_request = function (method_spec)
     console.log("build_request> unsupported method definition.");
   }
 
+  // If we have request_options, added them now.
+  if (this._request_options)
+  {
+    for (var opt in this._request_options)
+    {
+      request[opt] = this._request_options[opt];
+    }
+  }
+
   // Handle additional path information.
   if (path)
   {
     var mtype = typeof path;
-    url = url.replace(/\/+$/, '')
     if (mtype === "string" || mtype === "number")
-    {
+    { // Append to the URL.
+      url = url.replace(/\/+$/, '');
       url += '/' + path;
     }
     else if ($.isArray(path))
-    {
+    { // Append each element to the URL.
+      url = url.replace(/\/+$/, '');
       url += '/' + path.join('/');
+    }
+    else if (mtype === "object")
+    { // Named options to be added directly to the request.
+      for (var opt in path)
+      {
+        request[opt] = path[opt];
+      }
     }
   }
 
