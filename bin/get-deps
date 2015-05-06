@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+var sources = require('conf/sources.json');
+var exec = require('child_process').exec;
+
+for (var sfile in sources)
+{
+  var source = sources[s];
+
+}
+
