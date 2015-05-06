@@ -21,7 +21,7 @@ BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.full.js riot.stub.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
-MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js yepnope.js modernizr.js sprintf.js bowser.dist.js riot.control.js uri.dist.js uri.jq.dist.js
+MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js modernizr.js sprintf.js bowser.dist.js riot.control.js uri.dist.js uri.jq.dist.js
 
 ## Listings for the minify_all and compile_all targets.
 ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.min.js/g')
@@ -36,7 +36,6 @@ UNDERSCORE_URL = http://documentcloud.github.com/underscore/underscore-min.js
 LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://dl.google.com/closure-compiler/compiler-latest.zip 
 MOMENT_URL = http://momentjs.com/downloads/moment.min.js
-YEPNOPE_URL = https://raw.github.com/SlexAxton/yepnope.js/master/yepnope.js
 MODERNIZR_URL=http://modernizr.com/downloads/modernizr-latest.js
 SPRINTF_URL=https://raw.github.com/alexei/sprintf.js/master/src/sprintf.js
 BOWSER_URL=https://raw.githubusercontent.com/ded/bowser/master/bowser.min.js
@@ -92,10 +91,6 @@ less.dist.js:
 ## Download Moment, a datetime parsing/formatting library.
 moment.dist.js:
 	wget -O $@ $(MOMENT_URL)
-
-## Download YepNope, a dependency manager.
-yepnope.js:
-	wget -O $@ $(YEPNOPE_URL)
 
 ## Download Modernizr, a feature testing library.
 modernizr.js:
@@ -198,7 +193,6 @@ distclean: clean
 	rm -fv *.dist.js
 	rm -fv *.map
 	rm -fv modernizr.js
-	rm -fv yepnope.js
 	rm -fv riot.*.inc riot.full.js riot.default.js riot.stub.js
 	rm -fv riot.compiler.js riot.observable.js riot.router.js 
 	rm -fv riot.tmpl.js riot.view.js
