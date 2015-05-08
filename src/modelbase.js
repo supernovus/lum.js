@@ -198,7 +198,7 @@ export default class ModelBase
    * Load a Web Service model.
    * Requires the 'webservice' library to be loaded.
    */
-  Nano.ModelAPI.prototype._load_ws_model = function (name, source)
+  _load_ws_model = function (name, source)
   {
     var opts = source.opts;
     this.onDebug('loadModel', '-- Loading web service', name, opts);
@@ -218,7 +218,7 @@ export default class ModelBase
    *
    * Requires the json.jq and exists.jq jQuery extensions.
    */
-  Nano.ModelAPI.prototype._load_json_model = function (name, source)
+  _load_json_model = function (name, source)
   {
     var elname;
     if ('element' in source)

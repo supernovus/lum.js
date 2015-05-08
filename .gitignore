@@ -1,4 +1,4 @@
 *.swp
 sync*
 scripts/*
-
+node_modules/*

@@ -1,61 +1,52 @@
 /**
- * Cross platform, fast versions of indexOf and contains.
+ * Cross platform, fast versions of various array utilities.
  */
 
-(function (root)
+"use strict";
+
+export function indexOf (array, value)
 {
-  "use strict";
+  var index  = -1,
+    length = array.length;
 
-  if (root.Nano === undefined)
-    root.Nano = {};
-
-  Nano.array = {};
-
-  Nano.array.indexOf = function (array, value)
+  while (++index < length)
   {
-    var index  = -1,
-        length = array.length;
-
-    while (++index < length)
+    if (array[index] === value)
     {
-      if (array[index] === value)
-      {
-        return index;
-      }
+      return index;
     }
-    return -1;
   }
+  return -1;
+}
 
-  Nano.array.contains = function (array, value)
+export function contains (array, value)
+{
+  var index  = -1,
+      length = array.length;
+
+  while (++index < length)
   {
-    var index  = -1,
-        length = array.length;
-
-    while (++index < length)
+    if (array[index] === value)
     {
-      if (array[index] === value)
-      {
-        return true;
-      }
+      return true;
     }
-    return false;
   }
+  return false;
+}
 
-  Nano.array.powerset = function (ary) 
+export function powerset (ary) 
+{
+  var ps = new Array(new Array());
+  for (var i=0; i < ary.length; i++) 
   {
-    var ps = new Array(new Array());
-    for (var i=0; i < ary.length; i++) 
+    // we modify the ps array in the next loop,
+    // so can't use the ps.length property directly in the loop condition.
+    var current_length = ps.length;
+    for (var j = 0; j < current_length; j++) 
     {
-      // we modify the ps array in the next loop,
-      // so can't use the ps.length property directly in the loop condition.
-      var current_length = ps.length;
-      for (var j = 0; j < current_length; j++) 
-      {
-        ps.push(ps[j].concat(ary[i]));
-      }
+      ps.push(ps[j].concat(ary[i]));
     }
-    return ps;
   }
-
-})(window);
+  return ps;
+}
 

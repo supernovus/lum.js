@@ -50,7 +50,7 @@
     "uglify": false,
     "version":
     {
-      "regex": "Underscore.js\s+(\d+\.\d+\(\.\d+)?)",
+      "regex": "Underscore.js\\s+(\\d+\\.\\d+\\(\\.\\d+)?)",
       "match": 1
     },
     "url": "http://underscorejs.org/underscore-min.js"
@@ -60,7 +60,7 @@
     "uglify": false,
     "version":
     {
-      "regex": "version\s+:\s+(\d+\.\d+(\.\d+)?)",
+      "regex": "version\\s+:\\s+(\\d+\\.\\d+(\\.\\d+)?)",
       "match": 1
     },
     "url": "http://momentjs.com/downloads/moment.min.js"
@@ -75,7 +75,7 @@
     "uglify": true,
     "version": 
     {
-      "regex":"Modernizr\s+v(\d+\.\d+(\.\d+)?)",
+      "regex":"Modernizr\\s+v(\\d+\\.\\d+(\\.\\d+)?)",
       "match": 1
     },
     "url": "http://modernizr.com/downloads/modernizr-latest.js"
