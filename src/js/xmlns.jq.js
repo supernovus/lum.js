@@ -62,9 +62,11 @@
 //    http://docs.jquery.com/License
 //
 
-(function($) {
+"use strict";
 
-var jquery_gt_18 = jQuery.fn.jquery >= "1.8";
+import $ from 'ext/jquery';
+
+var jquery_gt_18 = $.fn.jquery >= "1.8";
 //  Some common default namespaces, that are treated specially by browsers.
 //
 var default_xmlns = {
@@ -211,7 +213,7 @@ div = null;
 //  Modify the TAG find function to account for a namespace selector.
 //
 $.expr.find.TAG = function(match,context,isXML) {
-	if (!jQuery.isArray(match)) {
+	if (!$.isArray(match)) {
 		if ( typeof context.getElementsByTagName !== "undefined" ) {
 			return context.getElementsByTagName(match);
 		}
@@ -437,6 +439,3 @@ $.expr.filter.ATTR = (jquery_gt_18)? filter_attr : function(elem, match) {
     var check = match[6];
     return filter_attr(null, ns, name, type, check).call(this, elem, null);
 };
-
-
-})(jQuery);

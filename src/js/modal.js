@@ -5,17 +5,13 @@
  * any doesn't set up things like buttons automatically. It's simply a way
  * to create portions of the page that can be shown and hidden on demand, 
  * and to control a mask element to grey out/disable the rest of the page.
- *
- * Requires jQuery.
  */
 
-(function (root, $)
+import $ from 'ext/jquery';
+
+export default class Modal
 {
-
-  if (root.Nano === undefined)
-    root.Nano = {};
-
-  var Modal = Nano.ModalDialog = function (options)
+  constructor (options)
   {
     if (options === undefined)
       options = {};
@@ -32,7 +28,7 @@
     else
     {
       this.content = null;
-      console.log("No 'element' selector passed to ModalDialog constructor.");
+      console.log("No 'element' selector passed to Modal constructor.");
     }
 
     // Process any mask related options.
@@ -73,98 +69,9 @@
   }
 
 /**
- * Globally known display types.
- *
- * These are registered as a global object, not as instance objects.
- * Keep that in mind when considering extending it.
- */
-  Modal.displayTypes = {};
-
-  Modal.displayTypes.below = function (content, offset)
-  {
-    var x = offset.left;
-    var y = offset.top;
-    return {x:x, y:y};
-  }
-
-  Modal.displayTypes.belowCenter = function (content, offset)
-  {
-    var x = offset.left + (pos.width() - content.width()) / 2;
-    var y = offset.top + 10;
-    return {x:x, y:y};
-  }
-
-  Modal.displayTypes.center = function (content, offset)
-  {
-    var x = Math.max(0, 
-      (($(window).height() - content.outerHeight()) / 2) + 
-        $(window).scrollTop()
-    );
-    var y = Math.max(0,
-      (($(window).width() - content.outerWidth()) / 2) +
-        $(window).scrollLeft()
-    );
-    return {x:x, y:y};
-  }
-
-  Modal.displayTypes.abscenter = function (content, offset)
-  {
-    var marginx = (content.outerHeight() / 2) * -1;
-    var marginy = (content.outerWidth()  / 2) * -1;
-    content.css(
-    { 
-      position:      'fixed', 
-      left:          '50%', 
-      top:           '50%',
-      'margin-left':  marginx,
-      'margin-top':   marginy,
-    });
-  }
-
-  Modal.displayTypes.avgCenter = function (content, offset)
-  {
-    content.css(
-    {
-      position: 'fixed',
-      left:     '25%',
-      top:      '25%',
-    });
-  }
-
-  Modal.displayTypes.uiElementCenter = function (content, offset, pos)
-  {
-    if (jQuery.ui)
-    {
-      content.position(
-      {
-        of: pos
-      });
-    }
-    else
-    {
-      return Modal.displayTypes.belowCenter(content, offset);
-    }
-  }
-
-  Modal.displayTypes.uiWindowCenter = function (content, offset, pos)
-  {
-    if (jQuery.ui)
-    {
-      content.position(
-      {
-        of: window
-      });
-    }
-    else
-    {
-      return Modal.displayTypes.abscenter(content, offset);
-    }
-  }
-
-/**
  * Show the dialog, at a specific position relative to a passed element.
  */
-  Modal.prototype.show = function (posElement)
+  show (posElement)
   {
     // Sanity check.
     if (!this.content) { return; }
@@ -235,7 +142,7 @@
 /**
  * Hide the dialog.
  */
-  Modal.prototype.hide = function ()
+  hide ()
   {
     // Sanity check.
     if (!this.content) { return; }
@@ -287,6 +194,95 @@
     }
 
   }
+} // class Modal
 
-})(window, jQuery);
+/**
+ * Globally known display types.
+ *
+ * These are registered as a global object, not as instance objects.
+ * Keep that in mind when considering extending it.
+ */
+
+Modal.displayTypes = {};
+
+Modal.displayTypes.below = function (content, offset)
+{
+  var x = offset.left;
+  var y = offset.top;
+  return {x:x, y:y};
+}
+
+Modal.displayTypes.belowCenter = function (content, offset)
+{
+  var x = offset.left + (pos.width() - content.width()) / 2;
+  var y = offset.top + 10;
+  return {x:x, y:y};
+}
+
+Modal.displayTypes.center = function (content, offset)
+{
+  var x = Math.max(0, 
+    (($(window).height() - content.outerHeight()) / 2) + 
+      $(window).scrollTop()
+  );
+  var y = Math.max(0,
+    (($(window).width() - content.outerWidth()) / 2) +
+      $(window).scrollLeft()
+  );
+  return {x:x, y:y};
+}
+
+Modal.displayTypes.abscenter = function (content, offset)
+{
+  var marginx = (content.outerHeight() / 2) * -1;
+  var marginy = (content.outerWidth()  / 2) * -1;
+  content.css(
+  { 
+    position:      'fixed', 
+    left:          '50%', 
+    top:           '50%',
+    'margin-left':  marginx,
+    'margin-top':   marginy,
+  });
+}
+
+Modal.displayTypes.avgCenter = function (content, offset)
+{
+  content.css(
+  {
+    position: 'fixed',
+    left:     '25%',
+    top:      '25%',
+  });
+}
+
+Modal.displayTypes.uiElementCenter = function (content, offset, pos)
+{
+  if ($.ui)
+  {
+    content.position(
+    {
+      of: pos
+    });
+  }
+  else
+  {
+    return Modal.displayTypes.belowCenter(content, offset);
+  }
+}
+
+Modal.displayTypes.uiWindowCenter = function (content, offset, pos)
+{
+  if ($.ui)
+  {
+    content.position(
+    {
+      of: window
+    });
+  }
+  else
+  {
+    return Modal.displayTypes.abscenter(content, offset);
+  }
+}
 

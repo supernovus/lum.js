@@ -1,23 +1,19 @@
 /**
  * Status messages, compatible with Nano.php's message format.
  *
- * Requires:
- *
- * #common
- * vsprintf
- *
  * TODO: replace hard coded HTML with riot template support.
  * TODO: support 'vars' like PHP version.
  */
  
-(function (root, $)
+"use strict";
+
+import $ from 'ext/jquery';
+import vsprintf from 'ext/vsprintf';
+import 'json.jq';
+
+export default class Status
 {
-  "use strict";
-  
-  if (root.Nano === undefined)
-    root.Nano = {};
-  
-  Nano.Status = function (options)
+  construct (options)
   {
     if (options === undefined || options === null)
       options = {};
@@ -27,13 +23,13 @@
         : '#status_messages';
   
     this.messages = $(msgs).JSON();
- 
+   
     this.alerts = options.uiElement !== undefined
         ? options.uiElement
         : '#alerts';
-
+  
     this.onShow = options.onShow;
-
+  
     var default_symbols = {"error":"!", "warning":"?", "message":"*"};
   
     this.symbols = options.symbols !== undefined
@@ -41,7 +37,7 @@
         : default_symbols;
   }
   
-  Nano.Status.prototype.show = function (type, message, tag)
+  show (type, message, tag)
   {
     var html = '<div class="news '+tag+'">'
       + '<span class="'+type+'">'+this.symbols[type]+'</span>'
@@ -54,7 +50,7 @@
     $(this.alerts).show().append(html);
   }
   
-  Nano.Status.prototype.get = function (msgid, reps)
+  get (msgid, reps)
   {
     var msgtext = this.messages[msgid];
     if ($.isArray(reps))
@@ -71,7 +67,7 @@
     return msgtext;
   }
   
-  Nano.Status.prototype.clear = function (tag)
+  clear (tag)
   {
     $(this.alerts+' div.'+tag).remove();
     if ($(this.alerts+' div').length == 0)
@@ -80,18 +76,18 @@
     }
   }
   
-  Nano.Status.prototype.msg = function (msgid, tag, reps, type)
+  msg (msgid, tag, reps, type)
   {
     if (type === undefined)
       type = 'message';
-
+  
     if ($.isPlainObject(msgid))
     {
       if ('args' in msgid)
         reps = msgid.args;
       else if ('vars' in msgid)
         reps = msgid.vars;
-
+  
       if ('key' in msgid)
         msgid = msgid.key;
       else
@@ -102,19 +98,20 @@
       reps  = msgid.slice(1);
       msgid = msgid[0];
     }
-
+  
     var message = this.get(msgid, reps);
     this.show(type, message, tag);
   }
   
-  Nano.Status.prototype.warn = function (msgid, tag, reps)
+  warn (msgid, tag, reps)
   {
     this.msg(msgid, tag, reps, 'warning');
   }
   
-  Nano.Status.prototype.err = function (msgid, tag, reps)
+  err (msgid, tag, reps)
   {
     this.msg(msgid, tag, reps, 'error');
   }
  
-})(window, jQuery);
+} // class Status
+

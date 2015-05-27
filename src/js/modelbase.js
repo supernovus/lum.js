@@ -4,6 +4,14 @@
 * In order to use this with the modular trigger mechanism in the webApp
 * function, ensure you trigger the "ready" event on the API.
 */
+
+import $ from 'ext/jquery';
+import WebService from 'nano/webservice';
+import addProperty from 'nano/coreutils';
+import format_json from 'nano/format_json';
+import 'nano/exists.jq';
+import 'nano/json.jq';
+
 export default class ModelBase
 {
   constructor(conf)
@@ -196,13 +204,12 @@ export default class ModelBase
 
   /**
    * Load a Web Service model.
-   * Requires the 'webservice' library to be loaded.
    */
   _load_ws_model = function (name, source)
   {
     var opts = source.opts;
     this.onDebug('loadModel', '-- Loading web service', name, opts);
-    var wsclass = 'class' in opts ? opts.class : Nano.WebService;
+    var wsclass = 'class' in opts ? opts.class : WebService;
     if (name in this.debugging)
     {
       opts.debug = this.debugging[name];
@@ -215,8 +222,6 @@ export default class ModelBase
    *
    * We will add some magical methods to the object, including a save()
    * function that will save any changes back to the hidden element.
-   *
-   * Requires the json.jq and exists.jq jQuery extensions.
    */
   _load_json_model = function (name, source)
   {
@@ -242,7 +247,7 @@ export default class ModelBase
       }
    
      // Add a special "save" function.
-      Nano.addProperty(jsondata, 'save', function (target)
+      addProperty(jsondata, 'save', function (target)
       {
         if (!target)
           target = elname;
@@ -251,11 +256,11 @@ export default class ModelBase
 
       // Add a special "json" function. This requires the
       // format_json library to have been loaded.
-      Nano.addProperty(jsondata, 'json', function (format)
+      addProperty(jsondata, 'json', function (format)
       {
         var json = JSON.stringify(this);
         if (format)
-          return Nano.format_json(json);
+          return format_json(json);
         else
          return json;
       });

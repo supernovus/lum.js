@@ -15,8 +15,10 @@
  *  - Adding quick ability removeOption() to clear select box.
  *
  */
- 
-(function($) {
+
+"use strict";
+
+import $ from 'ext/jquery';
  
 /**
  * Adds (single/multiple) options to a select box (or series of select boxes)
@@ -537,4 +539,4 @@ $.fn.selectedOptions = function()
 	return this.find("option:selected");
 };
 
-})(jQuery);
+
