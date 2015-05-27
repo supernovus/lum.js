@@ -21,7 +21,7 @@ BOOT_SCRIPTS = jquery.dist.js json3.dist.js riot.full.js riot.stub.js
 BOOT_DEPENDS = $(BOOT_COMPILERS) $(BOOT_SCRIPTS)
 
 ## Optional scripts.
-MORE_SCRIPTS = underscore.dist.js less.dist.js moment.dist.js modernizr.js sprintf.js bowser.dist.js riot.control.js uri.dist.js uri.jq.dist.js
+MORE_SCRIPTS = underscore.dist.js moment.dist.js modernizr.js sprintf.js bowser.dist.js riot.control.js uri.dist.js uri.jq.dist.js
 
 ## Listings for the minify_all and compile_all targets.
 ALL_MIN = $(shell ls *.js | egrep -v '.(dist|cc|min|ug).js' | sed -e 's/\.js/.min.js/g')
@@ -33,7 +33,6 @@ JSMIN_URL = https://raw.github.com/douglascrockford/JSMin/master/jsmin.c
 JQUERY_URL = http://code.jquery.com/jquery.min.js
 JSON_URL = http://cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.min.js
 UNDERSCORE_URL = http://documentcloud.github.com/underscore/underscore-min.js
-LESS_URL = http://lesscss.googlecode.com/files/less-1.3.0.min.js
 CC_URL = http://dl.google.com/closure-compiler/compiler-latest.zip 
 MOMENT_URL = http://momentjs.com/downloads/moment.min.js
 MODERNIZR_URL=http://modernizr.com/downloads/modernizr-latest.js
@@ -83,10 +82,6 @@ json3.dist.js:
 ## Download Underscore, a collection of functional programming helpers.
 underscore.dist.js:
 	wget -O $@ $(UNDERSCORE_URL)
-
-## Download LESS, a CSS extension language.
-less.dist.js:
-	wget -O $@ $(LESS_URL)
 
 ## Download Moment, a datetime parsing/formatting library.
 moment.dist.js:
