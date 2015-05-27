@@ -123,10 +123,10 @@ module.exports = function (grunt)
   
   var tasks =
   [
-    "babel",
-    "uglify",
-  //  "riot",
-  //  "sass",
+    "newer:babel:dist",
+    "newer:uglify:dist",
+  //  "newer:riot:dist",
+  //  "nweer:sass:dist",
   ];
   
   grunt.registerTask("default", tasks);

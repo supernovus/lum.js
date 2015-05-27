@@ -1,8 +1,5 @@
 /**
 * A Model API base core. Use this as the foundation for your API objects.
-*
-* In order to use this with the modular trigger mechanism in the webApp
-* function, ensure you trigger the "ready" event on the API.
 */
 
 import $ from 'ext/jquery';
@@ -205,7 +202,7 @@ export default class ModelBase
   /**
    * Load a Web Service model.
    */
-  _load_ws_model = function (name, source)
+  _load_ws_model (name, source)
   {
     var opts = source.opts;
     this.onDebug('loadModel', '-- Loading web service', name, opts);
@@ -223,7 +220,7 @@ export default class ModelBase
    * We will add some magical methods to the object, including a save()
    * function that will save any changes back to the hidden element.
    */
-  _load_json_model = function (name, source)
+  _load_json_model (name, source)
   {
     var elname;
     if ('element' in source)
