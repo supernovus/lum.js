@@ -3,7 +3,7 @@
  * stackoverflow.com/questions/8584098/
  */
 
-import $ from 'jquery';
+import $ from 'ext/jquery';
 
 $.fn.changeElementType = function(newType) {
   var attrs = {};

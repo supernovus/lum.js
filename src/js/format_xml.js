@@ -1,13 +1,10 @@
-(function (root, $)
-{
-  "use strict";
+"use strict";
 
-  if (root.Nano === undefined)
-    root.Nano = {};
+import $ from 'ext/jquery';
 
 // Based on a script from:
 // http://stackoverflow.com/questions/376373/pretty-printing-xml-with-javascript
-Nano.format_xml = function format_xml (xml) 
+export default function format_xml (xml) 
 {
   var reg = /(>)(<)(\/*)/g;
   var wsexp = / *(.*) +\n/g;
@@ -39,7 +36,7 @@ Nano.format_xml = function format_xml (xml)
     'other->opening'    : 0,
     'other->other'      : 0
   };
-
+  
   for (var i=0; i < lines.length; i++) 
   {
     var ln = lines[i];
@@ -54,7 +51,7 @@ Nano.format_xml = function format_xml (xml)
     var fromTo = lastType + '->' + type;
     lastType = type;
     var padding = '';
-
+  
     indent += transitions[fromTo];
     for (var j = 0; j < indent; j++) 
     {
@@ -67,31 +64,29 @@ Nano.format_xml = function format_xml (xml)
   }
 
   return formatted;
-};
+}
 
-  // A quick jQuery wrapper by me. Expects XML text to be in the field.
-  $.fn.formatXML = function ()
+// A quick jQuery wrapper by me. Expects XML text to be in the field.
+$.fn.formatXML = function ()
+{ 
+  return this.each(function ()
   { 
-    return this.each(function ()
-    { 
-      var mytype = this.nodeName.toLowerCase(); // The element name.
-      var $this = $(this); // A jQuery wrapper to the element.
-      var oldval = '';
-      if (mytype == "textarea")
-        oldval = $this.val();
-      else if (mytype == "pre")
-        oldval = $this.text();
-      else
-        return; // We don't support anything but <textarea/> and <pre/>.
+    var mytype = this.nodeName.toLowerCase(); // The element name.
+    var $this = $(this); // A jQuery wrapper to the element.
+    var oldval = '';
+    if (mytype == "textarea")
+      oldval = $this.val();
+    else if (mytype == "pre")
+      oldval = $this.text();
+    else
+      return; // We don't support anything but <textarea/> and <pre/>.
 
-      var newval = format_xml(oldval);
+    var newval = format_xml(oldval);
 
-      if (mytype == "textarea")
-        $this.val(newval);
-      else
-        $this.text(newval);
-    });
-  };
-
-})(window, jQuery);
+    if (mytype == "textarea")
+      $this.val(newval);
+    else
+      $this.text(newval);
+  });
+}
 

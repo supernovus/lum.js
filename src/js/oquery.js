@@ -3,12 +3,7 @@
  * matching certain property values.
  */
 
-(function (root)
-{
-  "use strict";
-
-  if (root.Nano === undefined)
-    root.Nano = {};
+"use strict";
 
 /**
  * Search through an array of objects.
@@ -26,7 +21,7 @@
  * @return Mixed    Either an array of matches, or a single matching object.
  *                  If single was true, and nothing matched, we return null.
  */
-var oq = Nano.oQuery = function (query, objarr, opts)
+export default function oq (query, objarr, opts)
 {
 //  console.log("we're in oQuery()");
 
@@ -121,6 +116,4 @@ oq.indexes = function (query, objarray)
 {
   return oq(query, objarray, {index: true});
 }
-
-})(window);
 

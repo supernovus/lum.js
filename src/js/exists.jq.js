@@ -3,11 +3,12 @@
  * see if an element exists.
  */
 
-(function($) 
+"use strict";
+
+import $ from 'ext/jquery';
+
+$.fn.exists = function ()
 {
-  $.fn.exists = function ()
-  {
-    return this.length !== 0;
-  };
-})(jQuery);
+  return this.length !== 0;
+};
 

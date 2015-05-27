@@ -14,18 +14,17 @@
  *
  */
 
-(function($) 
+import $ from 'ext/jquery';
+
+$.fn.JSON = function (obj)
 {
-  $.fn.JSON = function (obj)
+  if (!obj)
   {
-    if (!obj)
-    {
-      return JSON.parse(this.val());
-    }
-    else
-    {
-      return this.val(JSON.stringify(obj));
-    }
-  };
-})(jQuery);
+    return JSON.parse(this.val());
+  }
+  else
+  {
+    return this.val(JSON.stringify(obj));
+  }
+};
 

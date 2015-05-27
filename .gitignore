@@ -2,3 +2,5 @@
 sync*
 scripts/*
 node_modules/*
+build/*.js
+
