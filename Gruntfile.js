@@ -114,7 +114,7 @@ module.exports = function (grunt)
           "style/nano/*.map",
         ]
       },
-      deps:
+      downloads:
       {
         src: ["scripts/ext/*.js"]
       }
