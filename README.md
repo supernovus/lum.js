@@ -25,16 +25,11 @@ Run 'npm install' to install development dependencies.
 Run 'grunt download' to download external resource scripts.
 Run 'grunt' to compile the source files into website scripts.
 
-## Using in your own projects
+## Use in your own projects
 
-Copy the Gruntfile.js to your own project, and customize it based on your
-requirements.
-
-You can either copy the _devDependencies_ object from the package.json into
-your own project's package.json, or if your OS supports it, you can simply
-create a symbolic link to the 'node_modules' folder to your project folder
-so grunt can find the dependencies it needs. The symlink is easier if
-it's supported.
+Copy or symbolically link the 'node_modules' directory into your own project.
+Copy the Gruntfile.js, package.json, and grunt/ directory into your own project
+and customize them as required for your needs.
 
 ## Cleanup
 
