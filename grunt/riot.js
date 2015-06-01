@@ -9,7 +9,15 @@ module.exports = function (grunt, options)
     options:
     {
       type:    'es6',
-      modular: 'amd',
+      modular: 
+      {
+        type: 'amd',
+        deps:
+        [
+          {'ext/riot-core': 'riot'},
+          {'ext/jquery':    '$'},
+        ],
+      }
     },
     dist: 
     {

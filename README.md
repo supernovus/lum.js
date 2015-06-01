@@ -49,4 +49,3 @@ Timothy Totten <2010@totten.ca>
 
 [Artistic License 2.0](http://www.perlfoundation.org/artistic_license_2_0)
 
-

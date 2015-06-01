@@ -7,8 +7,8 @@
 "use strict";
 
 import $ from 'ext/jquery';
-import 'nano/json.jq';
-import 'nano/exists.jq';
+import 'nano/json-jq';
+import 'nano/exists-jq';
 import 'nano/format_json';
 
 export function debug_field (obj, toel)

@@ -9,7 +9,7 @@
 
 import $ from 'ext/jquery';
 import vsprintf from 'ext/vsprintf';
-import 'json.jq';
+import 'json-jq';
 
 export default class Status
 {

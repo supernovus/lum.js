@@ -3,11 +3,12 @@
 */
 
 import $ from 'ext/jquery';
+import riot from 'ext/riot-core';
 import WebService from 'nano/webservice';
 import addProperty from 'nano/coreutils';
 import format_json from 'nano/format_json';
-import 'nano/exists.jq';
-import 'nano/json.jq';
+import 'nano/exists-jq';
+import 'nano/json-jq';
 
 export default class ModelBase
 {
