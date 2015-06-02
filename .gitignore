@@ -1,6 +1,7 @@
 *.swp
 sync*
-scripts/*
+scripts/ext/*
+scripts/nano/*
 node_modules/*
 npm-debug.log
 
