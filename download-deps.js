@@ -92,10 +92,11 @@
         http.get(
         {
           url: source.url,
-          progress: function (current, total)
+/*          progress: function (current, total)
           {
             console.log('downloaded %d bytes from %d', current, total);
           }
+*/
         }, make_handler(source, dest));
       }
     }
