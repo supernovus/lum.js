@@ -20,12 +20,12 @@
    */ 
   Nano.Editor = function (opts)
   {
-    this.lang = lang in opts ? opts.lang : 'xml';
-    this.srcType = sourceEncoding ? opts.sourceEncoding : false;
-    this.srcElement = sourceElement in opts ? opts.sourceElement : null;
-    this.srcUrl = sourceUrl in opts ? opts.sourceUrl : null;
-    this.editElement = editElement in opts ? opts.editElement : 'editor';
-    this.saveMethod = saveMethod in opts ? opts.saveMethod : 'PUT';
+    this.lang = 'lang' in opts ? opts.lang : 'xml';
+    this.srcType = 'sourceEncoding' ? opts.sourceEncoding : false;
+    this.srcElement = 'sourceElement' in opts ? opts.sourceElement : null;
+    this.srcUrl = 'sourceUrl' in opts ? opts.sourceUrl : null;
+    this.editElement = 'editElement' in opts ? opts.editElement : 'editor';
+    this.saveMethod = 'saveMethod' in opts ? opts.saveMethod : 'PUT';
   }
 
   var BASE64 = Nano.Editor.BASE64 = 'base64'; // virtual constant.
@@ -80,7 +80,9 @@
     var editor = this.getEditor();
     if (this.srcType === BASE64)
     {
-      data = CryptoJS.enc.Base64.parse(data);
+//      console.log("decoding base64: "+data);
+      data = CryptoJS.enc.Base64.parse(data).toString(CryptoJS.enc.Utf8);
+//      console.log("decoded as: "+data);
     }
     editor.setValue(data);
   }
@@ -110,7 +112,10 @@
 
     if (this.srcType === BASE64)
     {
+//      console.log("encoding text: "+data);
+      data = CryptoJS.enc.Utf8.parse(data);
       data = CryptoJS.enc.Base64.stringify(data);
+//      console.log("encoded to: "+data);
     }
 
     if (typeof callback === "function")
