@@ -1,0 +1,6 @@
+[submodule "scripts/ace"]
+	path = scripts/ace
+	url = https://github.com/ajaxorg/ace-builds.git
+[submodule "scripts/crypto"]
+	path = scripts/crypto
+	url = https://github.com/sytelus/CryptoJS.git
