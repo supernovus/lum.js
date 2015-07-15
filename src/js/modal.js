@@ -7,7 +7,7 @@
  * and to control a mask element to grey out/disable the rest of the page.
  */
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 export default class Modal
 {

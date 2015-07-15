@@ -14,7 +14,8 @@ module.exports = function (grunt, options)
       cwd:    'src/sass',
       src:    ['**/*.scss'],
       dest:   'style/nano/',
-      ext:    '.css'
+      ext:    '.css',
+      extDot: 'last',
     }
   };
 }

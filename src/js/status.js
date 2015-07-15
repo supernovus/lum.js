@@ -7,9 +7,9 @@
  
 "use strict";
 
-import $ from 'ext/jquery';
-import vsprintf from 'ext/vsprintf';
-import 'json-jq';
+import $ from 'jquery';
+import vsprintf from 'sprintf';
+import 'json.jq';
 
 export default class Status
 {

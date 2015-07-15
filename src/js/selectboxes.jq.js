@@ -18,7 +18,7 @@
 
 "use strict";
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
  
 /**
  * Adds (single/multiple) options to a select box (or series of select boxes)

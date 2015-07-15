@@ -4,8 +4,8 @@
   
 "use strict";
 
-import $ from 'ext/jquery';
-import clone from 'nano/coreutils';
+import $ from 'jquery';
+import clone from 'coreutils';
 
 export default class WebService
 {

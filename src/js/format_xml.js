@@ -1,6 +1,6 @@
 "use strict";
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 // Based on a script from:
 // http://stackoverflow.com/questions/376373/pretty-printing-xml-with-javascript

@@ -4,7 +4,7 @@
 
 "use strict";
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 /**
  * Build a menu. Use it on an element containing child elements representing

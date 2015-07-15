@@ -14,7 +14,7 @@
  *
  */
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 $.fn.JSON = function (obj)
 {

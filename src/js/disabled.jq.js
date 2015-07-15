@@ -6,7 +6,7 @@
 
 "use strict";
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 $.fn.enable = function ()
 {

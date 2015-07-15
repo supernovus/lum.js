@@ -19,6 +19,7 @@ module.exports = function (grunt, options)
       src:    ['**/*.js'],
       dest:   'scripts/nano/',
       ext:    '.js',
+      extDot: 'last',
     }
   };
 }

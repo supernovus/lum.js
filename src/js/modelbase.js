@@ -2,13 +2,13 @@
 * A Model API base core. Use this as the foundation for your API objects.
 */
 
-import $ from 'ext/jquery';
-import riot from 'ext/riot-core';
-import WebService from 'nano/webservice';
-import addProperty from 'nano/coreutils';
-import format_json from 'nano/format_json';
-import 'nano/exists-jq';
-import 'nano/json-jq';
+import $ from 'jquery';
+import riot from 'riot';
+import WebService from 'webservice';
+import addProperty from 'coreutils';
+import format_json from 'format_json';
+import 'exists.jq';
+import 'json.jq';
 
 export default class ModelBase
 {

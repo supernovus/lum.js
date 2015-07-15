@@ -64,7 +64,7 @@
 
 "use strict";
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 var jquery_gt_18 = $.fn.jquery >= "1.8";
 //  Some common default namespaces, that are treated specially by browsers.

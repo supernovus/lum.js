@@ -4,7 +4,7 @@
 
 "use strict";
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
 export default function format_json (val)

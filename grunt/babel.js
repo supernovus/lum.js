@@ -17,7 +17,8 @@ module.exports = function (grunt, options)
       cwd:    'src/js',
       src:    ['**/*.js'],
       dest:   'build/',
-      ext:    '.js'
+      ext:    '.js',
+      extDot: 'last',
     }
   };
 }

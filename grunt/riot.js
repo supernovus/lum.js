@@ -26,6 +26,7 @@ module.exports = function (grunt, options)
       src:    ['**/*.tag'],
       dest:   'scripts/tags/nano/',
       ext:    '.js',
+      extDot: 'last',
     }
   };
 }

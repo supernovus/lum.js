@@ -4,7 +4,7 @@
 
 "use strict";
 
-import $ from 'ext/jquery';
+import $ from 'jquery';
 
 var VALID_NS = "validation";
 
