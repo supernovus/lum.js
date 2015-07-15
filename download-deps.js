@@ -1,3 +1,5 @@
+#!/usr/bin/node
+
 /**
  * This will be loaded in the Gruntfile.js, and registered as 'download'.
  */
