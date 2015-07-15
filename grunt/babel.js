@@ -15,11 +15,11 @@ module.exports = function (grunt, options)
     {
       expand: true,
       cwd:    'src/js',
-      src:    ['**/*.js'],
+      src:    ['**/*.js', '!config.js'],
       dest:   'build/',
       ext:    '.js',
       extDot: 'last',
-    }
+    },
   };
 }
 

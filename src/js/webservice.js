@@ -5,7 +5,7 @@
 "use strict";
 
 import $ from 'jquery';
-import clone from 'coreutils';
+import {clone} from 'coreutils';
 
 export default class WebService
 {

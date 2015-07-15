@@ -20,6 +20,19 @@ module.exports = function (grunt, options)
       dest:   'scripts/nano/',
       ext:    '.js',
       extDot: 'last',
+    },
+    conf:
+    {
+      options: 
+      {
+        sourceMapIn: undefined,
+      },
+      expand: true,
+      cwd:    'src/js',
+      src:    'config.js',
+      dest:   'scripts/nano/',
+      ext:    '.js',
+      extDot: 'last',
     }
   };
 }

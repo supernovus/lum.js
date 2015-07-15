@@ -5,7 +5,7 @@
 import $ from 'jquery';
 import riot from 'riot';
 import WebService from 'webservice';
-import addProperty from 'coreutils';
+import {addProperty} from 'coreutils';
 import format_json from 'format_json';
 import 'exists.jq';
 import 'json.jq';
