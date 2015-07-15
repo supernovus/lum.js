@@ -1,9 +1,9 @@
+#!/usr/bin/node
+
 /**
  * This will be loaded in the Gruntfile.js, and registered as 'download'.
  */
-module.exports = function (grunt)
-{
-  var sources = require('../conf/sources.json');
+  var sources = require('./conf/sources.json');
   
   var exec = require('child_process').exec;
   var UglifyJS = require('uglify-js');
@@ -61,12 +61,14 @@ module.exports = function (grunt)
           var output = UglifyJS.minify(string, {fromString:true});
           if (output && output.code)
           {
-    //        console.log('minified>>>'+output.code);
+//            console.log('minified>>>'+output.code);
+            console.log(" writing minified file.");
             file.write(output.code);
           }
         }
         else
         {
+          console.log(" writing downloaded file.");
           file.write(res.buffer);
         }
         file.close();
@@ -88,11 +90,19 @@ module.exports = function (grunt)
       if (!exists)
       {
         console.log(" --> Downloading "+source.url);
-        http.get(source.url, make_handler(source, dest));
+        //http.get(source.url, make_handler(source, dest));
+        http.get(
+        {
+          url: source.url,
+/*          progress: function (current, total)
+          {
+            console.log('downloaded %d bytes from %d', current, total);
+          }
+*/
+        }, make_handler(source, dest));
       }
     }
   } // function download_deps()
 
-  grunt.registerTask('download', 'Download dependencies', download_deps);
-} // module.exports
+download_deps();
 

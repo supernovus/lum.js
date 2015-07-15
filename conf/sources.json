@@ -11,6 +11,12 @@
     "version": "2.1.4",
     "url": "http://code.jquery.com/jquery-2.1.4.min.js"
   },
+  "jquery-migrate.js":
+  {
+    "uglify": false,
+    "version": "1.2.1",
+    "url": "http://code.jquery.com/jquery-migrate-1.2.1.min.js"
+  },
   "riot-core.js":
   {
     "uglify": false,
