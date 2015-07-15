@@ -1,20 +1,30 @@
-var NanoRequire = {}; // A global variable.
+// Ensure Nano global object exists.
+if (window.Nano === undefined)
+{
+  window.Nano = {};
+}
 
 (function()
 { // Wrapping the rest of this in an anonymous function.
 
 "use strict";
 
-NanoRequire.baseUrl = 'scripts';
+// Create a Nano.Require object that will be used to store our methods.
+Nano.Require = {};
 
-NanoRequire.paths = 
+// The base URL for our scripts.
+Nano.Require.baseUrl = 'scripts';
+
+// Some initial paths for some complex external libraries.
+Nano.Require.paths = 
 {
   ace:           'ace/src-min-noconflict/ace',
   'crypto-core': 'crypto/components/core-min',
   base64:        'crypto/components/enc-base64-min',
 };
 
-NanoRequire.add = function (basedir, pathspec)
+// Add a set of libraries to a certain subfolder of the base URL.
+Nano.Require.add = function (basedir, pathspec)
 {
   for (var i in pathspec)
   {
@@ -22,17 +32,17 @@ NanoRequire.add = function (basedir, pathspec)
     var ptype = typeof path;
     if (ptype === 'string')
     {
-      NanoRequire.paths[path] = basedir + '/' + path;
+      Nano.Require.paths[path] = basedir + '/' + path;
     }
     else if (ptype === 'object')
     {
       if (0 in path && 1 in path)
       {
-        NanoRequire.paths[path[1]] = basedir + '/' + path[0];
+        Nano.Require.paths[path[1]] = basedir + '/' + path[0];
       }
       else if ('file' in path && 'name' in path)
       {
-        NanoRequire.paths[path.name] = basedir + '/' + path.file;
+        Nano.Require.paths[path.name] = basedir + '/' + path.file;
       }
       else
       {
@@ -46,14 +56,16 @@ NanoRequire.add = function (basedir, pathspec)
   }
 }
 
-NanoRequire.refresh = function ()
+// Refresh the RequireJS configuration.
+Nano.Require.refresh = function ()
 {
   requirejs.config({
-    baseUrl: NanoRequire.baseUrl,
-    paths:   NanoRequire.paths,
+    baseUrl: Nano.Require.baseUrl,
+    paths:   Nano.Require.paths,
   });
 }
 
+// All of our Nano.js libraries.
 var nanojs = 
 [
   'arrayutils','change-type.js','coreutils','debug','disabled.jq',
@@ -62,6 +74,7 @@ var nanojs =
   'webservice','xmlns.jq',
 ];
 
+// All of our external libraries.
 var extjs =
 [
   'bowser','jquery','jquery-migrate','json3','modernizr','moment',
@@ -69,10 +82,10 @@ var extjs =
   'sprintf','underscore',['uri','URI'],['uri.jq','URI.jq'],
 ];
 
-NanoRequire.add('nano', nanojs);
-NanoRequire.add('ext',  extjs);
-
-NanoRequire.refresh();
+// Let's do this.
+Nano.Require.add('nano', nanojs);
+Nano.Require.add('ext',  extjs);
+Nano.Require.refresh();
 
 })();
 
