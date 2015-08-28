@@ -20,8 +20,8 @@
  *  single   if true, we return the first matching object.
  *  index    if true, we return the index position in the array.
  *
- * If the query parameter is a string, then single will be forced on, and
- * we will search for a property called 'id' with that value.
+ * If the query parameter is a string or number, then single will be forced on,
+ * and we will search for a property called 'id' with that value.
  *
  * @return Mixed    Either an array of matches, or a single matching object.
  *                  If single was true, and nothing matched, we return null.
@@ -38,7 +38,7 @@ var oq = Nano.oQuery = function (query, objarr, opts)
   }
 
   var qtype = typeof query;
-  if (qtype === 'string')
+  if (qtype === 'string' || qtype === 'number')
   {
     query = { id: query };
     opts.single = true;
