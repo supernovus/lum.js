@@ -17,12 +17,19 @@ export default class Status
   {
     if (options === undefined || options === null)
       options = {};
+
+    if (options.messages !== undefined)
+    {
+      this.messages = options.messages;
+    }
+    else
+    {
+      var msgs = options.msgElement !== undefined 
+          ? options.msgElement 
+          : '#status_messages';
   
-    var msgs = options.msgElement !== undefined 
-        ? options.msgElement 
-        : '#status_messages';
-  
-    this.messages = $(msgs).JSON();
+      this.messages = $(msgs).JSON();
+    }
    
     this.alerts = options.uiElement !== undefined
         ? options.uiElement
