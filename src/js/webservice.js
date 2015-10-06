@@ -330,17 +330,17 @@ Nano.WebService.prototype._build_request = function (method_spec)
  * Build the request data in "JSON" format.
  */
 Nano.WebService.prototype._build_json_request_data = 
-function (data, wrapper, noEmpty)
+function (indata, wrapper, noEmpty)
 {
-  var data = JSON.stringify(data);
+  var outdata = JSON.stringify(indata);
   if (noEmpty)
   {
-    if (data == '{}' || data == '[]' || data == 'null')
+    if (outdata == '{}' || outdata == '[]' || outdata == 'null')
     {
       return null;
     }
   }
-  return data;
+  return outdata;
 }
 
 /**
