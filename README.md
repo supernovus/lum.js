@@ -22,7 +22,7 @@ manager. Everything else will be installed using 'npm' or 'grunt'.
 If you don't have a _grunt_ binary run: 'npm install -g grunt-cli'.
 
 Run 'npm install' to install development dependencies.
-Run 'grunt download' to download external resource scripts.
+Run 'node download-deps.js' to download external resource scripts.
 Run 'grunt' to compile the source files into website scripts.
 
 ## Use in your own projects
