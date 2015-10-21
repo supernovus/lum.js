@@ -94,7 +94,7 @@
     /**
      * Debugging information. Can be a list of tags.
      */
-    self.debugging = 'debug' in conf ? conf.debug : {};
+    self.debugging = conf.debug !== undefined ? conf.debug : {};
 
     /**
      * See if we have debugging in the hash.
