@@ -42,6 +42,12 @@
     return this.editor;
   }
 
+  Nano.Editor.prototype.setLang = function (lang)
+  {
+    this.lang = lang;
+    this.editor.getSession().setMode("ace/mode/"+lang);
+  }
+
   Nano.Editor.prototype.load = function (data)
   {
     var dtype = typeof data;
