@@ -44,8 +44,8 @@
 
   Nano.Editor.prototype.setLang = function (lang)
   {
+    this.getEditor().getSession().setMode("ace/mode/"+lang);
     this.lang = lang;
-    this.editor.getSession().setMode("ace/mode/"+lang);
   }
 
   Nano.Editor.prototype.load = function (data)
