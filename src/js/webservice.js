@@ -17,7 +17,7 @@ export default class WebService
     this._base_url = options.url;     // Specify the base URL.
     if (this._base_url === true)
     { // We'll use the current URL as a base for the rest.
-      this._base_url = document.URL;
+      this._base_url = document.URL.split('#')[0];
     }
   
     // The data type and mime type are determined by the following options.

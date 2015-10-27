@@ -212,6 +212,10 @@ export default class ModelBase
     {
       opts.debug = this.debugging[name];
     }
+    else if ('*' in this.debugging && this.debugging['*'])
+    {
+      opts.debug = true;
+    }
     this.model[name] = new wsclass(opts);
   }
 
