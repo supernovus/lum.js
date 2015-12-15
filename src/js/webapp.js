@@ -335,7 +335,7 @@
       var save_changes = false;
       if (source.enforceObject === true)
       {
-        if ($.isArray(jsondata) || jsondata.length == 0)
+        if ($.isArray(jsondata) && jsondata.length == 0)
         {
           jsondata = {};
           save_changes = true;
