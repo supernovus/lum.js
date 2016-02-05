@@ -1,10 +1,10 @@
 
-;(function(riot)
+;(function(root)
 {
   "use strict";
 
 /**
- * riot 1.x render() provided as a plugin for riot 2.x
+ * riot 1.x render() provided as a plugin for riot 2.x or Nano itself.
  */
 
 var FN = {}, // Precompiled templates (JavaScript functions)
@@ -17,7 +17,7 @@ function default_escape_fn(str, key) {
   });
 }
 
-riot.render = function(tmpl, data, escape_fn) {
+root.render = function(tmpl, data, escape_fn) {
   if (escape_fn === true) escape_fn = default_escape_fn;
   tmpl = tmpl || '';
 
@@ -28,5 +28,5 @@ riot.render = function(tmpl, data, escape_fn) {
   )(data, escape_fn);
 };
 
-})(window.riot);
+})(window.riot ? window.riot : window.Nano);
 
