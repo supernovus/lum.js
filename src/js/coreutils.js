@@ -55,5 +55,60 @@
     return JSON.parse(JSON.stringify(object));
   }
 
+  /**
+   * Register a global Namespace.
+   */
+  Nano.registerNamespace = function (namespaces)
+  {
+    if (typeof namespaces === 'string')
+    {
+      namespaces = namespaces.split('.');
+    }
+    var cns = root;
+    for (var n in namespaces)
+    {
+      var ns = namespaces[n];
+      if (cns[ns] === undefined)
+      {
+        cns[ns] = {};
+      }
+      cns = cns[ns];
+    }
+  }
+
+  /**
+   * See if a global Namespace is registered.
+   */
+  Nano.hasNamespace = function (namespaces, logerror)
+  {
+    if (typeof namespaces === 'string')
+    {
+      namespaces = namespaces.split('.');
+    }
+    var cns = root;
+    for (var n in namespaces)
+    {
+      var inns = namespaces[n];
+      if (!Array.isArray(inns))
+      {
+        inns = [inns];
+      }
+      for (var i in inns)
+      {
+        var ns = inns[i];
+        if (cns[ns] === undefined)
+        {
+          if (logerror)
+          {
+            console.log("Required namespace not found", namespaces);
+          }
+          return false;
+        }
+      }
+      cns = cns[ns];
+    }
+    return true;
+  }
+
 })(window);
 

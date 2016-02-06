@@ -18,21 +18,6 @@
   }
 
   /**
-   * Promise interface, from Riot.js example app.
-   */
-  Nano.Promise = function (fn)
-  {
-    var self = observable(this);
-    $.map(['done', 'fail', 'always'], function(name) 
-    {
-      self[name] = function(arg) 
-      {
-        return self[$.isFunction(arg) ? 'on' : 'trigger'](name, arg);
-      };
-    });
-  }
-
-  /**
    * A factory function to build riot 1.x style modular applications.
    *
    * Pass it the API class object (not an instance!)
