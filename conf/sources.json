@@ -8,8 +8,8 @@
   "jquery.js":
   {
     "uglify": false,
-    "version": "2.1.4",
-    "url": "http://code.jquery.com/jquery-2.1.4.min.js"
+    "version": "2.2.0",
+    "url": "http://code.jquery.com/jquery-2.2.0.min.js"
   },
   "jquery-migrate.js":
   {
