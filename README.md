@@ -50,6 +50,8 @@ major browser supports ES6 out of the box, and Babel and RequireJS are no
 longer needed, I will resurrect v2 and port any changes from these libraries
 back into it.
 
+This is to be considered the active branch of Nano.js
+
 ## Author
 
 Timothy Totten <2010@totten.ca>
