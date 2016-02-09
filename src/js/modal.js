@@ -9,11 +9,14 @@
  * Requires jQuery.
  */
 
-(function (root, $)
+(function ($)
 {
 
-  if (root.Nano === undefined)
-    root.Nano = {};
+  if (window.Nano === undefined)
+  {
+    console.log("fatal error: Nano core not loaded");
+    return;
+  }
 
   var Modal = Nano.ModalDialog = function (options)
   {
@@ -288,5 +291,5 @@
 
   }
 
-})(window, jQuery);
+})(jQuery);
 

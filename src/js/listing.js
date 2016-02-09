@@ -12,8 +12,8 @@
 
 if (window.Nano === undefined || Nano.Pager === undefined)
 {
-  console.log("Missing Nano.Pager, cannot continue.");
-  return false;
+  console.log("fatal error: Nano.Pager not loaded");
+  return;
 }
 
 Nano.Listing = function (options)

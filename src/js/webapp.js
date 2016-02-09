@@ -4,7 +4,11 @@
  * This requires coreutils.js to initialize the namespace and add core
  * utilities.
  *
- * This replaces App.js in all capacities.
+ * This is marked DEPRECATED. 
+ * The ModelAPI class has been split into it's own class, and a new
+ * ViewController class has been added to work with it. 
+ *
+ * None of the classes in this file should be used in new code.
  */
 
 (function($, observable)
@@ -13,7 +17,7 @@
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: missing Nano global namespace");
+    console.log("fatal error: Nano core not loaded");
     return;
   }
 

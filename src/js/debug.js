@@ -4,23 +4,17 @@
  * Requires: jquery, JSON, json.jq, exists.jq and format_json.
  */
 
-(function (root, $)
+(function ($)
 {
   "use strict";
 
-  if (root.Nano === undefined)
+  if (window.Nano === undefined)
   {
-    console.log("fatal error: missing Nano global namespace");
+    console.log("fatal error: Nano core not loaded");
     return;
   }
 
-  Nano.debug = {};
-
-  // Kept for compatibility reasons.
-  Nano.debug.log = function ()
-  {
-    console.log.apply(console, arguments);
-  }
+  Nano.debug = {debug:false};
 
   Nano.debug.field = function (obj, toel)
   {
@@ -97,5 +91,5 @@
     $(elname).on('click', handler);
   }
 
-})(window, jQuery);
+})(jQuery);
 

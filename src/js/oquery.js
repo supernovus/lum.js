@@ -3,12 +3,15 @@
  * matching certain property values.
  */
 
-(function (root)
+(function ()
 {
   "use strict";
 
-  if (root.Nano === undefined)
-    root.Nano = {};
+  if (window.Nano === undefined)
+  {
+    console.log("fatal error: Nano core not loaded");
+    return;
+  }
 
 /**
  * Search through an array of objects.
@@ -45,7 +48,7 @@ var oq = Nano.oQuery = function (query, objarr, opts)
   }
   else if (qtype !== 'object')
   {
-    console.log("Invalid query passed to oQuery()");
+    Nano.warn("Invalid query passed to oQuery()");
     if (opts.single === true)
       return null;
     else
@@ -122,5 +125,5 @@ oq.indexes = function (query, objarray)
   return oq(query, objarray, {index: true});
 }
 
-})(window);
+})();
 

@@ -1,5 +1,7 @@
 /**
  * Core utilities used by other Nano libraries.
+ *
+ * This is mandatory for most Nano v1.5 libraries.
  */
 
 (function (root)
@@ -11,6 +13,21 @@
    */
   if (root.Nano === undefined)
     root.Nano = {};
+
+  /**
+   * A wrapper console.error() that falls back to console.log()
+   */
+  Nano.warn = function ()
+  {
+    if (console.error !== undefined)
+    {
+      console.error.apply(console, arguments);
+    }
+    else
+    {
+      console.log.apply(console, arguments);
+    }
+  }
 
   /**
    * Extend function. 

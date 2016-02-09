@@ -1,13 +1,19 @@
-(function (root, $)
+(function ($)
 {
   "use strict";
 
-  if (root.Nano === undefined)
-    root.Nano = {};
+  if (window.Nano === undefined)
+  {
+    console.log("fatal error: Nano core not loaded");
+    return;
+  }
+
+  if (Nano.format === undefined)
+    Nano.format = {};
 
 // Based on a script from:
 // http://stackoverflow.com/questions/376373/pretty-printing-xml-with-javascript
-Nano.format_xml = function format_xml (xml) 
+Nano.format.xml = function format_xml (xml) 
 {
   var reg = /(>)(<)(\/*)/g;
   var wsexp = / *(.*) +\n/g;
@@ -93,5 +99,5 @@ Nano.format_xml = function format_xml (xml)
     });
   };
 
-})(window, jQuery);
+})(jQuery);
 

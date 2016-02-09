@@ -4,19 +4,19 @@
  * I'd previously written two different web service frameworks, and this is my
  * attempt at merging them together. Common functionality is done here, and
  * then any API-specific functionality can be added in higher level classes
- * using jQuery's $.extend() function.
+ * using Nano.extend() or jQuery.extend()
  *
  * Requires jQuery, JSON and the coreutils library.
  */
 
-(function (root, $, document) // Set here, but we're not indenting.
+(function ($) // Set here, but we're not indenting.
 { 
   
 "use strict";
 
-if (root.Nano === undefined)
+if (window.Nano === undefined)
 {
-  console.log("fatal error: the Nano namespace was not defined");
+  console.log("fatal error: Nano core not loaded");
   return;
 }
 
@@ -413,5 +413,5 @@ Nano.WebService.prototype._send_request = function (method_spec)
   return response;
 }
 
-})(window, jQuery, document); // End of class.
+})(jQuery); // End of class.
 

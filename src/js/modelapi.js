@@ -4,7 +4,7 @@
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: missing Nano global namespace");
+    console.log("fatal error: Nano core not loaded");
     return;
   }
 

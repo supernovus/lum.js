@@ -10,12 +10,15 @@
  * TODO: support 'vars' like PHP version.
  */
  
-(function (root, $)
+(function ($)
 {
   "use strict";
   
-  if (root.Nano === undefined)
-    root.Nano = {};
+  if (window.Nano === undefined)
+  {
+    console.log("fatal error: Nano core not loaded");
+    return;
+  }
   
   Nano.Status = function (options)
   {
@@ -124,4 +127,4 @@
     this.msg(msgid, tag, reps, 'error');
   }
  
-})(window, jQuery);
+})(jQuery);

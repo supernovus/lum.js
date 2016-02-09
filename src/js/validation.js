@@ -2,11 +2,17 @@
  * Simple form Validation object.
  */
 
-(function(root, $)
+(function($)
 {
 // Now in script namespace.
 
 "use strict";
+
+if (window.Nano === undefined)
+{
+  console.log("fatal error: Nano core not loaded");
+  return;
+}
 
 var VALID_NS = "validation";
 
@@ -21,11 +27,6 @@ var VALID_MSG =
   isIdent:  "field is not identifier",
   regex:    "field does not match regex",
 };
-
-if (root.Nano === undefined)
-{
-  root.Nano = {};
-}
 
 Nano.Validation = function (conf)
 {
@@ -214,4 +215,4 @@ Nano.Validation.prototype.activate = function ()
 }
 
 // End of script namespace.
-})(window, jQuery);
+})(jQuery);

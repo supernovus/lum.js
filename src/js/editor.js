@@ -5,13 +5,13 @@
  * Currently using Ace as it's backend component.
  */
 
-(function(root, $, ace, CryptoJS)
+(function($, ace, CryptoJS)
 {
   "use strict";
 
-  if (root.Nano === undefined)
+  if (window.Nano === undefined)
   {
-    console.log("fatal error: missing Nano global namespace");
+    console.log("fatal error: Nano core not loaded");
     return;
   }
 
@@ -171,4 +171,4 @@
     }
   }
 
-})(window, jQuery, ace, CryptoJS);
+})(jQuery, ace, CryptoJS);

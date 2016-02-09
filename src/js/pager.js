@@ -12,7 +12,10 @@
 { // Header added.
 
 if (window.Nano === undefined)
-  root.Nano = {};
+{
+  console.log("fatal error: Nano core not loaded");
+  return;
+}
 
 Nano.Pager = function (options)
 {
