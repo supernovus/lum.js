@@ -1,5 +1,5 @@
 
-;(function(root)
+;(function()
 {
   "use strict";
 
@@ -17,7 +17,7 @@ function default_escape_fn(str, key) {
   });
 }
 
-root.render = function(tmpl, data, escape_fn) {
+var render = function(tmpl, data, escape_fn) {
   if (escape_fn === true) escape_fn = default_escape_fn;
   tmpl = tmpl || '';
 
@@ -26,7 +26,16 @@ root.render = function(tmpl, data, escape_fn) {
       return template_escape[char];
     }).replace(/{\s*([\w\.]+)\s*}/g, "' + (e?e(_.$1,'$1'):_.$1||(_.$1==null?'':_.$1)) + '") + "'")
   )(data, escape_fn);
-};
+}
 
-})(window.riot ? window.riot : window.Nano);
+if (window.riot !== undefined)
+  riot.render = render;
+if (window.Nano !== undefined)
+{
+  if (Nano.render === undefined)
+    Nano.render = {};
+  Nano.render.riot1 = render;
+}
+
+})();
 
