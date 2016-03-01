@@ -1,5 +1,6 @@
 *.swp
 sync*
+.sync/*
 scripts/ext/*
 scripts/nano/*
 node_modules/*
