@@ -10,11 +10,19 @@
   {
     //return this.removeAttr('disabled');
     return this.prop('disabled', false);
-  };
+  }
+  $.fn.enabled = function ()
+  {
+    return (this.prop('disabled') ? false : true);
+  }
   $.fn.disable = function ()
   {
     //return this.attr('disabled','disabled');
     return this.prop('disabled', true);
-  };
+  }
+  $.fn.disabled = function ()
+  {
+    return this.prop('disabled');
+  }
 })(jQuery);
 
