@@ -22,6 +22,8 @@
  *
  *  single   if true, we return the first matching object.
  *  index    if true, we return the index position in the array.
+
+ *  return   if set, used in nested queries to determine the object to return.
  *
  * If the query parameter is a string or number, then single will be forced on,
  * and we will search for a property called 'id' with that value.
@@ -57,13 +59,48 @@ var oq = Nano.oQuery = function (query, objarr, opts)
 
   for (var i in objarr)
   {
-//    console.log("iterating item #"+i);
+//    console.log("iterating item ", i);
     var item = objarr[i];
     var match = true;
     for (var key in query)
     {
-//      console.log("checking value of "+key);
-      if (item[key] != query[key])
+//      console.log("checking value of ", key);
+      if (typeof query[key] === 'object')
+      {
+//        console.log("a subquery");
+        if (typeof item[key] !== 'object')
+        { // Couldn't find the nested item.
+//          console.log("the item didn't have a "+key+" property.");
+          return null;
+        }
+        var subresults = oq(query[key], item[key], opts);
+//        console.log("subresults: ", subresults);
+        if (opts.return === key)
+        { // We're using a return filter.
+          match = false;
+          if (opts.single && subresults !== null)
+          {
+            return subresults;
+          }
+          else if (!opts.single && subresults.length > 0)
+          {
+            matched = matched.concat(subresults);
+          }
+        }
+        else
+        {
+          if
+          ( 
+            (opts.single && subresults === null)
+            ||
+            (!opts.single && subresults.length === 0)
+          )
+          {
+            match = false;
+          }
+        }
+      }
+      else if (item[key] != query[key])
       {
         match = false;
         break;
