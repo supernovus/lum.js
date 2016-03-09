@@ -127,5 +127,22 @@
     return true;
   }
 
+  /**
+   * See if a value is set, and if not, return a default value.
+   */
+  Nano.getDef = function (opt, defvalue)
+  {
+    if (opt === undefined || opt === null)
+      return defvalue;
+    return opt;
+  }
+
+  Nano.getOpt = function (opts, optname, defvalue)
+  {
+    if (opts[optname] === undefined)
+      return defvalue;
+    return opt;
+  }
+
 })(window);
 
