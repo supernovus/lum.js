@@ -141,7 +141,7 @@
   {
     if (opts[optname] === undefined)
       return defvalue;
-    return opt;
+    return opts[optname];
   }
 
 })(window);
