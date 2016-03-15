@@ -107,6 +107,15 @@ Nano.Listing = function (options)
     this.sortAttr = 'nano:sort';
   }
 
+  if ('sortCol' in options)
+  {
+    this.sortCol = options.sortCol;
+  }
+  else
+  {
+    this.sortCol = [];
+  }
+
   if ('searchAttr' in options)
   {
     this.searchAttr = options.searchAttr;
@@ -114,6 +123,15 @@ Nano.Listing = function (options)
   else
   {
     this.searchAttr = 'nano:search';
+  }
+
+  if ('searchCol' in options)
+  {
+    this.searchCol = options.searchCol;
+  }
+  else
+  {
+    this.searchCol = [];
   }
 
   // Options for constructing a pager.
@@ -275,12 +293,28 @@ Nano.Listing.prototype.refresh = function ()
         var find = new RegExp(this.searches[col], "i");
         for (var i in searchdata1)
         {
-          var rawitem = rawdata[i];
-          if (typeof rawitem[col] === 'string')
+          var curitem = searchdata1[i];
+          var curcol  = curitem[col];
+          if (typeof this.searchCol[col] === 'function')
           {
-            if (rawitem[col].search(find) !== -1)
+            this.searchCol[col](curitem, find, searchdata2);
+          }
+          else if (typeof curcol === 'string')
+          {
+            if (curcol.search(find) !== -1)
             {
-              searchdata2.push(rawitem);
+              searchdata2.push(curitem);
+            }
+          }
+          else if ($.isArray(curcol))
+          {
+            for (var j in curcol)
+            {
+              var subcol = curcol[j];
+              if (subcol.search(find) !== -1)
+              {
+                searchdata2.push(curitem);
+              }
             }
           }
         }
@@ -302,101 +336,134 @@ Nano.Listing.prototype.refresh = function ()
 //      console.log("sorting by",this.sortBy);
       var col = this.sortBy;
       var desc = this.sortDesc;
-      var sort_str_asc = function (a, b)
+      if (typeof this.sortCol[col] === 'function')
       {
-        if (b[col] === undefined || b[col] === null)
-          return -1;
-        return a[col].localeCompare(b[col]);
+        this.sortCol[col](sortdata, desc);
       }
-      var sort_str_desc = function (a, b)
+      else
       {
-        if (b[col] === undefined || b[col] === null)
-          return 1;
-        return b[col].localeCompare(a[col]);
-      }
-      var sort_num_asc = function (a, b)
-      {
-//        console.log('a - b', a[col], b[col])
-        if (b[col] === undefined || b[col] === null)
-          return -1;
-        return (a[col] - b[col]);
-      }
-      var sort_num_desc = function (a, b)
-      {
-//        console.log('b - a', b[col], a[col]);
-        if (b[col] === undefined || b[col] === null)
-          return 1;
-        return (b[col] - a[col]);
-      }
-      var sort_other_asc = function (a, b)
-      {
-        if (a[col] === undefined || a[col] === null)
+        var sort_str_asc = function (a, b)
         {
           if (b[col] === undefined || b[col] === null)
-            return 0;
-          return -1;
+            return -1;
+          return a[col].localeCompare(b[col]);
         }
-        if (b[col] === undefined || b[col] === null)
-        {
-          return 1;
-        }
-        if (a[col] < b[col]) return -1;
-        if (a[col] > b[col]) return 1;
-        return 0;
-      }
-      var sort_other_desc = function (a, b)
-      {
-        if (a[col] === undefined || a[col] === null)
+        var sort_str_desc = function (a, b)
         {
           if (b[col] === undefined || b[col] === null)
-            return 0;
-          return 1;
+            return 1;
+          return b[col].localeCompare(a[col]);
         }
-        if (b[col] === undefined || b[col] === null)
+        var sort_num_asc = function (a, b)
         {
-          return -1;
+  //        console.log('a - b', a[col], b[col])
+          if (b[col] === undefined || b[col] === null)
+            return -1;
+          return (a[col] - b[col]);
         }
-        if (a[col] > b[col]) return -1;
-        if (a[col] < b[col]) return 1;
-        return 0;
-      }
-      var whatisit = typeof sortdata[0][col];
-//      console.log("it is a ",whatisit, col, desc);
-      if (whatisit === 'string')
-      {
-        if (desc)
+        var sort_num_desc = function (a, b)
         {
-          sortdata.sort(sort_str_desc);
+  //        console.log('b - a', b[col], a[col]);
+          if (b[col] === undefined || b[col] === null)
+            return 1;
+          return (b[col] - a[col]);
         }
-        else
+        var sort_array_str_asc = function (a, b)
         {
-          sortdata.sort(sort_str_asc);
+          if (b[col] === undefined || b[col] === null || b[col][0] === null)
+            return -1;
+          return a[col][0].localeCompare(b[col][0]);
         }
-      }
-      else if (whatisit === 'number')
-      {
-        if (desc)
+        var sort_array_str_desc = function (a, b)
         {
-//          console.log("sorting number descending");
-          sortdata.sort(sort_num_desc);
+          if (b[col] === undefined || b[col] === null || b[col][0] === null)
+            return -1;
+          return b[col][0].localeCompare(a[col][0]);
         }
-        else
+        var sort_other_asc = function (a, b)
         {
-//          console.log("sorting number ascending");
-          sortdata.sort(sort_num_asc);
+          if (a[col] === undefined || a[col] === null)
+          {
+            if (b[col] === undefined || b[col] === null)
+              return 0;
+            return -1;
+          }
+          if (b[col] === undefined || b[col] === null)
+          {
+            return 1;
+          }
+          if (a[col] < b[col]) return -1;
+          if (a[col] > b[col]) return 1;
+          return 0;
         }
-      }
-      else 
-      {
-        if (desc)
+        var sort_other_desc = function (a, b)
         {
-//          console.log("sorting other descending");
-          sortdata.sort(sort_other_desc);
+          if (a[col] === undefined || a[col] === null)
+          {
+            if (b[col] === undefined || b[col] === null)
+              return 0;
+            return 1;
+          }
+          if (b[col] === undefined || b[col] === null)
+          {
+            return -1;
+          }
+          if (a[col] > b[col]) return -1;
+          if (a[col] < b[col]) return 1;
+          return 0;
         }
-        else
+        var whatisit = typeof sortdata[0][col];
+  //      console.log("it is a ",whatisit, col, desc);
+        if (whatisit === 'string')
         {
-//          console.log("sorting other ascending");
-          sortdata.sort(sort_other_asc);
+          if (desc)
+          {
+            sortdata.sort(sort_str_desc);
+          }
+          else
+          {
+            sortdata.sort(sort_str_asc);
+          }
+        }
+        else if (whatisit === 'number')
+        {
+          if (desc)
+          {
+  //          console.log("sorting number descending");
+            sortdata.sort(sort_num_desc);
+          }
+          else
+          {
+  //          console.log("sorting number ascending");
+            sortdata.sort(sort_num_asc);
+          }
+        }
+        else if ($.isArray(sortdata[0][col]))
+        {
+          if (typeof sortdata[0][col][0] === 'string')
+          {
+            if (desc)
+            {
+              sortdata.sort(sort_array_str_desc);
+            }
+            else
+            {
+              sortdata.sort(sort_array_str_asc);
+            }
+          }
+        }
+        else 
+        {
+          if (desc)
+          {
+  //          console.log("sorting other descending");
+            sortdata.sort(sort_other_desc);
+          }
+          else
+          {
+  //          console.log("sorting other ascending");
+            sortdata.sort(sort_other_asc);
+          }
         }
       }
     }
@@ -433,28 +500,17 @@ Nano.Listing.prototype.showPage = function (page)
 //  console.log("sse:", show, start, end);
 //  console.log({tmpl: tmpl, list: list});
 
-  var preRender = null;
-  if ('preRender' in this)
-  {
-    preRender = this.preRender;
-  }
-  var postRender = null;
-  if ('postRender' in this)
-  {
-    postRender = this.postRender;
-  }
-
   for (var i = start; i < end; i++)
   {
 //    console.log("data["+i+"]");
     if (i >= dlen) break; // Partial page.
     var obj  = data[i];
 //    console.log("  == ", obj);
-    if (preRender)
-      preRender(obj);
+    if ('preRender' in this)
+      this.preRender(obj);
     var item = $(this.renderer(tmpl, obj));
-    if (postRender)
-      postRender(item, obj);
+    if ('postRender' in this)
+      this.postRender(item, obj);
     list.append(item);
   }
   return true;
