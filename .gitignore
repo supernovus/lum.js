@@ -6,4 +6,4 @@ scripts/nano/*
 style/ext/*
 node_modules/*
 npm-debug.log
-
+ext/*

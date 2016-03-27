@@ -21,6 +21,7 @@ If you don't have a _grunt_ binary run: 'npm install -g grunt-cli'.
 
 Run 'npm install' to install development dependencies.
 Run 'node download-deps.js' to download external resource scripts.
+Run 'npm install semantic-ui' to install Semantic-UI (if desired.)
 Run 'grunt' to compile the source files into website scripts.
 
 ## Use in your own projects
