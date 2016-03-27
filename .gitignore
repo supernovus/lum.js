@@ -3,6 +3,7 @@ sync*
 .sync/*
 scripts/ext/*
 scripts/nano/*
+style/ext/*
 node_modules/*
 npm-debug.log
 

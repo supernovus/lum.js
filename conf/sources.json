@@ -17,6 +17,36 @@
     "version": "1.3.0",
     "url": "http://code.jquery.com/jquery-migrate-1.3.0.min.js"
   },
+  "jquery-ui.js":
+  {
+    "uglify": false,
+    "version": "1.11.4",
+    "url": "http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+  },
+  "jquery-ui.css":
+  {
+    "css": true,
+    "version": "1.11.4",
+    "url": "http://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css"
+  },
+  "semantic-ui.css":
+  {
+    "css": true,
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/Semantic-Org/Semantic-UI/master/package.json"
+    },
+    "url": "https://raw.githubusercontent.com/Semantic-Org/Semantic-UI/master/dist/semantic.min.css"
+  },
+  "semantic-ui.js":
+  {
+    "uglify": false,
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/Semantic-Org/Semantic-UI/master/package.json"
+    },
+    "url": "https://raw.githubusercontent.com/Semantic-Org/Semantic-UI/master/dist/semantic.min.js"
+  },
   "riot-core.js":
   {
     "uglify": false,

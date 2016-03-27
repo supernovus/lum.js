@@ -12,7 +12,10 @@
   var path = require('path');
   
   var scriptroot = 'scripts/';
-  var deproot = scriptroot+'ext/';
+  var jsroot = scriptroot+'ext/';
+
+  var styleroot = 'style/';
+  var cssroot = styleroot+'ext/';
   
   function mkdir (path)
   {
@@ -28,7 +31,9 @@
   function download_deps ()
   { 
     mkdir(scriptroot);
-    mkdir(deproot);
+    mkdir(jsroot);
+    mkdir(styleroot);
+    mkdir(cssroot);
     
     // TODO: actually care about the versions.
     //
@@ -78,7 +83,15 @@
     for (var sfile in sources)
     {
       var source = sources[sfile];
-      var dest = deproot+sfile;
+      var dest;
+      if (source.css)
+      {
+        dest = cssroot+sfile;
+      }
+      else
+      {
+        dest = jsroot+sfile;
+      }
       console.log("Checking for "+dest);
       var exists = false;
       try
