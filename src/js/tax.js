@@ -38,7 +38,10 @@
     if (round)
       taxsum = Math.round(taxsum*100)/100;
     taxes.unshift(taxsum);
-    taxes.unshift(subtotal+taxsum);
+    var total = subtotal+taxsum;
+    if (round)
+      total = Math.round(total*100)/100;
+    taxes.unshift(total);
     return taxes;
   }
 
@@ -70,7 +73,10 @@
     if (round)
       subtotal = Math.round(subtotal*100)/100;
     taxes.push(subtotal);
-    taxes.push(total-subtotal);
+    var taxsum = total-subtotal;
+    if (round)
+      taxsum = Math.round(taxsum*100)/100;
+    taxes.push(taxsum);
     for (t in taxrates)
     {
       tax = taxrates[t] * subtotal;
