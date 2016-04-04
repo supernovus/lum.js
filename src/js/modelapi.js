@@ -13,6 +13,9 @@
    */
   Nano.ModelAPI = function ModelAPI (conf)
   {
+    if (conf === undefined)
+      conf = {};
+
     /**
      * A reference to ourself. If observable() is found, we apply it.
      */
