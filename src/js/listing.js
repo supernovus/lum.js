@@ -20,6 +20,8 @@ Nano.Listing = function (options)
 {
   var self = this;
 
+//  console.log("Building Listing item", options);
+
   if (options === undefined || typeof options.getData !== 'function')
   {
     console.log("Invalid or missing 'getData' parameter, cannot continue.");
@@ -56,11 +58,19 @@ Nano.Listing = function (options)
   // A function that returns the active data set.
   this.getData = options.getData;
 
+  // Is our data retrieved asynchronously?
+  // If so, the getData() method should return an object using the
+  // Promise interface, such as jQuery's jqXHR object.
+  this.asyncData = 'async' in options ? options.async : false;
+
   // Do we want to sort the data by a certain column?
   this.sortBy = null;
 
   // And if so, in which direction?
   this.sortDesc = false;
+
+  // Search by a specific column?
+  this.searchBy = null;
 
   // Are we searching in a specific column?
   this.searches = {};
@@ -142,7 +152,7 @@ Nano.Listing = function (options)
 
   // Alias to pager.element
   if ('pagerElement' in options)
-    pagerOpts.element = options.pagerElement;
+    pagerOpts.pagerElement = options.pagerElement;
 
   // Alias to pager.perpage
   if ('perPage' in options)
@@ -162,27 +172,60 @@ Nano.Listing = function (options)
 
   if ('searchSelector' in options)
   {
-    this.registerSearch(options.searchSelector);
+    var unified = 'unifiedSearch' in options ? options.unifiedSearch : false;
+    this.registerSearch(options.searchSelector, unified);
+    if (unified)
+    { // Save the search selector.
+      this.searchSelector = options.searchSelector;
+      if ('searchColSelector' in options)
+      {
+        var evname = 'searchColEvent' in options 
+          ? options.searchColEvent
+          : 'contextmenu';
+        this.registerSearchToggle(options.searchColSelector, evname);
+      }
+      else
+      {
+        if ($('.listing_header label').exists())
+        {
+          this.registerSearchToggle('.listing_header label');
+        }
+      }
+    }
   }
   else
-  {
+  { // If we find individual .search items, we use searches for each of them.
     if ($('.listing_header .search').exists())
     {
       this.registerSearch('.listing_header .search');
     }
   }
 
-  // Add the item count.
-  this.displayData = this.getData();
-  pagerOpts.count = this.displayData.length;
+  if ('searchBy' in options)
+  {
+    this.searchBy = options.searchBy;
+  }
 
+  if ('sortBy' in options)
+  {
+    this.sortBy = options.sortBy;
+  }
+
+  if ('sortDesc' in options)
+  {
+    this.sortDesc = options.sortDesc;
+  }
+
+  // We don't want to render the pager during construction.
+  pagerOpts.noRender = true;
 //  console.log({pagerOpts: pagerOpts});
+
 
   // Build our pager option.
   this.pager = new Nano.Pager(pagerOpts);
 
-  // Display the first page.
-  this.showPage(this.pager.currentpage);
+  // Display the first page. This will render the pager.
+  this.refresh();
 }
 
 // A simple sorting routine.
@@ -194,6 +237,7 @@ Nano.Listing.prototype.registerSort = function (selector)
 //    console.log('sort was clicked');
     var $this = $(this);
     var wantcol = $this.parent().attr(self.sortAttr);
+    if (!wantcol) return; // No sort attribute.
     var curcol = self.sortBy;
 //    console.log('wantcol', wantcol, 'curcol', curcol);
     if (wantcol == curcol)
@@ -215,14 +259,43 @@ Nano.Listing.prototype.registerSort = function (selector)
 }
 
 // A simple search method.
-Nano.Listing.prototype.registerSearch = function (selector)
+Nano.Listing.prototype.registerSearch = function (selector, unified)
 {
+//  console.log("registerSearch("+selector+','+(unified?'true':'false')+")");
   var self = this;
   $(selector).on('keyup', function (e)
   {
     var $this = $(this);
     var text = $this.val();
-    var col = $this.parent().attr(self.searchAttr);
+    var col;
+    if (unified)
+    { // Unified searches.
+      // One search box is used by every field.
+      if (this.searchBy)
+      { // Search by the last selected column.
+        col = this.searchBy;
+      }
+      else
+      { // Get the first data field.
+        // This assumes the first data field is searchable.
+        // You may want to set a default by passing 'searchBy' in the
+        // constructor instead of relying on this.
+        var data = self.getData();
+        if (data.length === 0) return;
+        var item = data[0];
+        for (col in item)
+        {
+          break;
+        }
+        this.searchBy = col;
+      }
+    }
+    else
+    { // Our original searches with multiple search boxes.
+      // This offers the ability to search more than one field at a time
+      // but the tradeoff is, it has a more complex user interface.
+      col = $this.parent().attr(self.searchAttr);
+    }
     if (text === '')
     {
       self.search(col, null);
@@ -233,6 +306,23 @@ Nano.Listing.prototype.registerSearch = function (selector)
       $this.css('display', 'block');
       self.search(col, text);
     }
+  });
+}
+
+// Register changing the search toggle. Only used in unified searching.
+Nano.Listing.prototype.registerSearchToggle = function (selector, evname)
+{
+//  console.log("registerSearchToggle("+selector+")");
+  var self = this;
+  $(selector).on(evname, function (e)
+  {
+    e.preventDefault();
+    var $this = $(this);
+    var searchcol = $this.parent().attr(self.searchAttr);
+//    console.log("searchcol", searchcol);
+    if (searchcol)
+      self.searchBy = searchcol;
+    $(self.searchSelector).focus();
   });
 }
 
@@ -275,6 +365,23 @@ Nano.Listing.prototype.sort = function (col, desc)
 }
 
 Nano.Listing.prototype.refresh = function ()
+{
+  var ourdata = this.getData();
+  if (this.asyncData)
+  {
+    var self = this;
+    ourdata.done(function(data)
+    {
+      self.refresh_data(data);
+    });
+  }
+  else
+  {
+    this.refresh_data(ourdata);
+  }
+}
+
+Nano.Listing.prototype.refresh_data = function (data)
 {
   var rawdata = this.getData();
   if (this.sortBy === null && Object.keys(this.searches).length === 0)

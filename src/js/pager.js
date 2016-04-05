@@ -35,6 +35,15 @@ Nano.Pager = function (options)
     this.element = $('.pager').first();
   }
 
+  if ('listSelector' in options)
+  {
+    this.listSelector = options.listSelector;
+  }
+  else
+  {
+    this.listSelector = '.list_pages';
+  }
+
   // Number of items to show per page.
   this.perpage = 'perpage' in options ? options.perpage : 5;
 
@@ -76,6 +85,15 @@ Nano.Pager = function (options)
     this.currentTag = 'span';
   }
 
+  if ('linkClass' in options)
+  {
+    this.linkClass = options.linkClass;
+  }
+  if ('currentClass' in options)
+  {
+    this.currentClass = options.currentClass;
+  }
+
   if ('ellipse' in options)
   {
     this.ellipse = options.ellipse;
@@ -91,7 +109,8 @@ Nano.Pager = function (options)
     onChange: options.onChange,
   };
 
-  this.render();
+  if (!options.noRender)
+    this.render();
 
   // Okay, let's register some events using jQuery.
   var pager = this;
@@ -142,7 +161,11 @@ Nano.Pager.prototype.changePage = function (anchor)
  */
 Nano.Pager.prototype.render = function ()
 {
-  var list = this.element.find('.list_pages');
+  var list;
+  if (this.listSelector)
+    list = this.element.find(this.listSelector);
+  else
+    list = this.element;
   list.empty();
   // First, draw the first page.
   this.draw(list, 1);
@@ -193,15 +216,32 @@ Nano.Pager.prototype.render = function ()
 Nano.Pager.prototype.draw = function (list, page)
 {
   var tag;
+  var tagclass;
   if (page == this.currentpage)
   {
     tag = this.currentTag;
+    if (this.currentClass)
+    {
+      tagclass = this.currentClass;
+    }
+    else if (this.linkClass)
+    {
+      tagclass = this.linkClass;
+    }
   }
   else
   {
     tag = this.linkTag;
+    if (this.linkClass)
+    {
+      tagclass = this.linkClass;
+    }
   }
-  list.append('<'+tag+' href="#'+page+'">'+page+'</'+tag+'>');
+  var el = '<'+tag+' href="#'+page+'"';
+  if (tagclass)
+    el += ' class="'+tagclass+'"';
+  el += '>'+page+'</'+tag+'>';
+  list.append(el);
 }
 
 // End of module.

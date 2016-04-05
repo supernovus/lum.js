@@ -34,11 +34,12 @@
     }
   }
 
-  Nano.ViewController.prototype.start = function (api)
+  Nano.ViewController.prototype.start = function (modelclass, conf)
   { // Register all of our functions. Make sure the page is loaded first.
     var self = this;
     $(function()
     {
+      var api = self.apiInstance = new modelclass(conf);
       if (this.calls)
       {
         for (var c in this.calls)
