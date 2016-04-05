@@ -182,7 +182,11 @@ Nano.WebService.prototype._build_request = function (method_spec)
       if (def.length == 2)
       { // [pathspec, handler]
         url_path        = def[0];
-        wrapper.handler = def[1];
+        var subdeftype = typeof def[1];
+        if (subdeftype === 'string')
+          request.type  = def[1];
+        else if (subdeftype === 'function')
+          wrapper.handler = def[1];
       }
       else if (def.length == 3)
       { // [httpmethod, pathspec, handler]
