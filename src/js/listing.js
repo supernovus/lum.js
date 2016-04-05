@@ -367,7 +367,7 @@ Nano.Listing.prototype.sort = function (col, desc)
 Nano.Listing.prototype.refresh = function ()
 {
   var ourdata = this.getData();
-  if (this.asyncData)
+  if (this.asyncData && typeof ourdata.done === 'function')
   {
     var self = this;
     ourdata.done(function(data)
@@ -381,9 +381,8 @@ Nano.Listing.prototype.refresh = function ()
   }
 }
 
-Nano.Listing.prototype.refresh_data = function (data)
+Nano.Listing.prototype.refresh_data = function (rawdata)
 {
-  var rawdata = this.getData();
   if (this.sortBy === null && Object.keys(this.searches).length === 0)
   {
     this.displayData = rawdata;
