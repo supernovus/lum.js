@@ -48,8 +48,8 @@ as a script loader, and was simply too complicated to work well.
 This version retains the v1 libraries and ES5 syntax, while supporting some
 of the advanced features from the v2 implementation. Eventually when every
 major browser supports ES6 out of the box, and Babel and RequireJS are no
-longer needed, I will resurrect v2 and port any changes from these libraries
-back into it.
+longer needed, I will make a new v3 using the v2 syntax, but all of the
+updates from these libraries.
 
 This is to be considered the active branch of Nano.js
 
