@@ -20,7 +20,7 @@
   /**
    * Promise interface, from Riot.js example app.
    */
-  Nano.Promise = function (fn)
+  Nano.Promise = function ()
   {
     var self = observable(this);
     $.map(['done', 'fail', 'always'], function(name) 
