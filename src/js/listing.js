@@ -63,6 +63,12 @@ Nano.Listing = function (options)
   // Promise interface, such as jQuery's jqXHR object.
   this.asyncData = 'async' in options ? options.async : false;
 
+  // Filter data using an external source?
+  if ('filterData' in options)
+  {
+    this.filterData = options.filterData;
+  }
+
   // Do we want to sort the data by a certain column?
   this.sortBy = null;
 
@@ -276,18 +282,8 @@ Nano.Listing.prototype.registerSearch = function (selector, unified)
         col = self.searchBy;
       }
       else
-      { // Get the first data field.
-        // This assumes the first data field is searchable.
-        // You may want to set a default by passing 'searchBy' in the
-        // constructor instead of relying on this.
-        var data = self.getData();
-        if (data.length === 0) return;
-        var item = data[0];
-        for (col in item)
-        {
-          break;
-        }
-        self.searchBy = col;
+      { // Nothing to search for, sorry.
+        return;
       }
     }
     else
@@ -383,6 +379,10 @@ Nano.Listing.prototype.refresh = function ()
 
 Nano.Listing.prototype.refresh_data = function (rawdata)
 {
+  if (typeof this.filterData === 'function')
+  {
+    rawdata = this.filterData(rawdata);
+  }
   if (this.sortBy === null && Object.keys(this.searches).length === 0)
   {
     this.displayData = rawdata;
