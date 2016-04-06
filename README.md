@@ -1,5 +1,11 @@
 # Nano.js v2
 
+## NOTE
+
+This branch is abandoned. All work is being done in 'v1.5'.
+When browsers support ES6 without transpilers, I will port all of the stuff
+in the 'v1.5' branch to ES6 format, and call it v3.
+
 ## Summary
 
 A bunch of common Javascript stuff for my projects that makes life easier.
