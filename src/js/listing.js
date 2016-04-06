@@ -271,9 +271,9 @@ Nano.Listing.prototype.registerSearch = function (selector, unified)
     if (unified)
     { // Unified searches.
       // One search box is used by every field.
-      if (this.searchBy)
+      if (self.searchBy)
       { // Search by the last selected column.
-        col = this.searchBy;
+        col = self.searchBy;
       }
       else
       { // Get the first data field.
@@ -287,7 +287,7 @@ Nano.Listing.prototype.registerSearch = function (selector, unified)
         {
           break;
         }
-        this.searchBy = col;
+        self.searchBy = col;
       }
     }
     else
@@ -392,6 +392,7 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
     var sortdata = this.displayData = [];
     if (Object.keys(this.searches).length > 0)
     { // Only include the matching items.
+      console.log("searching", this.searches);
       var searchdata1 = rawdata;
       var searchdata2 = [];
       for (var col in this.searches)
