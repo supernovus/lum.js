@@ -392,7 +392,6 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
     var sortdata = this.displayData = [];
     if (Object.keys(this.searches).length > 0)
     { // Only include the matching items.
-      console.log("searching", this.searches);
       var searchdata1 = rawdata;
       var searchdata2 = [];
       for (var col in this.searches)
