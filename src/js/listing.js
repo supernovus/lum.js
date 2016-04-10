@@ -5,6 +5,9 @@
  *
  * Note: this does not bind any actions to the listing buttons, so you still
  * need to do that yourself.
+ *
+ * TODO: Make it so default search/sort are shown in UI.
+ * TODO: Make unified search handle multiple fields better.
  */
 
 (function($)
@@ -368,21 +371,48 @@ Nano.Listing.prototype.refresh = function ()
     var self = this;
     ourdata.done(function(data)
     {
+      if (typeof self.filterData === 'function')
+      {
+        self.filter_data(data);
+      }
+      else
+      {
+        self.refresh_data(data);
+      }
+    });
+  }
+  else
+  {
+    if (typeof this.filterData === 'function')
+    {
+      this.filter_data(ourdata);
+    }
+    else
+    {
+      this.refresh_data(ourdata);
+    }
+  }
+}
+
+Nano.Listing.prototype.filter_data = function (rawdata)
+{
+  var filterdata = this.filterData(rawdata);
+  if (this.asyncData && typeof filterdata.done === 'function')
+  {
+    var self = this;
+    filterdata.done(function(data)
+    {
       self.refresh_data(data);
     });
   }
   else
   {
-    this.refresh_data(ourdata);
+    this.refresh_data(filterdata);
   }
 }
 
 Nano.Listing.prototype.refresh_data = function (rawdata)
 {
-  if (typeof this.filterData === 'function')
-  {
-    rawdata = this.filterData(rawdata);
-  }
   if (this.sortBy === null && Object.keys(this.searches).length === 0)
   {
     this.displayData = rawdata;
