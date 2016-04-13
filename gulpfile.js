@@ -4,7 +4,7 @@ var uglify = require('gulp-uglify');
 var del    = require('del');
 //var sass   = require('gulp-sass');
 //var cssmin = require('gulp-minify-css');
-//var srcmap = require('gulp-sourcemaps');
+var srcmap = require('gulp-sourcemaps');
 
 var srcjs  = 'src/js/**/*.js';
 var destjs = 'scripts/nano/';
@@ -41,9 +41,9 @@ gulp.task('scripts', function ()
 {
   return gulp.src(srcjs)
     .pipe(newer(destjs))
-//    .pipe(sourcemaps.init())
+    .pipe(srcmap.init())
     .pipe(uglify())
-//    .pipe(sourcemaps.write('.map'))
+    .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destjs));
 });
 
@@ -51,10 +51,10 @@ gulp.task('styles', function ()
 {
   return gulp.src(srcsass)
     .pipe(newer(destsass))
-//    .pipe(sourcemaps.init())
+    .pipe(srcmap.init())
     .pipe(sass())
     .pipe(cssmin())
-//    .pipe(sourcemaps.write('.map'))
+    .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destsass));
 });
 
