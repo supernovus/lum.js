@@ -20,7 +20,7 @@ module.exports = function (grunt, options)
     },
     downloads:
     {
-      src: ["scripts/ext/*.js"]
+      src: ["scripts/ext/*.js", "style/ext/*.css"]
     }
   };
 }

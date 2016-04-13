@@ -2,17 +2,42 @@ var gulp   = require('gulp');
 var newer  = require('gulp-newer');
 var uglify = require('gulp-uglify');
 var del    = require('del');
+//var sass   = require('gulp-sass');
+//var cssmin = require('gulp-minify-css');
 //var srcmap = require('gulp-sourcemaps');
 
 var srcjs  = 'src/js/**/*.js';
 var destjs = 'scripts/nano/';
 
+//var srcsass  = 'src/sass/**/*.scss';
+//var destsass = 'style/nano/';
+
+var downloaded_js  = 'scripts/ext';
+var downloaded_css = 'style/ext';
+
 gulp.task('clean', function ()
 {
-  return del([destjs]);
+  var cleanitems =
+  [
+    destjs,
+    //destsass,
+  ];
+  return del(cleanitems);
 });
 
-gulp.task('build', function ()
+gulp.task('cleandeps', function ()
+{
+  var cleanitems =
+  [
+    downloaded_js,
+    downloaded_css,
+  ];
+  return del(cleanitems);
+});
+
+gulp.task('distclean', ['clean', 'cleandeps']);
+
+gulp.task('scripts', function ()
 {
   return gulp.src(srcjs)
     .pipe(newer(destjs))
@@ -22,9 +47,29 @@ gulp.task('build', function ()
     .pipe(gulp.dest(destjs));
 });
 
+gulp.task('styles', function ()
+{
+  return gulp.src(srcsass)
+    .pipe(newer(destsass))
+//    .pipe(sourcemaps.init())
+    .pipe(sass())
+    .pipe(cssmin())
+//    .pipe(sourcemaps.write('.map'))
+    .pipe(gulp.dest(destsass));
+});
+
+var buildtasks =
+[
+  'scripts',
+//  'styles',
+];
+
+gulp.task('build', buildtasks); 
+
 gulp.task('watch', function ()
 {
-  gulp.watch(srcjs, ['build']);
+  gulp.watch(srcjs, ['scripts']);
+  //gulp.watch(srcsass, ['styles']);
 });
 
 gulp.task('default', ['build']);

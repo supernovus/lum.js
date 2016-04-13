@@ -4,11 +4,6 @@
 
 A bunch of common Javascript stuff for my projects that makes life easier.
 
-It will Uglify the script sources, and also supports compiling Riot.js tag 
-files and SCSS/Sass stylesheets (it uses libsass, which may have a few 
-limitations compared to the Ruby Sass compiler, but is faster and can be 
-installed with NPM rather than requiring another OS package.)
-
 ## Requirements
 
 * Node.js, the Javascript runtime. The scripts expect it to be called 'node'.
@@ -17,18 +12,27 @@ installed with NPM rather than requiring another OS package.)
 
 This is tested on a Linux operating system, but should work anywhere Node.js does. If you find platform specific issues, let me know.
 
+## Build System
+
+Nano.js supports either 'gulp' or 'grunt' as a build system. You could actually
+install both of them if you want, you'll just use more disk space.
+
+I started with grunt when I began the project, but have switched to gulp now.
+
+Pick whichever one you are more familiar with.
+
 ## Setup
 
+* If you don't have a _gulp_ binary run:  'npm install -g gulp-cli'
 * If you don't have a _grunt_ binary run: 'npm install -g grunt-cli'.
-* If you don't have a _gulp_ binary run: 'npm install -g gulp-cli'
 
 * Run 'npm install' to install development dependencies.
 * Run './bin/download-deps.js' to download external resource scripts.
 
-* If you want to use 'grunt' as your build system, run './bin/setup-grunt.sh'
 * If you want to use 'gulp' as your build system, run './bin/setup-gulp.sh'
+* If you want to use 'grunt' as your build system, run './bin/setup-grunt.sh'
 
-* Run 'grunt' or 'gulp' to compile the source files into website scripts.
+* Run 'gulp' or 'grunt' to compile the source files into website scripts.
 
 ## Optional Features
 
@@ -43,16 +47,21 @@ This is tested on a Linux operating system, but should work anywhere Node.js doe
 ## Use in your own projects
 
 * Copy or symbolically link the 'node_modules' directory.
+* If using 'gulp', copy the 'gulpfile.js' into your own project and customize as required for your needs.
 * If using 'grunt', copy or symlink the 'Gruntfile.js' into your own project.
 * If using 'grunt', copy the contents of the grunt/ directory into your project and customize them as required for your needs.
-* If using 'gulp', copy the 'gulpfile.js' into your own project and customize as required for your needs.
 * When Nano.php is added to Github, it has a script which can set up new projects, and install both it and Nano.js into your project root. I will update this documentation when it is available.
 
 ## Cleanup
 
-* Run 'grunt clean:release' to remove compiled libraries.
-* Run 'grunt clean:downloads' to remove downloaded libraries.
-* Run 'grunt clean' to remove anything added by grunt.
+* If using 'gulp'
+    * Run 'gulp clean' to remove compiled libraries.
+    * Run 'gulp cleandeps' to remove downloaded libraries.
+    * Run 'gulp distclean' to remove everything.
+* If using 'grunt'
+    * Run 'grunt clean:release' to remove compiled libraries.
+    * Run 'grunt clean:downloads' to remove downloaded libraries.
+    * Run 'grunt clean' to remove everything.
 
 There is no automated way to remove the modules installed by npm.
 Just delete the 'node_modules' directory if you really want a clean slate.
