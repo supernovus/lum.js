@@ -1,9 +1,9 @@
-#!/usr/bin/node
+#!/usr/bin/env node
 
 /**
  * This will be loaded in the Gruntfile.js, and registered as 'download'.
  */
-  var sources = require('./conf/sources.json');
+  var sources = require('../conf/sources.json');
   
   var exec = require('child_process').exec;
   var UglifyJS = require('uglify-js');

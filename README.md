@@ -11,23 +11,41 @@ installed with NPM rather than requiring another OS package.)
 
 ## Requirements
 
-This has been tested in a Linux environment, but will likely work anywhere
-that Node.js does. The software requirements are Node.js with its NPM package
-manager. Everything else will be installed using 'npm' or 'grunt'.
+* Node.js, the Javascript runtime. The scripts expect it to be called 'node'.
+* npm, the Node.js package manager.
+* git, the version control software that you downloaded this with.
+
+This is tested on a Linux operating system, but should work anywhere Node.js does. If you find platform specific issues, let me know.
 
 ## Setup
 
-If you don't have a _grunt_ binary run: 'npm install -g grunt-cli'.
+* If you don't have a _grunt_ binary run: 'npm install -g grunt-cli'.
+* If you don't have a _gulp_ binary run: 'npm install -g gulp-cli'
 
 * Run 'npm install' to install development dependencies.
-* Run 'node download-deps.js' to download external resource scripts.
-* Run 'npm install semantic-ui' to install Semantic-UI (if desired.)
-* Run 'grunt' to compile the source files into website scripts.
+* Run './bin/download-deps.js' to download external resource scripts.
+
+* If you want to use 'grunt' as your build system, run './bin/setup-grunt.sh'
+* If you want to use 'gulp' as your build system, run './bin/setup-gulp.sh'
+
+* Run 'grunt' or 'gulp' to compile the source files into website scripts.
+
+## Optional Features
+
+* Run 'npm install semantic-ui' to install Semantic-UI.
+    * When it asks for a target location, make sure to install it into 'ext/semantic' as our symlinks point there.
+* Run 'git submodule init && git submodule update' to install:
+    * Ace editor libraries.
+    * Crypto.js libraries.
+* Run './bin/setup-sass.sh' to install SASS components for grunt and/or gulp.
+* Run './bin/setup-riot.sh' to install Riot.js components for grunt and/or gulp.
 
 ## Use in your own projects
 
-* Copy or symbolically link the 'node_modules' directory and 'Gruntfile.js' into your own project.
-* Copy the contents of the grunt/ directory into your own project and customize them as required for your needs.
+* Copy or symbolically link the 'node_modules' directory.
+* If using 'grunt', copy or symlink the 'Gruntfile.js' into your own project.
+* If using 'grunt', copy the contents of the grunt/ directory into your project and customize them as required for your needs.
+* If using 'gulp', copy the 'gulpfile.js' into your own project and customize as required for your needs.
 * When Nano.php is added to Github, it has a script which can set up new projects, and install both it and Nano.js into your project root. I will update this documentation when it is available.
 
 ## Cleanup
