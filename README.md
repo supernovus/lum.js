@@ -19,22 +19,22 @@ manager. Everything else will be installed using 'npm' or 'grunt'.
 
 If you don't have a _grunt_ binary run: 'npm install -g grunt-cli'.
 
-Run 'npm install' to install development dependencies.
-Run 'node download-deps.js' to download external resource scripts.
-Run 'npm install semantic-ui' to install Semantic-UI (if desired.)
-Run 'grunt' to compile the source files into website scripts.
+* Run 'npm install' to install development dependencies.
+* Run 'node download-deps.js' to download external resource scripts.
+* Run 'npm install semantic-ui' to install Semantic-UI (if desired.)
+* Run 'grunt' to compile the source files into website scripts.
 
 ## Use in your own projects
 
-Copy or symbolically link the 'node_modules' directory into your own project.
-Copy the Gruntfile.js, package.json, and grunt/ directory into your own project
-and customize them as required for your needs.
+* Copy or symbolically link the 'node_modules' directory and 'Gruntfile.js' into your own project.
+* Copy the contents of the grunt/ directory into your own project and customize them as required for your needs.
+* When Nano.php is added to Github, it has a script which can set up new projects, and install both it and Nano.js into your project root. I will update this documentation when it is available.
 
 ## Cleanup
 
-Run 'grunt clean:release' to remove compiled libraries.
-Run 'grunt clean:downloads' to remove downloaded libraries.
-Run 'grunt clean' to remove anything added by grunt.
+* Run 'grunt clean:release' to remove compiled libraries.
+* Run 'grunt clean:downloads' to remove downloaded libraries.
+* Run 'grunt clean' to remove anything added by grunt.
 
 There is no automated way to remove the modules installed by npm.
 Just delete the 'node_modules' directory if you really want a clean slate.
