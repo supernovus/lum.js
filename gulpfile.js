@@ -5,6 +5,7 @@ var del    = require('del');
 //var sass   = require('gulp-sass');
 //var cssmin = require('gulp-minify-css');
 var srcmap = require('gulp-sourcemaps');
+var runseq = require('run-sequence');
 
 var srcjs  = 'src/js/**/*.js';
 var destjs = 'scripts/nano/';
@@ -47,6 +48,7 @@ gulp.task('scripts', function ()
     .pipe(gulp.dest(destjs));
 });
 
+/*
 gulp.task('styles', function ()
 {
   return gulp.src(srcsass)
@@ -57,6 +59,7 @@ gulp.task('styles', function ()
     .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destsass));
 });
+*/
 
 var buildtasks =
 [
@@ -65,6 +68,11 @@ var buildtasks =
 ];
 
 gulp.task('build', buildtasks); 
+
+gulp.task('rebuild', function ()
+{
+  runseq('clean', 'build');
+});
 
 gulp.task('watch', function ()
 {
