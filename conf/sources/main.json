@@ -2,20 +2,20 @@
   "require.js":
   {
     "uglify": false,
-    "version": "2.1.17",
-    "url": "http://requirejs.org/docs/release/2.1.17/minified/require.js"
+    "version": "2.2.0",
+    "url": "http://requirejs.org/docs/release/2.2.0/minified/require.js"
   },
   "jquery.js":
   {
     "uglify": false,
-    "version": "2.2.0",
-    "url": "http://code.jquery.com/jquery-2.2.0.min.js"
+    "version": "2.2.3",
+    "url": "http://code.jquery.com/jquery-2.2.3.min.js"
   },
   "jquery-migrate.js":
   {
     "uglify": false,
-    "version": "1.3.0",
-    "url": "http://code.jquery.com/jquery-migrate-1.3.0.min.js"
+    "version": "1.4.0",
+    "url": "http://code.jquery.com/jquery-migrate-1.4.0.min.js"
   },
   "jquery-ui.js":
   {
@@ -27,35 +27,7 @@
   {
     "css": true,
     "version": "1.11.4",
-    "url": "http://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css"
-  },
-  "riot-core.js":
-  {
-    "uglify": false,
-    "version":
-    {
-      "json": "https://raw.githubusercontent.com/muut/riotjs/master/package.json"
-    },
-    "url": "https://raw.githubusercontent.com/muut/riotjs/master/riot.min.js"
-  },
-  "riot-compiler.js":
-  {
-    "@parent": "riot-core.js",
-    "url": "https://raw.githubusercontent.com/muut/riotjs/master/compiler.min.js"
-  },
-  "riot-full.js":
-  {
-    "@parent": "riot-core.js",
-    "url": "https://raw.githubusercontent.com/muut/riotjs/master/riot+compiler.min.js"
-  },
-  "riot-control.js":
-  {
-    "uglify": true,
-    "version":
-    {
-      "json": "https://raw.githubusercontent.com/jimsparkman/RiotControl/master/package.json"
-    },
-    "url": "https://raw.githubusercontent.com/jimsparkman/RiotControl/master/riotcontrol.js"
+    "url": "http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"
   },
   "json3.js":
   {
@@ -87,16 +59,6 @@
   {
     "@parent": "moment.js",
     "url": "http://momentjs.com/downloads/moment-with-locales.min.js"
-  },
-  "modernizr.js":
-  {
-    "uglify": true,
-    "version": 
-    {
-      "regex":"Modernizr\\s+v(\\d+\\.\\d+(\\.\\d+)?)",
-      "match": 1
-    },
-    "url": "http://modernizr.com/downloads/modernizr-latest.js"
   },
   "sprintf.js":
   {

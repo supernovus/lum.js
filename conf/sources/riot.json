@@ -1,0 +1,30 @@
+{
+  "riot-core.js":
+  {
+    "uglify": false,
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/muut/riotjs/master/package.json"
+    },
+    "url": "https://raw.githubusercontent.com/muut/riotjs/master/riot.min.js"
+  },
+  "riot-compiler.js":
+  {
+    "@parent": "riot-core.js",
+    "url": "https://raw.githubusercontent.com/muut/riotjs/master/compiler.min.js"
+  },
+  "riot-full.js":
+  {
+    "@parent": "riot-core.js",
+    "url": "https://raw.githubusercontent.com/muut/riotjs/master/riot+compiler.min.js"
+  },
+  "riot-control.js":
+  {
+    "uglify": true,
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/jimsparkman/RiotControl/master/package.json"
+    },
+    "url": "https://raw.githubusercontent.com/jimsparkman/RiotControl/master/riotcontrol.js"
+  }
+}

@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * This will be loaded in the Gruntfile.js, and registered as 'download'.
- */
-  var sources = require('../conf/sources.json');
+  var argv = require('yargs').argv;
+
+  var redownload = argv.redownload !== undefined ? true : false;
+
+  var suite = 'main';
+  if (argv.suite !== undefined)
+    suite = argv.suite;
+
+  var sources = require('../conf/sources/'+suite+'.json');
   
   var exec = require('child_process').exec;
   var UglifyJS = require('uglify-js');
@@ -45,8 +50,8 @@
     //     The regex searches through the source file, and the match will be
     //     the version if found.
     //
-    // We'll record the versions in conf/current.json which will be in the
-    // .gitignore file.
+    // We'll record the versions in conf/installed_deps.json which will be in
+    // the .gitignore file.
     
     function make_handler (source, dest)
     {
@@ -94,12 +99,15 @@
       }
       console.log("Checking for "+dest);
       var exists = false;
-      try
+      if (!redownload)
       {
-        var stat = fs.lstatSync(dest);
-        exists = stat.isFile();
+        try
+        {
+          var stat = fs.lstatSync(dest);
+          exists = stat.isFile();
+        }
+        catch (e) {}
       }
-      catch (e) {}
       if (!exists)
       {
         console.log(" --> Downloading "+source.url);

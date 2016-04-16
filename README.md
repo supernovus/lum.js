@@ -23,13 +23,17 @@ Pick whichever one you are more familiar with.
 
 ## Setup
 
-* If you don't have a _gulp_ binary run:  'npm install -g gulp-cli'
-* If you don't have a _grunt_ binary run: 'npm install -g grunt-cli'.
-
 * Run 'npm install' to install development dependencies.
 * Run './bin/download-deps.js' to download external resource scripts.
 
-* If you want to use 'gulp' as your build system, run './bin/setup-gulp.sh'
+* If you want to use 'gulp 3' as your build system, run './bin/setup-gulp3.sh'
+    * If you want to install the _gulp_ binary use: './bin/setup-gulp3.sh -g'
+    * If you want to uninstall old versions first use: './bin/setup-gulp3.sh -g -u'
+    * If you want to install the binary manually: 'npm install -g gulp-cli'
+* If you want to use 'gulp 4' as your build system, run './bin/setup-gulp4.sh'
+    * If you want to install the _gulp_ binary use: './bin/setup-gulp4.sh -g'
+    * If you want to uninstall old versions first use: './bin/setup-gulp4.sh -g -u'
+    * If you want to install the binary manually: 'npm install -g "gulpjs/gulp#4.0"'
 * If you want to use 'grunt' as your build system, run './bin/setup-grunt.sh'
 
 * Run 'gulp' or 'grunt' to compile the source files into website scripts.
@@ -42,7 +46,21 @@ Pick whichever one you are more familiar with.
     * Ace editor libraries.
     * Crypto.js libraries.
 * Run './bin/setup-sass.sh' to install SASS components for grunt and/or gulp.
+* Run './bin/download-deps.js --suite riot' to download Riot.js libraries.
 * Run './bin/setup-riot.sh' to install Riot.js components for grunt and/or gulp.
+
+## Updating downloaded dependencies
+
+Eventually the download-deps script will have proper version checking and will 
+be able to redownload only outdated scripts. Until then, you can force the
+script to redownload all dependencies using the following:
+
+  ./bin/download-deps.js --redownload
+
+If you downloaded the Riot.js libraries using download-deps, it can also
+be updated using the same method:
+
+  ./bin/download-deps.js --suite riot --redownload
 
 ## Use in your own projects
 
