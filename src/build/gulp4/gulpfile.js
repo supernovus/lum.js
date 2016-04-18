@@ -8,6 +8,10 @@ var del    = require('del');
 //var sass   = require('gulp-sass');
 //var cssmin = require('gulp-minify-css');
 var srcmap = require('gulp-sourcemaps');
+var fcache = require('gulp-file-cache');
+
+var jcache = new fcache('.gulp-cache-js');
+//var ccache = new fcache('.gulp-cache-css');
 
 var srcjs  = 'src/js/**/*.js';
 var destjs = 'scripts/nano/';
@@ -43,8 +47,10 @@ gulp.task('distclean', gulp.parallel('clean', 'cleandeps'));
 gulp.task('scripts', function ()
 {
   return gulp.src(srcjs, {since: gulp.lastRun('scripts')})
+    .pipe(jcache.filter())
     .pipe(srcmap.init())
     .pipe(uglify())
+    .pipe(jcache.cache())
     .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destjs));
 });
@@ -53,9 +59,11 @@ gulp.task('scripts', function ()
 gulp.task('styles', function ()
 {
   return gulp.src(srcsass, {since: gulp.lastRun('styles')})
+    .pipe(ccache.filter())
     .pipe(srcmap.init())
     .pipe(sass())
     .pipe(cssmin())
+    .pipe(ccache.cache())
     .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destsass));
 });

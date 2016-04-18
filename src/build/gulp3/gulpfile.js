@@ -3,13 +3,16 @@
  */
 
 var gulp   = require('gulp');
-var newer  = require('gulp-newer');
 var uglify = require('gulp-uglify');
 var del    = require('del');
 //var sass   = require('gulp-sass');
 //var cssmin = require('gulp-minify-css');
 var srcmap = require('gulp-sourcemaps');
 var runseq = require('run-sequence');
+var fcache = require('gulp-file-cache');
+
+var jcache = new fcache('.gulp-cache-js');
+var ccache = new fcache('.gulp-cache-css');
 
 var srcjs  = 'src/js/**/*.js';
 var destjs = 'scripts/nano/';
@@ -45,9 +48,11 @@ gulp.task('distclean', ['clean', 'cleandeps']);
 gulp.task('scripts', function ()
 {
   return gulp.src(srcjs)
+    .pipe(jcache.filter())
     .pipe(newer(destjs))
     .pipe(srcmap.init())
     .pipe(uglify())
+    .pipe(jcache.cache())
     .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destjs));
 });
@@ -56,10 +61,12 @@ gulp.task('scripts', function ()
 gulp.task('styles', function ()
 {
   return gulp.src(srcsass)
+    .pipe(ccache.filter())
     .pipe(newer(destsass))
     .pipe(srcmap.init())
     .pipe(sass())
     .pipe(cssmin())
+    .pipe(ccache.cache())
     .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destsass));
 });

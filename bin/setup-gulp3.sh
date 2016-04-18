@@ -12,7 +12,7 @@ if [ "$1" = "-u" ]; then
   npm uninstall gulp
 fi
 
-npm install gulp@^3.9.0 gulp-rename gulp-uglify gulp-sourcemaps gulp-newer gulp-if del run-sequence
+npm install gulp@^3.9.0 gulp-uglify gulp-sourcemaps gulp-file-cache del run-sequence
 
 cp src/build/gulp3/gulpfile.js .
 
