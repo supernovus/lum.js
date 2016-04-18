@@ -5,13 +5,11 @@
  *
  * Note: this does not bind any actions to the listing buttons, so you still
  * need to do that yourself.
- *
- * TODO: Make it so default search/sort are shown in UI.
- * TODO: Make unified search handle multiple fields better.
  */
 
 (function($)
 {
+/* jshint asi: true, laxbreak: true */
 
 if (window.Nano === undefined || Nano.Pager === undefined)
 {
@@ -225,16 +223,122 @@ Nano.Listing = function (options)
     this.sortDesc = options.sortDesc;
   }
 
+  // Use HTML Session Storage to remember current settings?
+  this.useMemory = 'memory' in options ? options.memory : false;
+  if (this.useMemory)
+  {
+    var memory = this.getMemory();
+    if (memory !== undefined)
+    {
+      for (var m in memory)
+      {
+        if (m === 'current')
+          pagerOpts.current = memory[m];
+        else
+          this[m] = memory[m];
+      }
+    }
+  }
+
   // We don't want to render the pager during construction.
   pagerOpts.noRender = true;
-//  console.log({pagerOpts: pagerOpts});
 
+  // If there is a location hash, it's the default page.
+  if (window.location.hash !== '')
+  {
+    var pagenum = window.location.hash.substr(1); // cut off the #
+    pagerOpts.current = pagenum;
+  }
+
+//  console.log({pagerOpts: pagerOpts});
+  if (typeof this.reloadSort === 'function')
+    this.reloadSort();
+  if (typeof this.reloadSearch === 'function')
+    this.reloadSearch();
 
   // Build our pager option.
   this.pager = new Nano.Pager(pagerOpts);
 
   // Display the first page. This will render the pager.
   this.refresh();
+}
+
+/** 
+ * Get the current listing namespace.
+ *
+ * We use the full URL path minus any hash elements, and if the
+ * listing element has an 'id' attribute, we append it with a hash.
+ */
+Nano.Listing.prototype.getNS = function ()
+{
+  var uri = window.location.href.split('#', 2)[0];
+  var eid = this.element.prop('id');
+  if (eid)
+    uri += '#'+eid;
+  return uri; 
+}
+
+/**
+ * Get the full memory stored in the session.
+ */
+Nano.Listing.prototype.getFullMemory = function ()
+{
+  var fullMemory;
+  if (sessionStorage.nanoListingMemory !== undefined)
+    fullMemory = JSON.parse(sessionStorage.nanoListingMemory);
+  else
+    fullMemory = {};
+  return fullMemory;
+}
+
+/**
+ * Save the full memory definition back into the session.
+ */
+Nano.Listing.prototype.saveFullMemory = function (data)
+{
+  sessionStorage.nanoListingMemory = JSON.stringify(data);
+}
+
+// Get the memory cache.
+Nano.Listing.prototype.getMemory = function ()
+{
+  if (typeof(Storage) === undefined)
+  {
+    console.error("No web storage available");
+    return;
+  }
+  if (this.memory !== undefined) return this.memory;
+  var ns = this.getNS();
+  var fullMemory = this.getFullMemory();
+  if (fullMemory[ns] !== undefined)
+  {
+    this.memory = fullMemory[ns];
+    return this.memory;
+  }
+}
+
+// Save the memory cache.
+Nano.Listing.prototype.saveMemory = function ()
+{
+  if (typeof(Storage) === undefined)
+  {
+    console.error("No web storage available");
+    return;
+  }
+  var memory = this.getMemory();
+  if (memory === undefined)
+  {
+    memory = {};
+  }
+  memory.current  = this.pager.currentpage;
+  memory.searchBy = this.searchBy;
+  memory.sortBy   = this.sortBy;
+  memory.sortDesc = this.sortDesc;
+  memory.searches = this.searches;
+  var ns = this.getNS();
+  var fullMemory = this.getFullMemory();
+  fullMemory[ns] = memory;
+  this.saveFullMemory(fullMemory);
 }
 
 // A simple sorting routine.
@@ -265,6 +369,16 @@ Nano.Listing.prototype.registerSort = function (selector)
     $this.parent().find('.arrow.down').toggle(self.sortDesc);
     self.refresh();
   });
+  self.reloadSort = function ()
+  {
+    if (self.sortBy)
+    {
+      var sortKey = self.sortAttr.replace(':', '\\:');
+      var el = $(selector).parent().parent().find('['+sortKey+'="'+self.sortBy+'"]');
+      el.find('.arrow.up').toggle(self.sortDesc ? false : true);
+      el.find('.arrow.down').toggle(self.sortDesc);
+    }
+  }
 }
 
 // A simple search method.
@@ -298,14 +412,29 @@ Nano.Listing.prototype.registerSearch = function (selector, unified)
     if (text === '')
     {
       self.search(col, null);
-      $this.css('display', '');
+      if (!unified)
+        $this.css('display', '');
     }
     else
     {
-      $this.css('display', 'block');
+      if (!unified)
+        $this.css('display', 'block');
       self.search(col, text);
     }
   });
+  self.reloadSearch = function ()
+  {
+    if (!unified && Object.keys(this.searches).length > 0)
+    {
+      var parentEl = $(selector).parent().parent();
+      for (var s in this.searches)
+      {
+        var searchKey = self.searchAttr.replace(':', '\\:');
+        var searchEl = parentEl.find('['+searchKey+'="'+s+'"] .search');
+        searchEl.css('display', 'block');
+      }
+    }
+  }
 }
 
 // Register changing the search toggle. Only used in unified searching.
@@ -320,8 +449,14 @@ Nano.Listing.prototype.registerSearchToggle = function (selector, evname)
     var searchcol = $this.parent().attr(self.searchAttr);
 //    console.log("searchcol", searchcol);
     if (searchcol)
+    {
       self.searchBy = searchcol;
-    $(self.searchSelector).focus();
+      if (self.searches[searchcol] !== undefined)
+      {
+        $(self.searchSelector).val(self.searches[searchcol]);
+      }
+      $(self.searchSelector).focus();
+    }
   });
 }
 
@@ -419,15 +554,16 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
   }
   else
   {
+    var i,col;
     var sortdata = this.displayData = [];
     if (Object.keys(this.searches).length > 0)
     { // Only include the matching items.
       var searchdata1 = rawdata;
       var searchdata2 = [];
-      for (var col in this.searches)
+      for (col in this.searches)
       {
         var find = new RegExp(this.searches[col], "i");
-        for (var i in searchdata1)
+        for (i in searchdata1)
         {
           var curitem = searchdata1[i];
           var curcol  = curitem[col];
@@ -461,7 +597,7 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
     }
     else
     { // Copy all raw data items into the sorted data.
-      for (var i in rawdata)
+      for (i in rawdata)
       {
         var rawitem = rawdata[i];
         sortdata.push(rawitem);
@@ -470,7 +606,7 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
     if (sortdata.length > 0 && this.sortBy)
     { // Sort by a column.
 //      console.log("sorting by",this.sortBy);
-      var col = this.sortBy;
+      col = this.sortBy;
       var desc = this.sortDesc;
       if (typeof this.sortCol[col] === 'function')
       {
@@ -607,6 +743,12 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
 
   this.pager.countPages(this.displayData.length);
   this.pager.render();
+
+  if (this.useMemory)
+  {
+    this.saveMemory();
+  }
+
   this.showPage(this.pager.currentpage);
 }
 
@@ -620,7 +762,7 @@ Nano.Listing.prototype.showPage = function (page)
   var list = this.element;
   list.empty();
 
-  if (dlen === undefined || dlen == 0)
+  if (dlen === undefined || dlen === 0)
   { // The list is empty. Restore the original text, and return.
     list.append(this.empty_list);
     return false;

@@ -53,6 +53,9 @@ Nano.Pager = function (options)
   // Set a reasonable default.
   this.pagecount = 1;
 
+  // Block hash changes?
+  this.blockHash = 'blockHash' in options ? options.blockHash : false;
+
   if ('count' in options)
   {
     this.countPages(options.count);
@@ -116,7 +119,8 @@ Nano.Pager = function (options)
   var pager = this;
   this.element.on('click', this.linkTag, function (event)
   {
-    event.preventDefault();
+    if (pager.blockHash) 
+      event.preventDefault();
     var anchor = $(this);
     pager.changePage(anchor);
   });
@@ -167,7 +171,10 @@ Nano.Pager.prototype.render = function ()
   else
     list = this.element;
   list.empty();
-  // First, draw the first page.
+  // Make sure the currentpage isn't higher than the pagecount.
+  if (this.currentpage > this.pagecount)
+    this.currentpage = this.pagecount;
+  // Draw the first page.
   this.draw(list, 1);
   if (this.pagecount === 1) return;
   if (this.pagecount <= this.showmax)
