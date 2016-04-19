@@ -11,29 +11,43 @@ var srcmap = require('gulp-sourcemaps');
 var runseq = require('run-sequence');
 var fcache = require('gulp-file-cache');
 
-var jcache = new fcache('.gulp-cache-js');
-var ccache = new fcache('.gulp-cache-css');
+var jcfile = '.gulp-cache-js';
+var ccfile = '.gul-cache-css';
+var jcache = new fcache(jcfile);
+var ccache = new fcache(ccfile);
 
 var srcjs  = 'src/js/**/*.js';
 var destjs = 'scripts/nano/';
 
-//var srcsass  = 'src/sass/**/*.scss';
-//var destsass = 'style/nano/';
+//var srccss  = 'src/sass/**/*.scss';
+//var destcss = 'style/nano/';
 
 var downloaded_js  = 'scripts/ext';
 var downloaded_css = 'style/ext';
 
-gulp.task('clean', function ()
+gulp.task('clean-js', function ()
 {
-  var cleanitems =
-  [
-    destjs,
-    //destsass,
-  ];
-  return del(cleanitems);
+  jcache.clear();
+  return del([destjs,jcfile]);
 });
 
-gulp.task('cleandeps', function ()
+/*
+gulp.task('clean-css', function ()
+{
+  ccache.clear();
+  return del([destcss,ccfile]);
+});
+*/
+
+var clean_tasks =
+[
+  'clean-js',
+//  'clean-css',
+]
+
+gulp.task('clean', clean_tasks);
+
+gulp.task('clean-deps', function ()
 {
   var cleanitems =
   [
@@ -43,9 +57,9 @@ gulp.task('cleandeps', function ()
   return del(cleanitems);
 });
 
-gulp.task('distclean', ['clean', 'cleandeps']);
+gulp.task('distclean', ['clean', 'clean-deps']);
 
-gulp.task('scripts', function ()
+gulp.task('build-js', function ()
 {
   return gulp.src(srcjs)
     .pipe(jcache.filter())
@@ -58,37 +72,51 @@ gulp.task('scripts', function ()
 });
 
 /*
-gulp.task('styles', function ()
+gulp.task('build-css', function ()
 {
-  return gulp.src(srcsass)
+  return gulp.src(srccss)
     .pipe(ccache.filter())
-    .pipe(newer(destsass))
+    .pipe(newer(destcss))
     .pipe(srcmap.init())
     .pipe(sass())
     .pipe(cssmin())
     .pipe(ccache.cache())
     .pipe(srcmap.write('maps'))
-    .pipe(gulp.dest(destsass));
+    .pipe(gulp.dest(destcss));
 });
 */
 
-var buildtasks =
+var build_tasks =
 [
-  'scripts',
-//  'styles',
+  'build-js',
+//  'build-css',
 ];
 
-gulp.task('build', buildtasks); 
+gulp.task('build', build_tasks); 
 
 gulp.task('rebuild', function ()
 {
   runseq('clean', 'build');
 });
 
-gulp.task('watch', function ()
+gulp.task('watch-js', function ()
 {
-  gulp.watch(srcjs, ['scripts']);
-  //gulp.watch(srcsass, ['styles']);
+  return gulp.watch(srcjs, ['build-js']);
 });
+
+/*
+gulp.task('watch-css', function ()
+{
+  return gulp.watch(srccss, ['build-css']);
+});
+*/
+
+var watch_tasks =
+[
+  'watch-js',
+//  'watch-css',
+];
+
+gulp.task('watch', watch_tasks);
 
 gulp.task('default', ['build']);
