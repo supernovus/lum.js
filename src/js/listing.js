@@ -318,7 +318,7 @@ Nano.Listing.prototype.getMemory = function ()
 }
 
 // Save the memory cache.
-Nano.Listing.prototype.saveMemory = function ()
+Nano.Listing.prototype.saveMemory = function (page)
 {
   if (typeof(Storage) === undefined)
   {
@@ -330,7 +330,7 @@ Nano.Listing.prototype.saveMemory = function ()
   {
     memory = {};
   }
-  memory.current  = this.pager.currentpage;
+  memory.current  = page;
   memory.searchBy = this.searchBy;
   memory.sortBy   = this.sortBy;
   memory.sortDesc = this.sortDesc;
@@ -744,11 +744,6 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
   this.pager.countPages(this.displayData.length);
   this.pager.render();
 
-  if (this.useMemory)
-  {
-    this.saveMemory();
-  }
-
   this.showPage(this.pager.currentpage);
 }
 
@@ -766,6 +761,11 @@ Nano.Listing.prototype.showPage = function (page)
   { // The list is empty. Restore the original text, and return.
     list.append(this.empty_list);
     return false;
+  }
+
+  if (this.useMemory)
+  {
+    this.saveMemory(page);
   }
 
   var show  = this.pager.perpage;
