@@ -35,6 +35,7 @@ Nano.Validation = function (conf)
   {
     this.status = conf.status;
   }
+  this.disabled = false;
   this.events = 'actions' in conf ? conf.actions : {};
   this.valid = true;
   this.tests = [];
@@ -110,6 +111,8 @@ Nano.Validation.prototype.reset = function ()
 Nano.Validation.prototype.validate = function ()
 {
   var self = this;
+
+  if (this.disabled) return true;
 
   var testTypes =
   {
