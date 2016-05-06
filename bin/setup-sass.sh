@@ -9,6 +9,6 @@ if [ -d "grunt" ]; then
 fi
 
 if [ -d "node_modules/gulp" ]; then
-  npm install gulp-sass gulp-minify-css
+  npm install gulp-sass gulp-clean-css
 fi
 

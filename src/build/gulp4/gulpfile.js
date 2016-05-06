@@ -6,7 +6,7 @@ var gulp   = require('gulp');
 var uglify = require('gulp-uglify');
 var del    = require('del');
 //var sass   = require('gulp-sass');
-//var cssmin = require('gulp-minify-css');
+//var cssmin = require('gulp-clean-css');
 var srcmap = require('gulp-sourcemaps');
 var fcache = require('gulp-file-cache');
 
