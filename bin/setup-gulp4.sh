@@ -5,7 +5,7 @@ if [ "$1" = "-g" ]; then
   if [ "$1" = "-u" ]; then
     sudo npm uninstall -g gulp-cli
   fi
-  sudo npm install -g "gulpjs/gulp-cli#4.0"
+  sudo npm install -g gulp-cli
 fi
 
 if [ "$1" = "-u" ]; then
