@@ -431,6 +431,7 @@ Nano.Listing.prototype.registerSearch = function (selector, unified)
       {
         var searchKey = self.searchAttr.replace(':', '\\:');
         var searchEl = parentEl.find('['+searchKey+'="'+s+'"] .search');
+        searchEl.val(this.searches[s]);
         searchEl.css('display', 'block');
       }
     }
