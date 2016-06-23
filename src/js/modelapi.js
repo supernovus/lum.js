@@ -286,12 +286,26 @@
         }
       }
 
+      var changeHandler;
+      if ('changed' in source)
+      {
+        changeHandler = source.changed;
+      }
+
       // Add a special "save" function.
       Nano.addProperty(jsondata, 'save', function (target)
       {
         if (!target)
           target = elname;
         $(target).JSON(this);
+        if (typeof changeHandler === 'string')
+        {
+          $(changeHandler).val(1);
+        }
+        else if (typeof changeHandler === 'function')
+        {
+          changeHandler(this, target);
+        }
       });
 
       // Add a special "json" function. This requires the
