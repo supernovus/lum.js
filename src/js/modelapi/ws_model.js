@@ -30,14 +30,22 @@
   Nano.ModelAPI.prototype.post_init.webserviceModel = function (conf)
   {
     this.model.doc_cache = {};
-    if (this.__ws_model === undefined)
-    { // Default ws model name is 'ws'.
-      this.__ws_model = 'ws';
-    }
-    if (this.__ws_deferred === undefined)
-    {
-      this.__ws_deferred = true;
-    }
+    if (this.__ws === undefined)
+      this.__ws = {};
+    if (this.__ws.model === undefined)
+      this.__ws.model = 'ws';
+    if (this.__ws.deferred === undefined)
+      this.__ws.deferred = true;
+    if (this.__ws.list === undefined)
+      this.__ws.list = 'list';
+    if (this.__ws.get === undefined)
+      this.__ws.get = 'get';
+    if (this.__ws.update === undefined)
+      this.__ws.update = 'update';
+    if (this.__ws.create === undefined)
+      this.__ws.create = 'create';
+    if (this.__ws.delete === undefined)
+      this.__ws.delete = 'delete';
   }
 
   /**
@@ -45,9 +53,9 @@
    */
   Nano.ModelAPI.prototype.get_ws = function (can)
   {
-    if (this.__ws_model !== undefined && this.model !== undefined && this.model[this.__ws_model] !== undefined)
+    if (this.__ws.model !== undefined && this.model !== undefined && this.model[this.__ws.model] !== undefined)
     {
-      var ws = this.model[this.__ws_model];
+      var ws = this.model[this.__ws.model];
       if (can === undefined)
       {
         return ws;
@@ -67,7 +75,7 @@
    */
   Nano.ModelAPI.prototype.no_ws = function (name)
   {
-    var promise = new Nano.Promise(this.__ws_deferred);
+    var promise = new Nano.Promise(this.__ws.deferred);
     promise.deferDone({success: false, error: "no web service can handle method: "+name});
     return promise;
   }
@@ -87,10 +95,11 @@
     var self = this;
     if (reload || this.model.cached_list === undefined)
     {
-      var ws = this.get_ws('list');
+      var meth = this.__ws.list;
+      var ws = this.get_ws(meth);
       if (ws === undefined)
-        return this.no_ws('list');
-      var ret = ws.list(listopts);
+        return this.no_ws(meth);
+      var ret = ws[meth](listopts);
       ret.done(function(list)
       {
         if (list.error === undefined)
@@ -105,7 +114,7 @@
     }
     else
     {
-      var promise = new Nano.Promise(self.__ws_deferred);
+      var promise = new Nano.Promise(self.__ws.deferred);
       promise.deferDone(self.model.cached_list);
       return promise;
     }
@@ -126,10 +135,11 @@
     var self = this;
     if (reload || this.model.doc_cache[id] === undefined)
     {
-      var ws = this.get_ws('get');
+      var meth = this.__ws.get;
+      var ws = this.get_ws(meth);
       if (ws === undefined)
-        return this.no_ws('get');
-      var ret = ws.get({id: id});
+        return this.no_ws(meth);
+      var ret = ws[meth]({id: id});
       ret.done(function(doc)
       {
         if (doc.error === undefined)
@@ -145,7 +155,7 @@
     }
     else
     {
-      var promise = new Nano.Promise(self.__ws_deferred);
+      var promise = new Nano.Promise(self.__ws.deferred);
       promise.deferDone(self.model.doc_cache[id]);
       return promise;
     }
@@ -294,11 +304,12 @@
    */
   Nano.ModelAPI.prototype.delete = function (id)
   {
-    var ws = this.get_ws('delete'); 
+    var meth = this.__ws.delete;
+    var ws = this.get_ws(meth); 
     if (ws === undefined)
-      return this.no_ws('delete');
+      return this.no_ws(meth);
     var self = this;
-    var ret = ws.delete({id: id});
+    var ret = ws[meth]({id: id});
     ret.done(function(data)
     {
       if (data.success)
@@ -329,8 +340,8 @@
   Nano.ModelAPI.prototype.save = function (doc)
   {
     var self = this;
-    var ret, ws;
-    self.trigger("preSave", doc);
+    var ret, ws, meth;
+    this.trigger("preSave", doc);
     if (doc.id !== undefined)
     { // We're making changes to an existing document.
       var changed = doc.changed();
@@ -356,22 +367,24 @@
         patch.$unset = removed;
       }
 //      console.log("patch", patch);
-      self.trigger("preSaveChanges", patch);
-      ws = this.get_ws('save');
+      meth = this.__ws.update;
+      this.trigger("preSaveChanges", patch);
+      ws = this.get_ws(meth);
       if (ws === undefined)
-        return this.no_ws('save');
-      ret = ws.save(patch);
-      self.trigger("postSaveChanges", ret, patch);
+        return this.no_ws(meth);
+      ret = ws[meth](patch);
+      this.trigger("postSaveChanges", ret, patch);
     }
     else
     { // We're saving a new document.
       // The doc should be the complete document, and removed is ignored.
-      self.trigger("preSaveNew", doc);
-      ws = this.get_ws('new');
+      meth = this.__ws.create;
+      this.trigger("preSaveNew", doc);
+      ws = this.get_ws(meth);
       if (ws === undefined)
-        return this.no_ws('new');
-      ret = ws.new(doc);
-      self.trigger("postSaveNew", ret, doc);
+        return this.no_ws(meth);
+      ret = ws[meth](doc);
+      this.trigger("postSaveNew", ret, doc);
     }
     ret.done(function(data)
     {
