@@ -21,9 +21,14 @@
      */
     var self;
     if (observable !== undefined)
+    {
       self = observable(this);
+      self.make_observable = observable;
+    }
     else
+    {
       self = this;
+    }
 
     /**
      * The model property stores our model data and backend services.
