@@ -8,7 +8,10 @@
  * The ModelAPI class has been split into it's own class, and a new
  * ViewController class has been added to work with it. 
  *
- * None of the classes in this file should be used in new code.
+ * As soon as any old code that uses this has been ported to the new
+ * methodology, I will remove this library entirely.
+ *
+ * Nothing in this file should be used in new code.
  */
 
 (function($, observable)
@@ -58,33 +61,6 @@
   }
 
   /**
-   * A quick method to get an empty API class, ready to be populated.
-   */
-  Nano.makeAPI = function (apiClass)
-  {
-    if (apiClass === undefined || apiClass === null)
-    {
-      if (Nano.ModelAPI !== undefined)
-      {
-        return Nano.ModelAPI.makeAPI();
-      }
-      else
-      {
-        console.log("fatal error: could not find suitable API class.");
-        return;
-      }
-    }
-
-    var API = function (apiConf)
-    {
-      apiClass.call(this, apiConf);
-    }
-    Nano.extend(apiClass, API);
-
-    return API;
-  }
-
-  /**
    * An optional wrapper around the webApp and ModelAPI classes.
    *
    * Usage:
@@ -104,7 +80,7 @@
     this.appConf = appConf;
 
     // Create our API class. This is the class object, not the instance.
-    this.API = Nano.makeAPI(appConf.apiClass);
+    this.API = this.makeAPI(appConf.apiClass);
 
     if (this.API === undefined)
     {
@@ -120,6 +96,41 @@
 
     // Create our Nano.webApp instance.
     this.webApp = Nano.webApp(this.API);
+  }
+
+  /**
+   * A quick method to get an empty API class, ready to be populated.
+   */
+  Nano.EasyWebApp.prototype.makeAPI = function (apiClass)
+  {
+    // First, if no apiClass was called, use the Nano.ModelAPI class.
+    if (apiClass === undefined || apiClass === null)
+    {
+      if (Nano.ModelAPI !== undefined)
+      {
+        return Nano.ModelAPI.makeAPI();
+      }
+      else
+      {
+        console.log("fatal error: could not find suitable API class.");
+        return;
+      }
+    }
+
+    // Next, if the apiClass provides a makeAPI method, use it.
+    if (apiClass.makeAPI !== undefined)
+    {
+      return apiClass.makeAPI();
+    }
+
+    // Finally, if the apiClass doesn't provide a makeAPI method, we use the
+    // original wrapping technique. It's ugly, but it works.
+    var API = function (apiConf)
+    {
+      apiClass.call(this, apiConf);
+    }
+    Nano.extend(apiClass, API);
+    return API;
   }
 
   Nano.EasyWebApp.prototype.addAPI = function (name, func)

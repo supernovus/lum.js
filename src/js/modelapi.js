@@ -333,7 +333,7 @@
     } // if element exists
   }
 
-  Nano.ModelAPI.makeAPI = function ()
+  Nano.ModelAPI.makeAPI = function (replicate)
   {
     var self = this;
     var newAPI = function (apiConf)
@@ -341,6 +341,13 @@
       self.call(this, apiConf);
     }
     Nano.extend(self, newAPI);
+    if (replicate)
+    {
+      newAPI.makeAPI = function (replicate)
+      {
+        return self.makeAPI.call(this, replicate);
+      }
+    }
     return newAPI;
   }
 

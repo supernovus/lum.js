@@ -55,7 +55,7 @@
     });
   }
 
-  Nano.ViewController.makeGUI = function ()
+  Nano.ViewController.makeGUI = function (replicate)
   {
     var self = this;
     var newGUI = function ()
@@ -63,6 +63,13 @@
       self.call(this);
     }
     Nano.extend(self, newGUI);
+    if (replicate)
+    {
+      newGUI.makeGUI = function (replicate)
+      {
+        return self.makeGUI.call(this, replicate);
+      }
+    }
     return newGUI;
   }
 
