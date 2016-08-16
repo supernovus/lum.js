@@ -57,24 +57,13 @@
 
   Nano.ViewController.makeGUI = function (replicate)
   {
-    var self = this;
-    var newGUI = function ()
-    {
-      self.call(this);
-    }
-    Nano.extend(self, newGUI);
-    if (replicate)
-    {
-      newGUI.makeGUI = function (replicate)
-      {
-        return self.makeGUI.call(this, replicate);
-      }
-    }
-    return newGUI;
+    return Nano.extend(this, null, replicate);
   }
 
-})(jQuery,                       // jQuery is always required. 
-window.riot 
+})(
+  jQuery,                        // jQuery is always required. 
+  window.riot 
   ? window.riot.observable       // If 'riot' exists, use it.
   : window.Nano.observable       // Nano may contain the observable trait.
 );
+

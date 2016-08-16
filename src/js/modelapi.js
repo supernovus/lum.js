@@ -335,24 +335,12 @@
 
   Nano.ModelAPI.makeAPI = function (replicate)
   {
-    var self = this;
-    var newAPI = function (apiConf)
-    {
-      self.call(this, apiConf);
-    }
-    Nano.extend(self, newAPI);
-    if (replicate)
-    {
-      newAPI.makeAPI = function (replicate)
-      {
-        return self.makeAPI.call(this, replicate);
-      }
-    }
-    return newAPI;
+    return Nano.extend(this, null, replicate);
   }
 
-})(jQuery,                       // jQuery is always required. 
-window.riot 
+})(
+  jQuery,                        // jQuery is always required. 
+  window.riot
   ? window.riot.observable       // If 'riot' exists, use it.
   : window.Nano.observable       // Nano may contain the observable trait.
 );

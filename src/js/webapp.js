@@ -124,13 +124,8 @@
     }
 
     // Finally, if the apiClass doesn't provide a makeAPI method, we use the
-    // original wrapping technique. It's ugly, but it works.
-    var API = function (apiConf)
-    {
-      apiClass.call(this, apiConf);
-    }
-    Nano.extend(apiClass, API);
-    return API;
+    // singular syntax of the Nano.extend() method.
+    return Nano.extend(apiClass);
   }
 
   Nano.EasyWebApp.prototype.addAPI = function (name, func)
