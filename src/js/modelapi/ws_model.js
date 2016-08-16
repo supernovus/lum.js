@@ -46,6 +46,8 @@
       this.__ws.create = 'create';
     if (this.__ws.delete === undefined)
       this.__ws.delete = 'delete';
+    if (this.__ws.patch === undefined)
+      this.__ws.patch = true;
   }
 
   /**
@@ -250,7 +252,15 @@
     {
       if (typeof prop === 'string' && value !== undefined)
       {
-        this[prop] = value;
+        var meth = 'set_'+prop;
+        if (typeof this[meth] === 'function')
+        {
+          this[meth](value);
+        }
+        else
+        {
+          this[prop] = value;
+        }
         this.changed(prop);
       }
       else if (typeof prop === 'object' && value === undefined)
@@ -271,7 +281,15 @@
     {
       if (typeof props === 'string')
       {
-        delete this[props];
+        var meth = 'unset_'+prop;
+        if (typeof this[meth] === 'function')
+        {
+          this[meth]();
+        }
+        else
+        {
+          delete this[props];
+        }
         this.removed(props);
       }
       else if ($.isArray(props))
@@ -354,25 +372,32 @@
         promise.deferDone({success:false, debugMsg:"no changes"});
         return promise;
       }
-      var patch =
+      var patch;
+      if (this.__ws.patch)
       {
-        id: doc.id,
-      };
-      if (ccount > 0)
-      {
-        patch.$set = changed;
-      }
-      if (rcount > 0)
-      {
-        patch.$unset = removed;
-      }
+        patch =
+        {
+          id: doc.id,
+        };
+        if (ccount > 0)
+        {
+          patch.$set = changed;
+        }
+        if (rcount > 0)
+        {
+          patch.$unset = removed;
+        }
 //      console.log("patch", patch);
+      }
       meth = this.__ws.update;
       this.trigger("preSaveChanges", patch);
       ws = this.get_ws(meth);
       if (ws === undefined)
         return this.no_ws(meth);
-      ret = ws[meth](patch);
+      if (this.__ws.patch)
+        ret = ws[meth](patch);
+      else
+        ret = ws[meth](doc);
       this.trigger("postSaveChanges", ret, patch);
     }
     else
