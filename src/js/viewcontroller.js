@@ -19,14 +19,14 @@
 
     self.api = null;
     if (observable === undefined)
-      self.calls = [];
+      self.readyHandlers = [];
   }
 
   Nano.ViewController.prototype.add = function (func)
   {
-    if (this.calls)
+    if (this.readyHandlers)
     {
-      this.calls.push(func);
+      this.readyHandlers.push(func);
     }
     else
     {
@@ -40,12 +40,12 @@
     $(function()
     {
       var api = self.apiInstance = new modelclass(conf);
-      if (this.calls)
+      if (self.readyHandlers)
       {
-        for (var c in this.calls)
+        for (var c in self.readyHandlers)
         {
-          var call = this.calls[c];
-          call(api);
+          var handler = self.readyHandlers[c];
+          handler.call(self, api);
         }
       }
       else
@@ -53,6 +53,22 @@
         self.trigger("ready", api);
       }
     });
+  }
+
+  Nano.ViewController.prototype.getHook = function (hookname)
+  {
+    if (this.readyHandlers)
+    {
+      Nano.warn("getHook requires 'observable' library to be loaded.");
+      return;
+    }
+    var self = this;
+    var hook = function (evnt)
+    {
+      var element = $(this);
+      self.trigger(hookname, element, evnt);
+    }
+    return hook;
   }
 
   Nano.ViewController.makeGUI = function (replicate)
