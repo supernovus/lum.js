@@ -20,6 +20,8 @@
     self.api = null;
     if (observable === undefined)
       self.readyHandlers = [];
+
+    self.defaultAttrNamespace = 'nano';
   }
 
   Nano.ViewController.prototype.add = function (func)
@@ -69,6 +71,30 @@
       self.trigger(hookname, element, evnt);
     }
     return hook;
+  }
+
+  Nano.ViewController.prototype.attrNS = function (selector, aname, aval, opts)
+  {
+    if (opts === undefined)
+      opts = {};
+    else if (typeof opts === 'function')
+      opts = {each: opts};
+    else if (typeof opts === 'string')
+      opts = {ns: opts};
+
+    var ns = 'ns' in opts ? opts.ns : this.defaultAttrNamespace;
+
+    var matching = $(selector).filter(function()
+    {
+      return $(this).attr(ns+':'+aname) == aval;
+    });
+
+    if (typeof opts.each === 'function')
+    {
+      matching.each(opts.each);
+    }
+
+    return matching;
   }
 
   Nano.ViewController.makeGUI = function (replicate)

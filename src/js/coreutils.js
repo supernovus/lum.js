@@ -130,9 +130,8 @@
   }
 
   /**
-   * Add a "magical" function to a JS object.
-   * These functions are marked as indomitable, do not affect
-   * enumeration, and are ignored by JSON.
+   * A wrapper around Object.defineProperty() that assigns a value to
+   * the property. It can be a static value, or a function.
    */
   Nano.addProperty = function (object, pname, pfunc, opts)
   {
@@ -141,10 +140,28 @@
     var props =
     {
       value:         pfunc,
-      enumerable:    'enumerable'   in opts ? opts.enumerable   : false,
-      configurable:  'configurable' in opts ? opts.configurable : false,
-      writable:      'writable'     in opts ? opts.writable     : false,
+      enumerable:    ('enumerable'   in opts ? opts.enumerable   : false),
+      configurable:  ('configurable' in opts ? opts.configurable : false),
+      writable:      ('writable'     in opts ? opts.writable     : false),
     }; 
+    Object.defineProperty(object, pname, props);
+  }
+
+  /**
+   * A wrapper around Object.defineProperty() that assigns a getter and
+   * setter to the property. The getter and setting must be functions.
+   */
+  Nano.addAccessor = function (object, pname, gfunc, sfunc, opts)
+  {
+    if (opts === undefined || opts === null)
+      opts = {};
+    var props =
+    {
+      get:          gfunc,
+      set:          sfunc,
+      enumerable:   ('enumerable'   in opts ? opts.enumerable   : false),
+      configurable: ('configurable' in opts ? opts.configurable : false),
+    };
     Object.defineProperty(object, pname, props);
   }
 

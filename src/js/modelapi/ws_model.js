@@ -48,6 +48,8 @@
       this.__ws.delete = 'delete';
     if (this.__ws.patch === undefined)
       this.__ws.patch = true;
+    if (this.__ws.watch === undefined)
+      this.__ws.watch = true;
   }
 
   /**
@@ -146,11 +148,11 @@
       {
         if (doc.error === undefined)
         {
-          self.extendObject(doc);
-          self.trigger('onLoad', doc);
+          self.extendObject(doc, id);
+          self.trigger('onLoad', doc, id);
           self.model.doc_cache[id] = doc;
           if (reload)
-            self.trigger('getReload', doc);
+            self.trigger('getReload', doc, id);
         }
       });
       return ret;
@@ -245,8 +247,11 @@
     if (self.make_observable !== undefined)
       self.make_observable(doc);
 
-    add_watch_list(doc, 'changed', true);
-    add_watch_list(doc, 'removed', false);
+    if (self.__ws.watch)
+    {
+      add_watch_list(doc, 'changed', true);
+      add_watch_list(doc, 'removed', false);
+    }
 
     Nano.addProperty(doc, 'set', function (prop, value)
     {
@@ -261,7 +266,8 @@
         {
           this[prop] = value;
         }
-        this.changed(prop);
+        if (self.__ws.watch)
+          this.changed(prop);
       }
       else if (typeof prop === 'object' && value === undefined)
       {
@@ -290,7 +296,8 @@
         {
           delete this[props];
         }
-        this.removed(props);
+        if (self.__ws.watch)
+          this.removed(props);
       }
       else if ($.isArray(props))
       {
@@ -362,39 +369,45 @@
     this.trigger("preSave", doc);
     if (doc.id !== undefined)
     { // We're making changes to an existing document.
-      var changed = doc.changed();
-      var removed = doc.removed();
-      var ccount = Object.keys(changed).length;
-      var rcount = removed.length;
-      if (ccount === 0 && rcount === 0)
-      {
-        var promise = new Nano.Promise(true);
-        promise.deferDone({success:false, debugMsg:"no changes"});
-        return promise;
-      }
       var patch;
-      if (this.__ws.patch)
+      if (this.__ws.watch)
       {
-        patch =
+        var changed = doc.changed();
+        var removed = doc.removed();
+        var ccount = Object.keys(changed).length;
+        var rcount = removed.length;
+        if (ccount === 0 && rcount === 0)
         {
-          id: doc.id,
-        };
-        if (ccount > 0)
-        {
-          patch.$set = changed;
+          var promise = new Nano.Promise(true);
+          promise.deferDone({success:false, debugMsg:"no changes"});
+          return promise;
         }
-        if (rcount > 0)
+        if (this.__ws.patch)
         {
-          patch.$unset = removed;
+          patch =
+          {
+            id: doc.id,
+          };
+          if (ccount > 0)
+          {
+            patch.$set = changed;
+          }
+          if (rcount > 0)
+          {
+            patch.$unset = removed;
+          }
+  //      console.log("patch", patch);
         }
-//      console.log("patch", patch);
       }
       meth = this.__ws.update;
-      this.trigger("preSaveChanges", patch);
+      if (patch !== undefined)
+        this.trigger("preSaveChanges", patch);
+      else
+        this.trigger("preSaveChanges", doc);
       ws = this.get_ws(meth);
       if (ws === undefined)
         return this.no_ws(meth);
-      if (this.__ws.patch)
+      if (patch !== undefined)
         ret = ws[meth](patch);
       else
         ret = ws[meth](doc);
