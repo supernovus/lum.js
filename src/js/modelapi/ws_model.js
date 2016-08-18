@@ -315,7 +315,7 @@
 
     Nano.addProperty(doc, 'save', function ()
     {
-      self.save(this);
+      return self.save(this);
     });
 
     self.trigger('extendObject', doc);
