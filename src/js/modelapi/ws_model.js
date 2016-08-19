@@ -439,7 +439,7 @@
     {
       if (data.success)
       {
-        self.trigger("postSave", doc, ret);
+        self.trigger("postSave", doc, data, ret);
         self.list(true).done(function(list)
         {
           self.trigger('refresh', list);
