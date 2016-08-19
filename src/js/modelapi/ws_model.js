@@ -148,6 +148,10 @@
       {
         if (doc.error === undefined)
         {
+          if (typeof self.deserialize === 'function')
+          {
+            doc = self.deserialize(doc);
+          }
           self.extendObject(doc, id);
           self.trigger('onLoad', doc, id);
           self.model.doc_cache[id] = doc;
@@ -369,9 +373,9 @@
     this.trigger("preSave", doc);
     if (doc.id !== undefined)
     { // We're making changes to an existing document.
-      var patch;
+      var savedoc;
       if (this.__ws.watch)
-      {
+      { // Find changes.
         var changed = doc.changed();
         var removed = doc.removed();
         var ccount = Object.keys(changed).length;
@@ -383,46 +387,52 @@
           return promise;
         }
         if (this.__ws.patch)
-        {
-          patch =
+        { // Use our custom patch format to save changes.
+          savedoc =
           {
             id: doc.id,
           };
           if (ccount > 0)
           {
-            patch.$set = changed;
+            savedoc.$set = changed;
           }
           if (rcount > 0)
           {
-            patch.$unset = removed;
+            savedoc.$unset = removed;
           }
-  //      console.log("patch", patch);
+  //      console.log("patch", savedoc);
         }
       }
+
+      if (savedoc === undefined)
+      { // We're not using the patch format.
+        if (typeof doc.serialize === 'function')
+          savedoc = doc.serialize(); // serialized format.
+        else
+          savedoc = doc;             // use the raw document.
+      }
+
       meth = this.__ws.update;
-      if (patch !== undefined)
-        this.trigger("preSaveChanges", patch);
-      else
-        this.trigger("preSaveChanges", doc);
+      this.trigger("preSaveChanges", savedoc, doc);
       ws = this.get_ws(meth);
       if (ws === undefined)
         return this.no_ws(meth);
-      if (patch !== undefined)
-        ret = ws[meth](patch);
-      else
-        ret = ws[meth](doc);
-      this.trigger("postSaveChanges", ret, patch);
+      ret = ws[meth](savedoc);
+      this.trigger("postSaveChanges", ret, savedoc, doc);
     }
     else
     { // We're saving a new document.
       // The doc should be the complete document, and removed is ignored.
       meth = this.__ws.create;
-      this.trigger("preSaveNew", doc);
+      var savedoc = (typeof doc.serialize === 'function')
+                  ? doc.serialize()
+                  : doc;
+      this.trigger("preSaveNew", savedoc, doc);
       ws = this.get_ws(meth);
       if (ws === undefined)
         return this.no_ws(meth);
-      ret = ws[meth](doc);
-      this.trigger("postSaveNew", ret, doc);
+      ret = ws[meth](savedoc);
+      this.trigger("postSaveNew", ret, savedoc, doc);
     }
     ret.done(function(data)
     {
