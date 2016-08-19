@@ -165,6 +165,7 @@
     {
       var promise = new Nano.Promise(self.__ws.deferred);
       promise.deferDone(self.model.doc_cache[id]);
+      self.trigger('onLoad', self.model.doc_cache[id], id);
       return promise;
     }
   }
