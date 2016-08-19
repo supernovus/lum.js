@@ -168,9 +168,22 @@
   /**
    * Clone a simple object, using a simple JSON chain.
    */
-  Nano.clone = function clone (object)
+  Nano.clone = function clone (object, copyProperties)
   {
-    return JSON.parse(JSON.stringify(object));
+    var clone = JSON.parse(JSON.stringify(object));
+    if (copyProperties)
+    {
+      for (var prop in copyProperties)
+      {
+        var configurable = copyProperties[prop];
+        if (clone[prop] === undefined)
+        {
+          var opts = {configurable: configurable};
+          Nano.addProperty(clone, prop, object[prop], opts);
+        }
+      }
+    }
+    return clone;
   }
 
   /**

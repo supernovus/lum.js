@@ -148,10 +148,6 @@ Nano.WebService.prototype._build_request = function (method_spec)
   var path = method_spec.path;
   var def  = method_spec.def;
 
-  // We want a copy of the data, so we don't modify the original.
-  if (data !== undefined && data !== null)
-    data = Nano.clone(data);
-
   // The top level request wrapper.
   var wrapper = 
   {
@@ -203,13 +199,20 @@ Nano.WebService.prototype._build_request = function (method_spec)
     else
     { // { path: uri_path, func: handler_function, http: http_method}
       //   The 'http' parameter can be left off to use the default.
-      if ('path' in def && 'func' in def)
+      if ('path' in def)
       {
         url_path        = def.path;
-        wrapper.handler = def.func;
+        if ('func' in def)
+        {
+          wrapper.handler = def.func;
+        }
         if ('http' in def)
         {
           request.type = def.http;
+        }
+        if ('keep' in def)
+        {
+          wrapper.preserve = def.keep;
         }
       }
       else
@@ -222,11 +225,15 @@ Nano.WebService.prototype._build_request = function (method_spec)
 
     var self = this;
 
+    // We want a copy of the data, so we don't modify the original.
+    if (data !== undefined && data !== null)
+      data = Nano.clone(data, wrapper.preserve);
+
     // Okay, let's do the method substitution.
     url_path = url_path.replace(/\:([\w-]+)/g, 
     function (match, param, offset, string)
     {
-      if (data && param in data)
+      if (data && data[param] !== undefined)
       {
         // The parameter was found. Extract and remove it from the data.
         var value = data[param];
