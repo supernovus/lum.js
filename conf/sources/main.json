@@ -8,22 +8,52 @@
   "jquery.js":
   {
     "uglify": false,
-    "version": "2.2.3",
-    "url": "http://code.jquery.com/jquery-2.2.3.min.js"
+    "version": "3.1.0",
+    "url": "https://code.jquery.com/jquery-3.1.0.min.js"
   },
-  "jquery-migrate.js":
+  "jquery-2.js":
   {
     "uglify": false,
-    "version": "1.4.0",
-    "url": "http://code.jquery.com/jquery-migrate-1.4.0.min.js"
+    "version": "2.2.4",
+    "url": "http://code.jquery.com/jquery-2.2.4.min.js"
+  },
+  "jquery-1.js":
+  {
+    "uglify": false,
+    "version": "1.12.4",
+    "url": "https://code.jquery.com/jquery-1.12.4.min.js"
+  },
+  "jquery-migrate-1.js":
+  {
+    "uglify": false,
+    "version": "1.4.1",
+    "url": "http://code.jquery.com/jquery-migrate-1.4.1.min.js"
+  },
+  "jquery-migrate-3.js":
+  {
+    "uglify": false,
+    "version": "3.0",
+    "url": "https://code.jquery.com/jquery-migrate-3.0.0.min.js"
   },
   "jquery-ui.js":
+  {
+    "uglify": false,
+    "version": "1.12.0",
+    "url": "http://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
+  },
+  "jquery-ui-1.11.js":
   {
     "uglify": false,
     "version": "1.11.4",
     "url": "http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
   },
   "jquery-ui.css":
+  {
+    "css": true,
+    "version": "1.11.4",
+    "url": "http://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css"
+  },
+  "jquery-ui-1.11.css":
   {
     "css": true,
     "version": "1.11.4",
