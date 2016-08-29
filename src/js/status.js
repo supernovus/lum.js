@@ -83,7 +83,10 @@
   
   Nano.Status.prototype.clear = function (tag)
   {
-    $(this.alerts+' div.'+tag).remove();
+    var selector = this.alerts+' div';
+    if (tag !== undefined)
+      selector += '.'+tag;
+    $(selector).remove();
     if ($(this.alerts+' div').length == 0)
     {
       $(this.alerts).hide();
