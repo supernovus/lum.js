@@ -40,8 +40,6 @@ Pick whichever one you are more familiar with.
 
 ## Optional Features
 
-* Run 'npm install semantic-ui' to install Semantic-UI.
-    * When it asks for a target location, make sure to install it into 'ext/semantic' as our symlinks point there.
 * Run 'git submodule init && git submodule update' to install:
     * Ace editor libraries.
     * Crypto.js libraries.
