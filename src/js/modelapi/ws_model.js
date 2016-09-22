@@ -125,16 +125,40 @@
   }
 
   /**
+   * When using get() if we are getting from server, pass the promise here.
+   */
+  Nano.ModelAPI.prototype._get_doc = function (ret, id, reload)
+  {
+    var self = this;
+    ret.done(function(doc)
+    {
+      if (doc.error === undefined)
+      {
+        if (typeof self.deserialize === 'function')
+        {
+          doc = self.deserialize(doc);
+        }
+        self.extendObject(doc, id);
+        self.trigger('onLoad', doc, id);
+        self.model.doc_cache[id] = doc;
+        if (reload)
+          self.trigger('getReload', doc, id);
+      }
+    });
+  }
+
+  /**
    * Get a document.
    *
-   * @param string  id      The document id.
-   * @param bool    reload  Reload from the server (default false)
+   * @param string  id         The document id.
+   * @param bool    reload     Reload from the server (default false)
+   * @param bool    noTriggers Don't run triggers (default false)
    *
    * @return Promise  Use promise.done() to get the document.
    *                  The promise is either a jqXHR, or a Nano.Promise
    *                  if the list was cached, and reload was false.
    */
-  Nano.ModelAPI.prototype.get = function (id, reload)
+  Nano.ModelAPI.prototype.get = function (id, reload, noTriggers)
   {
     var self = this;
     if (reload || this.model.doc_cache[id] === undefined)
@@ -144,28 +168,16 @@
       if (ws === undefined)
         return this.no_ws(meth);
       var ret = ws[meth]({id: id});
-      ret.done(function(doc)
-      {
-        if (doc.error === undefined)
-        {
-          if (typeof self.deserialize === 'function')
-          {
-            doc = self.deserialize(doc);
-          }
-          self.extendObject(doc, id);
-          self.trigger('onLoad', doc, id);
-          self.model.doc_cache[id] = doc;
-          if (reload)
-            self.trigger('getReload', doc, id);
-        }
-      });
+      if (!noTriggers)
+        this._get_doc(ret, id, reload);
       return ret;
     }
     else
     {
       var promise = new Nano.Promise(self.__ws.deferred);
       promise.deferDone(self.model.doc_cache[id]);
-      self.trigger('onLoad', self.model.doc_cache[id], id);
+      if (!noTriggers)
+        self.trigger('onLoad', self.model.doc_cache[id], id);
       return promise;
     }
   }
