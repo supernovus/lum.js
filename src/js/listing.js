@@ -247,7 +247,11 @@ Nano.Listing = function (options)
   if (window.location.hash !== '')
   {
     var pagenum = window.location.hash.substr(1); // cut off the #
-    pagerOpts.current = pagenum;
+    pagenum = parseInt(pagenum);
+    if (!isNaN(pagenum))
+    {
+      pagerOpts.current = pagenum;
+    }
   }
 
 //  console.log({pagerOpts: pagerOpts});
