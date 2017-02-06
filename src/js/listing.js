@@ -591,6 +591,7 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
               if (subcol.search(find) !== -1)
               {
                 searchdata2.push(curitem);
+                break; // Only include 1 item.
               }
             }
           }
