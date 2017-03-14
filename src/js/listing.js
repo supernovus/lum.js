@@ -417,12 +417,12 @@ Nano.Listing.prototype.registerSearch = function (selector, unified)
     {
       self.search(col, null);
       if (!unified)
-        $this.css('display', '');
+        $this.removeClass('active');
     }
     else
     {
       if (!unified)
-        $this.css('display', 'block');
+        $this.addClass('active');
       self.search(col, text);
     }
   });
@@ -436,7 +436,7 @@ Nano.Listing.prototype.registerSearch = function (selector, unified)
         var searchKey = self.searchAttr.replace(':', '\\:');
         var searchEl = parentEl.find('['+searchKey+'="'+s+'"] .search');
         searchEl.val(this.searches[s]);
-        searchEl.css('display', 'block');
+        searchEl.addClass('active');
       }
     }
   }
