@@ -24,6 +24,10 @@
    */
   $.fn.makeMenu = function (options)
   {
+    if (options.onCancel)
+    {
+      this.data('onCancel', options.onCancel);
+    }
     if (options.handler)
     {
       var itemEl = options.childItem ? options.childItem : 'li';
@@ -43,6 +47,11 @@
     // Clicking outside
     $('body').one('click', function ()
     {
+      var onCancel = menu.data('onCancel');
+      if (typeof onCancel === 'function')
+      { // Run the callback.
+        onCancel();
+      }
       menu.hide();
     });
 
