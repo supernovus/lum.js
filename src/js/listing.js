@@ -179,8 +179,9 @@ Nano.Listing = function (options)
 
   if ('searchSelector' in options)
   {
+    // TODO: support unified search with list-style searches.
     var unified = 'unifiedSearch' in options ? options.unifiedSearch : false;
-    this.registerSearch(options.searchSelector, unified);
+    this.registerSearch(options.searchSelector, unified, false);
     if (unified)
     { // Save the search selector.
       this.searchSelector = options.searchSelector;
@@ -202,9 +203,13 @@ Nano.Listing = function (options)
   }
   else
   { // If we find individual .search items, we use searches for each of them.
+    if ($('.listing_header .search.list').exists())
+    {
+      this.registerSearch('.listing_header .search.list', false, true);
+    }
     if ($('.listing_header .search').exists())
     {
-      this.registerSearch('.listing_header .search');
+      this.registerSearch('.listing_header .search', false, false);
     }
   }
 
@@ -386,46 +391,79 @@ Nano.Listing.prototype.registerSort = function (selector)
 }
 
 // A simple search method.
-Nano.Listing.prototype.registerSearch = function (selector, unified)
+Nano.Listing.prototype.registerSearch = function (selector, unified, islist)
 {
 //  console.log("registerSearch("+selector+','+(unified?'true':'false')+")");
   var self = this;
-  $(selector).on('keyup', function (e)
+  if (islist)
   {
-    var $this = $(this);
-    var text = $this.val();
-    var col;
-    if (unified)
-    { // Unified searches.
-      // One search box is used by every field.
-      if (self.searchBy)
-      { // Search by the last selected column.
-        col = self.searchBy;
-      }
-      else
-      { // Nothing to search for, sorry.
+    $(selector).on('change', function (e)
+    {
+      var $this = $(this);
+      var text = $this.val();
+      var col;
+      if (unified)
+      { 
+        // TODO: support unified search with list-style items.
         return;
       }
-    }
-    else
-    { // Our original searches with multiple search boxes.
-      // This offers the ability to search more than one field at a time
-      // but the tradeoff is, it has a more complex user interface.
-      col = $this.parent().attr(self.searchAttr);
-    }
-    if (text === '')
+      else
+      { // Original searches with multiple search boxes.
+        col = $this.parent().attr(self.searchAttr);
+      }
+      if (text === '')
+      {
+        self.search(col, null);
+        if (!unified)
+          $this.removeClass('active');
+      }
+      else
+      {
+        if (!unified)
+          $this.addClass('active');
+        self.search(col, text);
+      }
+    });
+  }
+  else
+  {
+    $(selector).on('keyup', function (e)
     {
-      self.search(col, null);
-      if (!unified)
-        $this.removeClass('active');
-    }
-    else
-    {
-      if (!unified)
-        $this.addClass('active');
-      self.search(col, text);
-    }
-  });
+      var $this = $(this);
+      var text = $this.val();
+      var col;
+      if (unified)
+      { // Unified searches.
+        // One search box is used by every field.
+        if (self.searchBy)
+        { // Search by the last selected column.
+          col = self.searchBy;
+        }
+        else
+        { // Nothing to search for, sorry.
+          return;
+        }
+      }
+      else
+      { // Our original searches with multiple search boxes.
+        // This offers the ability to search more than one field at a time
+        // but the tradeoff is, it has a more complex user interface.
+        col = $this.parent().attr(self.searchAttr);
+      }
+      if (text === '')
+      {
+        self.search(col, null);
+        if (!unified)
+          $this.removeClass('active');
+      }
+      else
+      {
+        if (!unified)
+          $this.addClass('active');
+        self.search(col, text);
+      }
+    });
+  }
   self.reloadSearch = function ()
   {
     if (!unified && Object.keys(this.searches).length > 0)
