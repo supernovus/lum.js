@@ -591,6 +591,7 @@ Nano.Listing.prototype.filter_data = function (rawdata)
 
 Nano.Listing.prototype.refresh_data = function (rawdata)
 {
+//  console.log(rawdata, this.sortBy, this.searches);
   if (this.sortBy === null && Object.keys(this.searches).length === 0)
   {
     this.displayData = rawdata;
@@ -606,6 +607,12 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
       for (col in this.searches)
       {
         var find = new RegExp(this.searches[col], "i");
+        var colspec;
+        if (col.indexOf('.') !== -1)
+        { // Looking for a nested property.
+          colspec = col.split('.');
+          col = colspec.shift(); // the first property is the col name.
+        }
         for (i in searchdata1)
         {
           var curitem = searchdata1[i];
@@ -630,6 +637,17 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
               {
                 searchdata2.push(curitem);
                 break; // Only include 1 item.
+              }
+            }
+          }
+          else if (typeof curcol === 'object' && colspec !== undefined)
+          { // We need to use the nested search.
+            var subcol = Nano.getNested(curcol, colspec);
+            if (typeof subcol === 'string')
+            { // We can only search strings at this point.
+              if (subcol.search(find) !== -1)
+              {
+                searchdata2.push(curitem);
               }
             }
           }
@@ -658,77 +676,110 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
       }
       else
       {
+        function get_col (obj)
+        {
+          return Nano.getNested(obj, col);
+        }
         var sort_str_asc = function (a, b)
         {
-          if (b[col] === undefined || b[col] === null)
+          var bcol = get_col(b);
+          if (bcol === undefined || bcol === null)
             return -1;
-          return a[col].localeCompare(b[col]);
+          var acol = get_col(a);
+          if (acol === undefined || acol === null)
+            return 1;
+          return acol.localeCompare(bcol);
         }
         var sort_str_desc = function (a, b)
         {
-          if (b[col] === undefined || b[col] === null)
+          var bcol = get_col(b);
+          if (bcol === undefined || bcol === null)
             return 1;
-          return b[col].localeCompare(a[col]);
+          var acol = get_col(a);
+          if (acol === undefined || acol === null)
+            return -1;
+          return bcol.localeCompare(acol);
         }
         var sort_num_asc = function (a, b)
         {
-  //        console.log('a - b', a[col], b[col])
-          if (b[col] === undefined || b[col] === null)
+//          console.log('a - b', a[col], b[col])
+          var bcol = get_col(b);
+          if (bcol === undefined || bcol === null)
             return -1;
-          return (a[col] - b[col]);
+          var acol = get_col(a);
+          if (acol === undefined || acol === null)
+            return 1;
+          return (acol - bcol);
         }
         var sort_num_desc = function (a, b)
         {
-  //        console.log('b - a', b[col], a[col]);
-          if (b[col] === undefined || b[col] === null)
+//          console.log('b - a', b[col], a[col]);
+          var bcol = get_col(b);
+          if (bcol === undefined || bcol === null)
             return 1;
-          return (b[col] - a[col]);
+          var acol = get_col(a);
+          if (acol === undefined || acol === null)
+            return -1;
+          return (bcol - acol);
         }
         var sort_array_str_asc = function (a, b)
         {
-          if (b[col] === undefined || b[col] === null || b[col][0] === null)
+          var bcol = get_col(b);
+          if (bcol === undefined || bcol === null || bcol[0] === null)
             return -1;
-          return a[col][0].localeCompare(b[col][0]);
+          var acol = get_col(a);
+          if (acol === undefined || acol === null || acol[0] === null)
+            return 1;
+          return acol[0].localeCompare(bcol[0]);
         }
         var sort_array_str_desc = function (a, b)
         {
-          if (b[col] === undefined || b[col] === null || b[col][0] === null)
+          var bcol = get_col(b);
+          if (bcol === undefined || bcol === null || bcol[0] === null)
+            return 1;
+          var acol = get_col(a);
+          if (acol === undefined || acol === null || acol[0] === null)
             return -1;
-          return b[col][0].localeCompare(a[col][0]);
+          return bcol[0].localeCompare(acol[0]);
         }
         var sort_other_asc = function (a, b)
         {
-          if (a[col] === undefined || a[col] === null)
+          var acol = get_col(a);
+          var bcol = get_col(b);
+          if (acol === undefined || acol === null)
           {
-            if (b[col] === undefined || b[col] === null)
+            if (bcol === undefined || bcol === null)
               return 0;
             return -1;
           }
-          if (b[col] === undefined || b[col] === null)
+          if (bcol === undefined || bcol === null)
           {
             return 1;
           }
-          if (a[col] < b[col]) return -1;
-          if (a[col] > b[col]) return 1;
+          if (acol < bcol) return -1;
+          if (acol > bcol) return 1;
           return 0;
         }
         var sort_other_desc = function (a, b)
         {
-          if (a[col] === undefined || a[col] === null)
+          var acol = get_col(a);
+          var bcol = get_col(b);
+          if (acol === undefined || acol === null)
           {
-            if (b[col] === undefined || b[col] === null)
+            if (bcol === undefined || bcol === null)
               return 0;
             return 1;
           }
-          if (b[col] === undefined || b[col] === null)
+          if (bcol === undefined || bcol === null)
           {
             return -1;
           }
-          if (a[col] > b[col]) return -1;
-          if (a[col] < b[col]) return 1;
+          if (acol > bcol) return -1;
+          if (acol < bcol) return 1;
           return 0;
         }
-        var whatisit = typeof sortdata[0][col];
+        var coldata = get_col(sortdata[0], col);
+        var whatisit = typeof coldata;
   //      console.log("it is a ",whatisit, col, desc);
         if (whatisit === 'string')
         {
@@ -754,9 +805,9 @@ Nano.Listing.prototype.refresh_data = function (rawdata)
             sortdata.sort(sort_num_asc);
           }
         }
-        else if ($.isArray(sortdata[0][col]))
+        else if ($.isArray(coldata))
         {
-          if (typeof sortdata[0][col][0] === 'string')
+          if (typeof coldata[0] === 'string')
           {
             if (desc)
             {

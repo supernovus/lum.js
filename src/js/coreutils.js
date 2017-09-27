@@ -263,5 +263,27 @@
     return opts[optname];
   }
 
+  /**
+   * Get a property from a nested data structure.
+   * Based on the same way we handle namespaces.
+   */
+  Nano.getNested = function (obj, proppath)
+  {
+    if (typeof proppath === 'string')
+    {
+      proppath = proppath.split('.');
+    }
+    for (var p = 0; p < proppath.length; p++)
+    {
+      var propname = proppath[p];
+      if (obj[propname] === undefined)
+      { // End of search, sorry.
+        return undefined;
+      }
+      obj = obj[propname];
+    }
+    return obj;
+  }
+
 })(window);
 
