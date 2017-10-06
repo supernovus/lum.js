@@ -129,5 +129,14 @@
     {
       "json": "https://raw.githubusercontent.com/mscdex/base91.js/master/package.json"
     }
+  },
+  "clipboard.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/zenorocha/clipboard.js/master/dist/clipboard.min.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/zenorocha/clipboard.js/master/package.json"
+    }
   }
 }
