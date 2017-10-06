@@ -8,8 +8,8 @@
   "jquery.js":
   {
     "uglify": false,
-    "version": "3.1.0",
-    "url": "https://code.jquery.com/jquery-3.1.0.min.js"
+    "version": "3.2.1",
+    "url": "https://code.jquery.com/jquery-3.2.1.min.js"
   },
   "jquery-2.js":
   {
@@ -38,8 +38,8 @@
   "jquery-ui.js":
   {
     "uglify": false,
-    "version": "1.12.0",
-    "url": "http://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
+    "version": "1.12.1",
+    "url": "http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
   },
   "jquery-ui-1.11.js":
   {
@@ -50,7 +50,7 @@
   "jquery-ui.css":
   {
     "css": true,
-    "version": "1.11.4",
+    "version": "1.12.1",
     "url": "http://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css"
   },
   "jquery-ui-1.11.css":

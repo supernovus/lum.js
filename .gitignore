@@ -10,3 +10,4 @@
 /grunt/*
 /gulpfile.js
 /.gulp-cache*
+/package-lock.json

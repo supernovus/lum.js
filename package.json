@@ -1,9 +1,0 @@
-{
-  "name": "Nano.js",
-  "version": "1.5.10",
-  "dependencies": {
-    "http-request": "^0.7.0",
-    "uglify-js": "^2.4.23",
-    "yargs": "^4.6.0"
-  }
-}
