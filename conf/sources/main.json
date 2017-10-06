@@ -121,5 +121,13 @@
   {
     "@parent": "uri.js",
     "url": "https://raw.githubusercontent.com/medialize/URI.js/gh-pages/src/jquery.URI.min.js"
+  },
+  "base91.js":
+  {
+    "url": "https://raw.githubusercontent.com/mscdex/base91.js/master/lib/base91.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/mscdex/base91.js/master/package.json"
+    }
   }
 }
