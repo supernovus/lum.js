@@ -1,9 +1,21 @@
 /**
  * Build a simple context menu.
+ *
+ * This is deprecated, see the replacement, 'contextmenu.js'.
  */
 
 (function($)
 {
+  if ($.fn.makeMenu !== undefined)
+  {
+    console.error("$.makeMenu already defined, skipping deprecated menu.jq.");
+    return;
+  }
+  else
+  {
+    console.log("This page is using menu.jq.js which is deprecated.");
+  }
+
   /**
    * Build a menu. Use it on an element containing child elements representing
    * the menu items. By default we expect the menu to be a <ul> with <li>
