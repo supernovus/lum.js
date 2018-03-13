@@ -166,6 +166,22 @@
   }
 
   /**
+   * Add 'addProperty' and 'addAccessor' helpers to the object directly.
+   * Useful if you're going to be adding a lot of properties/accessors.
+   */
+  Nano.addMetaHelpers = function (object)
+  {
+    Nano.addProperty(object, 'addProperty', function (pn,pf,opts)
+    {
+      Nano.addProperty(this, pn, pf, opts);
+    });
+    Nano.addProperty(object, 'addAccessor', function (pn, gf, sf, opts)
+    {
+      Nano.addAccessor(this, pn, gf, sf, opts);
+    });
+  }
+
+  /**
    * Clone a simple object, using a simple JSON chain.
    */
   Nano.clone = function clone (object, copyProperties)
