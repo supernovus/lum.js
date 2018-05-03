@@ -47,15 +47,28 @@
 
     /**
      * See if we have debugging in the hash.
+     *
+     * TODO: More flexibility in URL hash management.
      */
     if (location.hash === '#debug')
     { // Enable all debugging.
+      console.log("Enabling global debugging.");
       self.debugging['*'] = true;
     }
-
-    /**
-     * TODO: query string debugging, more flexible than #hash style.
-     */
+    else
+    { // Look for #debug:[foo,bar] and enable named debugging groups.
+      var match = location.hash.match(/debug\[(.*?)\]/);
+      if (match)
+      {
+        var keywords = match[1].split(',');
+        for (var k in keywords)
+        {
+          var keyword = keywords[k];
+          console.log("Enabling debugging on", keyword);
+          self.debugging[keyword] = true;
+        }
+      }
+    }
 
     /**
      * Stuff to do before loading our sources.

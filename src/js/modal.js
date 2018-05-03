@@ -1,5 +1,5 @@
 /**
- * Modal dialog boxes made easy.
+ * Modal dialog boxes, and UI masks made easy.
  *
  * A lightweight alternative to jQuery UI's Dialog, this isn't dragable,
  * any doesn't set up things like buttons automatically. It's simply a way
@@ -16,6 +16,72 @@
   {
     console.log("fatal error: Nano core not loaded");
     return;
+  }
+
+  var Mask = Nano.Mask = function (options)
+  {
+    if (options === undefined)
+      options = {};
+
+    var selector = 'element' in options ? options.element : '#mask';
+    this.selector = selector;
+    this.element  = $(selector);
+    if (options.autoHide === undefined)
+    {
+      this.autoHide = options.depth ? false : true;
+    }
+    else
+    {
+      this.autoHide = options.autoHide;
+    }
+    this.showDepth = options.depth;
+    this.hideDepth = null;
+    this.fadeIn = options.fadeIn;
+    this.fadeOut = options.fadeOut;
+    this.autoFade = options.autoFade;
+  }
+
+  Mask.prototype.show = function (fade)
+  {
+    var hidden = this.element.css('display') == 'none' ? true : false;
+    if (hidden)
+    {
+      if (fade === undefined)
+        fade = this.autoFade;
+      if (typeof fade === 'number')
+        $(this.element).fadeIn(fade);
+      else if (typeof fade === 'boolean' && fade && this.fadeIn)
+        $(this.element).fadeIn(this.fadeIn);
+      else
+        $(this.element).show();
+    }
+
+    if (this.showDepth)
+    {
+      // Save the current z-index, to reset to on close.
+      this.hideDepth = this.element.css('z-index');
+      // Now set the new z-index.
+      this.element.css('z-index', this.showDepth);
+    }
+  }
+
+  Mask.prototype.hide = function (fade)
+  {
+    if (this.hideDepth) // Restore the old depth.
+    {
+      this.element.css('z-index', this.hideDepth);
+    }
+    if (this.autoHide)
+    {
+      if (fade === undefined)
+        fade = this.autoFade;
+      if (typeof fade === 'number')
+        $(this.element).fadeOut(fade);
+      else if (typeof fade === 'boolean' && fade && this.fadeOut)
+        $(this.element).fadeOut(this.fadeOut);
+      else
+        $(this.element).hide();    
+    }
   }
 
   var Modal = Nano.ModalDialog = function (options)
@@ -39,28 +105,19 @@
     }
 
     // Process any mask related options.
-    if (options.mask && options.mask.element)
+    if (typeof options.mask === 'object')
     {
-      this.mask = {};
-      this.mask.selector = options.mask.element;
-      this.mask.element  = $(options.mask.element);
-      if (options.mask.hide === null || options.mask.hide === undefined)
-      {
-        this.mask.hide = options.mask.depth ? false : true;
+      if (typeof options.mask.show === 'function')
+      { // It's already an initialized Mask object. Set it directly.
+        this.mask = options.mask;
       }
       else
-      {
-        this.mask.hide = options.mask.hide;
+      { // It's a set of options to build a new Mask object.
+        this.mask = new Mask(options.mask);
       }
-      this.mask.show_depth  = options.mask.depth;
-      this.mask.hide_depth = null; // Not populated until show() call.
-
-      // Do we want the mask to fade in and out?
-      this.mask.fadeIn  = options.mask.fadeIn;
-      this.mask.fadeOut = options.mask.fadeOut;
     }
     else
-    {
+    { // No mask being used.
       this.mask = null;
     }
 
@@ -206,25 +263,7 @@
 
     if (this.mask)
     {
-      var mask = this.mask.element;
-      var hidden = mask.css('display') == 'none' ? true : false;
-      var fade = this.mask.fadeIn;
-      if (fade && hidden)
-      {
-        mask.fadeIn(fade);
-      }
-      else if (hidden)
-      {
-        mask.show();
-      }
-
-      if (this.mask.show_depth)
-      {
-        // Save the current z-index, to reset to on close.
-        this.mask.hide_depth = mask.css('z-index');
-        // Now set the new z-index.
-        mask.css('z-index', this.mask.show_depth);
-      }
+      this.mask.show(true);
     }   
 
     var after = this.events.afterShow;
@@ -264,23 +303,7 @@
     // Next deal with the mask if its being used.
     if (this.mask)
     {
-      var mask = this.mask.element;
-      if (this.mask.show_depth) // If show_depth is set, restore the old depth.
-      {
-        mask.css('z-index', this.mask.hide_depth);
-      }
-      if (this.mask.hide)
-      {
-        fade = this.mask.fadeOut; // Yup, we reuse the 'fade' variable.
-        if (fade)
-        {
-          mask.fadeOut(fade);
-        }
-        else
-        {
-          mask.hide();
-        }
-      }
+      this.mask.hide(true);
     }
 
     var after = this.events.afterHide;

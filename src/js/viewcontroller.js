@@ -17,7 +17,6 @@
     else
       self = this;
 
-    self.api = null;
     if (observable === undefined)
       self.readyHandlers = [];
 
@@ -41,7 +40,21 @@
     var self = this;
     $(function()
     {
-      var api = self.apiInstance = new modelclass(conf);
+      var api;
+      if (typeof modelclass === 'function')
+      {
+        api = new modelclass(conf);
+      }
+      else if (typeof modelclass === 'object')
+      {
+        api = modelclass;
+      }
+      else
+      {
+        console.error("Invalid model passed to ViewController.start()");
+        return;
+      }
+      self.apiInstance = api;
       if (self.readyHandlers)
       {
         for (var c in self.readyHandlers)
@@ -53,6 +66,15 @@
       else
       {
         self.trigger("ready", api);
+      }
+      // Once we've triggered all of our handlers, tell the API.
+      if (typeof api.trigger === 'function')
+      {
+        api.trigger("ready", self);
+      }
+      else if (typeof api.ready === 'function')
+      {
+        api.ready(self);
       }
     });
   }
