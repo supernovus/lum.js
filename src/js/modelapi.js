@@ -46,6 +46,11 @@
     self.debugging = conf.debug !== undefined ? conf.debug : {};
 
     /**
+     * Should we show the 'tag' when using onDebug() calls?
+     */
+    self.showDebugTag = false;
+
+    /**
      * See if we have debugging in the hash.
      *
      * TODO: More flexibility in URL hash management.
@@ -170,9 +175,10 @@
    */
   Nano.ModelAPI.prototype.onDebug = function (tag)
   {
+    var slicePos = this.showDebugTag ? 0 : 1;
     if (this.isDebug(tag))
     {
-      var args = Array.prototype.slice.call(arguments, 1);
+      var args = Array.prototype.slice.call(arguments, slicePos);
       console.log.apply(console, args);
     }
   }
