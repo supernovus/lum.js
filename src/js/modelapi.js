@@ -157,13 +157,25 @@
    */
   Nano.ModelAPI.prototype.isDebug = function (tag)
   {
-    if (tag !== undefined && tag !== null && 
+    if ($.isArray(tag))
+    { // Check one of a bunch of tags.
+      for (var t in tag)
+      {
+        if (this.isDebug(tag[t]))
+        { // One of the tags matched, we're good!
+          return true;
+        }
+      }
+      // None of the tags matched.
+      return false;
+    }
+    else if (typeof tag === 'string' && 
         tag in this.debugging && this.debugging[tag])
-    { // Check for the explicit tag.
+    { // Explicit tag matched.
       return true;
     }
     else if ('*' in this.debugging && this.debugging['*'])
-    { // Check for the wildcard tag.
+    { // Wildcard tag was set.
       return true;
     }
     return false;
@@ -175,9 +187,9 @@
    */
   Nano.ModelAPI.prototype.onDebug = function (tag)
   {
-    var slicePos = this.showDebugTag ? 0 : 1;
     if (this.isDebug(tag))
     {
+      var slicePos = this.showDebugTag ? 0 : 1;
       var args = Array.prototype.slice.call(arguments, slicePos);
       console.log.apply(console, args);
     }
