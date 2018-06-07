@@ -9,7 +9,11 @@
  *  #common
  *  vsprintf
  *
+ * Note: this object should be initialized after the document.ready
+ *       event has been triggered to ensure the DOM is complete.
+ *
  * TODO: more flexible rendering options.
+ * TODO: more class names as options.
  */
 
 (function ($)
@@ -31,7 +35,7 @@
       Nano.observable(this);
 
     if (options.strings !== undefined)
-    { // This is the preferred way to pass in variables.
+    { // For maximum flexibility, pass in the strings/notifications.
       this.strings = options.strings;
       if (options.notifications !== undefined)
       {
@@ -80,15 +84,32 @@
     this.renderAlert = 'renderAlert' in options ? options.renderAlert
       : Not.Engines.element
 
-    this.itemTemplate = '#notification_item .notification';
-    this.alertTemplate = '#notification_alert .notification';
+    this.itemTemplate = 'itemTemplate' in options
+      ? options.itemTempate : '#notification_item .notification';
+    this.alertTemplate = 'alertTemplate' in options 
+      ? options.alertTemplate : '#notification_alert .notification';
 
-    this.notificationSelector = '.notification';
+    this.listSelector = 'listSelector' in options ?
+      options.listSelector : '#notification_centre';
+    this.alertsSelector = 'alertsSelector' in options ?
+      options.alertsSelector : '#notification_alerts';
 
-    this.msgKeyAttr = 'messagekey';
+    this.notificationSelector = 'notificationSelector' in options 
+      ? options.notificationSelector : '.notification';
 
-    this.listElement = $('#notification_centre');
-    this.alertsElement = $('#notification_alerts');
+    this.iconSelector = 'iconSelector' in options ? 
+      options.iconSelector : '#notification_icon';
+
+    this.msgKeyAttr = 'msgKeyAttr' in options
+      ? options.msgKeyAttr : 'messagekey';
+
+    var doInit = 'autoInitialize' in options ? options.autoInitialize : true;
+    var doDraw = 'autoDraw' in options ? options.autoDraw : true;
+
+    if (doInit)
+      this.initialize();
+    if (doDraw)
+      this.redrawList();
   }
 
   Not.Types =
@@ -102,14 +123,15 @@
   {
     default: 1500,
     message: 1500,
-    warning: 5000,
-    error:   7500,
+    warning: 3000,
+    error:   6000,
   }
 
   Not.Engines = {};
   Not.Engines.element = function (selector, notification)
   {
     var elem = $(selector).clone();
+    elem.attr(this.msgKeyAttr, notification.key);
     elem.addClass(notification.class);
     if (notification.opts.tag)
       elem.addClass(notification.opts.tag);
@@ -117,12 +139,41 @@
     var togglemsgs = elem.find('.togglemsgs');
     if (togglemsgs.length > 0)
     {
-      if (notification.keyCount() > 2)
+      if (notification.keyCount() >= 2)
       {
-        
+        var morekeys = notification.keyCount() - 1;
+        var sopts = {reps:[morekeys], default: "%s more ..."};
+        var moretext = this.getString('more_status', sopts);
+        sopts.default = "%s less ...";
+        var lesstext = this.getString('less_status', sopts);
+        togglemsgs.find('.moremsgs').text(moretext);
+        togglemsgs.find('.lessmsgs').text(lesstext);
+      }
+      else
+      {
+        togglemsgs.addClass('hidden');
       }
     }
     return elem;
+  }
+
+  Not.prototype.initialize = function ()
+  {
+    this.listElement = $(this.listSelector);
+    this.alertsElement = $(this.alertsSelector);
+    this.iconElement = $(this.iconSelector);
+
+    var self = this;
+
+    this.listElement.on('click', '.togglemsgs', function ()
+    {
+      self.toggleMore(this);
+    });
+
+    this.iconElement.on('click', function (e)
+    {
+      self.toggleList();
+    });
   }
 
   Not.prototype.extendNotification = function (notification)
@@ -295,9 +346,12 @@
   {
     if (!this.shown[message.key])
     {
+      var self = this;
       var selector = this.alertTemplate;
       var msg = this.renderAlert(selector, message);
+      msg.hide();
       this.alertsElement.append(msg);
+      msg.fadeIn(400);
       var timeout;
       if (message.opts.timeout)
         timeout = message.opts.timeout;
@@ -308,17 +362,32 @@
 
       var callback = function ()
       {
-        msg.fadeOut(800);
-        msg.remove();
+        msg.fadeOut(800, function ()
+        {
+          msg.remove();
+        });
       }
 
       var timer = setTimeout(callback, timeout);
 
-      msg.find('.close').on('click', function ()
+      msg.find('.close').on('click', function (e)
+      {
+        e.stopPropagation();
+        clearTimeout(timer);
+        msg.fadeOut(400, function ()
+        {
+          msg.remove();
+        });
+      });
+
+      msg.on('click', function (e)
       {
         clearTimeout(timer);
-        msg.fadeOut(400);
-        msg.remove();
+        msg.fadeOut(400, function ()
+        {
+          msg.remove();
+        });
+        self.toggleList(true);
       });
     }
   }
@@ -379,12 +448,13 @@
 
   Not.prototype.toggleMore = function (elem)
   {
-    var msg = $(elem).closest('.notification');
+    var sel = this.notificationSelector;
+    var msg = $(elem).closest(sel);
     var attr = this.msgKeyAttr;
     var key = msg.attr(attr);
     var list = this.listElement;
-    var sel = this.notificationSelector;
     var all = list.find(sel+'['+attr+'="'+key+'"]');
+    console.log("toggleMore", elem, sel, msg, all);
     var more = all.not(':first');
     if (key in this.expandedItems && this.expandedItems[key] === true)
     {
@@ -402,13 +472,9 @@
     }
   }
 
-  Not.prototype.registerUI = function ()
+  Not.prototype.toggleList = function (toggle)
   {
-    var self = this;
-    this.listElement.on('click', '.togglemsgs', function ()
-    {
-      self.toggleMore(this);
-    });
+    this.listElement.toggle(toggle);
   }
 
 })(jQuery);

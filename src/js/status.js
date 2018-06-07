@@ -1,6 +1,8 @@
 /**
  * Status messages, compatible with Nano.php's message format.
  *
+ * NOTE: this is deprecated, the Notifications library replaces it.
+ *
  * Requires:
  *
  * #common
@@ -22,6 +24,7 @@
   
   Nano.Status = function (options)
   {
+    console.log("Deprecated Nano.Status library in use.");
     if (options === undefined || options === null)
       options = {};
  
