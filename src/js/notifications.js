@@ -404,6 +404,7 @@
       this.showAlert(notice);
       this.shown[notice.key] = true;
     }
+    this.updateIcon();
   }
 
   Not.prototype.msg = function (name, opts)
@@ -412,6 +413,7 @@
     this.showMessage(message);
     this.showAlert(message);
     this.shown[message.key] = true;
+    this.updateIcon();
   }
 
   Not.prototype.warn = function (name, opts)
@@ -428,6 +430,25 @@
       opts = {};
     opts.type = 'error';
     this.msg(name, opts);
+  }
+
+  Not.prototype.updateIcon = function ()
+  {
+    var icon = this.iconElement;
+    var count = this.notifications.length;
+    var iconMsg = icon.find('.message');
+    iconMsg.text(count);
+    iconMsg.removeClass('message warning error');
+    var classes = ['error','warning','message'];
+    for (var c in classes)
+    {
+      var className = classes[c];
+      if (this.hasStatus[className])
+      {
+        iconMsg.addClass(className);
+        break;
+      }
+    }
   }
 
   Not.prototype.hideMore = function ()
