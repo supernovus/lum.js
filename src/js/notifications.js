@@ -549,7 +549,7 @@
     var key = msg.attr(attr);
     var list = this.listElement;
     var all = list.find(sel+'['+attr+'="'+key+'"]');
-    console.log("toggleMore", elem, sel, msg, all);
+//    console.log("toggleMore", elem, sel, msg, all);
     var more = all.not(':first');
     if (key in this.expandedItems && this.expandedItems[key] === true)
     {
