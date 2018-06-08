@@ -90,7 +90,7 @@ Nano.Validation.prototype.fail = function (msg, params)
   this.valid = false;
   if (this.status !== undefined)
   {
-    this.status.msg(msg, VALID_NS, params);
+    this.status.msg(msg, {tag: VALID_NS, reps: params});
   }
   else
   {
@@ -104,7 +104,7 @@ Nano.Validation.prototype.reset = function ()
   this.valid = true;
   if (this.status !== undefined)
   {
-    this.status.clear(VALID_NS);
+    this.status.clearTag(VALID_NS);
   }
 }
 

@@ -333,6 +333,43 @@
     return message;
   }
 
+  Not.prototype.clear = function (tag)
+  {
+    var selector = this.notificationSelector;
+    if (tag !== undefined)
+      selector += '.'+tag;
+
+    var items = this.listElement.find(selector);
+    items.remove();
+
+    var filtered = [];
+    var removed;
+
+    if (tag !== undefined)
+    {
+      removed = [];
+      for (var n in this.notifications)
+      {
+        var notice = this.notifications[n];
+        if (notice.opts.tag === tag)
+        {
+          removed.push(notice);
+        }
+        else
+        {
+          filtered.push(notice);
+        }
+      }
+    }
+    else
+    {
+      removed = this.notifications;
+    }
+
+    this.notifications = filtered;
+    return removed;
+  }
+
   Not.prototype.showMessage = function (message)
   {
     var selector = this.itemTemplate;
@@ -407,8 +444,16 @@
     this.updateIcon();
   }
 
-  Not.prototype.msg = function (name, opts)
+  Not.prototype.msg = function (name, opts, reps)
   {
+    if (opts === undefined)
+      opts = {};
+    else if (typeof opts === 'string')
+      opts = {tag: opts};
+
+    if (reps !== undefined)
+      opts.reps = reps;
+
     var message = this.addMessage(name, opts);
     this.showMessage(message);
     this.showAlert(message);
@@ -416,36 +461,40 @@
     this.updateIcon();
   }
 
-  Not.prototype.warn = function (name, opts)
+  Not.prototype.warn = function (name, opts, reps)
   {
     if (opts === undefined)
       opts = {};
+    else if (typeof opts === 'string')
+      opts = {tag: opts};
     opts.type = 'warning';
-    this.msg(name, opts);
+    this.msg(name, opts, reps);
   }
 
-  Not.prototype.err = function (name, opts)
+  Not.prototype.err = function (name, opts, reps)
   {
     if (opts === undefined)
       opts = {};
+    else if (typeof opts === 'string')
+      opts = {tag: opts};
     opts.type = 'error';
-    this.msg(name, opts);
+    this.msg(name, opts, reps);
   }
 
   Not.prototype.updateIcon = function ()
   {
     var icon = this.iconElement;
     var count = this.notifications.length;
-    var iconMsg = icon.find('.message');
-    iconMsg.text(count);
-    iconMsg.removeClass('message warning error');
+    var iconSpan = icon.find('span');
+    iconSpan.text(count);
+    iconSpan.removeClass('message warning error');
     var classes = ['error','warning','message'];
     for (var c in classes)
     {
       var className = classes[c];
       if (this.hasStatus[className])
       {
-        iconMsg.addClass(className);
+        iconSpan.addClass(className);
         break;
       }
     }
