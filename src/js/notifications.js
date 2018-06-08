@@ -66,6 +66,7 @@
     this.hasStatus = {};
     this.keyCount  = {};
     this.shown     = {};
+    this.alerts    = {};
 
     this.expandedItems = {};
 
@@ -385,6 +386,7 @@
     }
 
     this.notifications = filtered;
+    this.updateIcon();
     return removed;
   }
 
@@ -415,33 +417,38 @@
       else
         timeout = Not.Timeouts.default;
 
-      var callback = function ()
+      var timer;
+
+      var callback = function (fadeTime)
       {
-        msg.fadeOut(800, function ()
+        if (fadeTime === undefined)
+          fadeTime = 800;
+        msg.fadeOut(fadeTime, function ()
         {
+          delete self.alerts[timer];
           msg.remove();
         });
       }
 
-      var timer = setTimeout(callback, timeout);
+      timer = setTimeout(callback, timeout);
+
+      this.alerts[timer] = callback;
 
       msg.find('.close').on('click', function (e)
       {
         e.stopPropagation();
         clearTimeout(timer);
-        msg.fadeOut(400, function ()
-        {
-          msg.remove();
-        });
+        callback(300);
       });
 
       msg.on('click', function (e)
       {
-        clearTimeout(timer);
-        msg.fadeOut(400, function ()
+        for (var timer in self.alerts)
         {
-          msg.remove();
-        });
+          var callback = self.alerts[timer];
+          clearTimeout(timer);
+          callback(300);
+        }
         self.togglePane(true);
       });
     }
