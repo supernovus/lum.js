@@ -78,19 +78,23 @@
       }
     }
 
-    this.renderItem = 'renderItem' in options ? options.renderItem 
-      : Not.Engines.element;
+    this.renderItem = 'renderItem' in options 
+      ? options.renderItem : Not.Engines.element;
 
-    this.renderAlert = 'renderAlert' in options ? options.renderAlert
-      : Not.Engines.element
+    this.renderAlert = 'renderAlert' in options 
+      ? options.renderAlert : Not.Engines.element
 
     this.itemTemplate = 'itemTemplate' in options
       ? options.itemTempate : '#notification_item .notification';
     this.alertTemplate = 'alertTemplate' in options 
       ? options.alertTemplate : '#notification_alert .notification';
 
+    this.paneSelector = 'paneSelector' in options ?
+      options.paneSelector : '#notification_centre';
+
     this.listSelector = 'listSelector' in options ?
-      options.listSelector : '#notification_centre';
+      options.listSelector : '.notifications';
+
     this.alertsSelector = 'alertsSelector' in options ?
       options.alertsSelector : '#notification_alerts';
 
@@ -102,6 +106,9 @@
 
     this.msgKeyAttr = 'msgKeyAttr' in options
       ? options.msgKeyAttr : 'messagekey';
+
+    this.dockClass = 'dockClass' in options
+      ? options.dockClass : 'overlay';
 
     var doInit = 'autoInitialize' in options ? options.autoInitialize : true;
     var doDraw = 'autoDraw' in options ? options.autoDraw : true;
@@ -159,20 +166,31 @@
 
   Not.prototype.initialize = function ()
   {
-    this.listElement = $(this.listSelector);
+    this.paneElement = $(this.paneSelector);
+    this.listElement = this.paneElement.find(this.listSelector);
     this.alertsElement = $(this.alertsSelector);
     this.iconElement = $(this.iconSelector);
 
     var self = this;
+
+    this.paneElement.on('click', '.dock', function ()
+    {
+      self.toggleDock();
+    });
+
+    this.paneElement.on('click', '.close', function ()
+    {
+      self.togglePane(false);
+    });
 
     this.listElement.on('click', '.togglemsgs', function ()
     {
       self.toggleMore(this);
     });
 
-    this.iconElement.on('click', function (e)
+    this.iconElement.on('click', function ()
     {
-      self.toggleList();
+      self.togglePane();
     });
   }
 
@@ -424,7 +442,7 @@
         {
           msg.remove();
         });
-        self.toggleList(true);
+        self.togglePane(true);
       });
     }
   }
@@ -542,9 +560,14 @@
     }
   }
 
-  Not.prototype.toggleList = function (toggle)
+  Not.prototype.togglePane = function (toggle)
   {
-    this.listElement.toggle(toggle);
+    this.paneElement.toggle(toggle);
+  }
+
+  Not.prototype.toggleDock = function (toggle)
+  {
+    this.paneElement.toggleClass(this.dockClass, toggle);
   }
 
 })(jQuery);
