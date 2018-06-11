@@ -514,7 +514,7 @@
     if (count > 0)
       iconSpan.text(count);
     else
-      iconSpan.text('');
+      iconSpan.text('-');
     iconSpan.removeClass('none message warning error');
     var classes = ['error','warning','message'];
     var foundClass = false;
