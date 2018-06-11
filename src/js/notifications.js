@@ -511,17 +511,27 @@
     var icon = this.iconElement;
     var count = this.notifications.length;
     var iconSpan = icon.find('span');
-    iconSpan.text(count);
-    iconSpan.removeClass('message warning error');
+    if (count > 0)
+      iconSpan.text(count);
+    else
+      iconSpan.text('');
+    iconSpan.removeClass('none message warning error');
     var classes = ['error','warning','message'];
+    var foundClass = false;
     for (var c in classes)
     {
       var className = classes[c];
       if (this.hasStatus[className])
       {
         iconSpan.addClass(className);
+        foundClass = true;
         break;
       }
+    }
+
+    if (!foundClass)
+    {
+      iconSpan.addClass('none');
     }
   }
 
