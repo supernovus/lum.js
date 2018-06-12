@@ -104,7 +104,7 @@ Nano.Validation.prototype.reset = function ()
   this.valid = true;
   if (this.status !== undefined)
   {
-    this.status.clearTag(VALID_NS);
+    this.status.clear(VALID_NS);
   }
 }
 
