@@ -21,6 +21,7 @@
       self.readyHandlers = [];
 
     self.defaultAttrNamespace = 'nano';
+    self.defaultTmplNamespace = 'tmpl';
   }
 
   Nano.ViewController.prototype.add = function (func)
@@ -117,6 +118,96 @@
     }
 
     return matching;
+  }
+
+  Nano.ViewController.prototype.addTemplate = function (name, def, register)
+  {
+    if (typeof name !== 'string')
+    {
+      console.error("Invalid template name", name, def);
+      return;
+    }
+    if (typeof def === 'string')
+    {
+      def = {html: def};
+    }
+    else if (typeof def !== 'object')
+    {
+      console.error("Invalid template definition", name, def);
+      return;
+    }
+
+    var render;
+    if ('render' in def)
+    {
+      render = def.render;
+    }
+    else if ('clone' in def)
+    {
+      console.error("The 'clone' option requires a 'render' option.", name, def);
+      return;
+    }
+    else if (Nano.render !== undefined && Nano.render.riot2 !== undefined)
+    {
+      render = Nano.render.riot2;
+    }
+    else if (Nano.render !== undefined && Nano.render.riot1 !== undefined)
+    {
+      render = Nano.render.riot1;
+    }
+    else
+    {
+      console.error("Could not find a rendering engine to use", name, def);
+      return;
+    }
+
+    var template;
+    if ('html' in def)
+    {
+      var html = $(def.html).html();
+      template = function (data)
+      {
+        return $(render(html, data));
+      }
+    }
+    else if ('clone' in def)
+    {
+      var toClone = def.clone;
+      template = function (data)
+      {
+        var clone = $(toClone).clone();
+        var result = render(clone, data);
+        if (result === undefined)
+        {
+          return clone;
+        }
+        else
+        {
+          return result;
+        }
+      }
+    }
+    else
+    {
+      console.error("No 'html' or 'clone' in template definition", name, def);
+      return;
+    }
+
+    if (register === undefined)
+    {
+      register = true;
+    }
+    if (register)
+    {
+      var prop = this.defaultTmplNamespace;
+      if (this[prop] === undefined)
+      {
+        this[prop] = {};
+      }
+      this[prop][name] = template;
+    }
+
+    return template;
   }
 
   Nano.ViewController.makeGUI = function (replicate)
