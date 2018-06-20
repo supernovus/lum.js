@@ -162,5 +162,14 @@
     "uglify": false,
     "version": "0.4.0",
     "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.jQueryUI.min.js"
+  },
+  "jquery-ui-touch-punch.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/jquery.ui.touch-punch.min.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/bower.json"
+    }
   }
 }
