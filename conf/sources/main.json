@@ -151,6 +151,12 @@
     "version": "0.4.0",
     "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.css"
   },
+  "gridstack-extra.css":
+  {
+    "css": true,
+    "version": "0.4.0",
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack-extra.min.css"
+  },
   "gridstack.js":
   {
     "uglify": false,
