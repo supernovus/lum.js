@@ -2,14 +2,14 @@
   "require.js":
   {
     "uglify": false,
-    "version": "2.2.0",
-    "url": "http://requirejs.org/docs/release/2.2.0/minified/require.js"
+    "version": "2.3.5",
+    "url": "http://requirejs.org/docs/release/2.3.5/minified/require.js"
   },
   "jquery.js":
   {
     "uglify": false,
-    "version": "3.2.1",
-    "url": "https://code.jquery.com/jquery-3.2.1.min.js"
+    "version": "3.3.1",
+    "url": "https://code.jquery.com/jquery-3.3.1.min.js"
   },
   "jquery-2.js":
   {
@@ -138,5 +138,29 @@
     {
       "json": "https://raw.githubusercontent.com/zenorocha/clipboard.js/master/package.json"
     }
+  },
+  "lodash.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/lodash.min.js",
+    "version": "4.17.10"
+  },
+  "gridstack.css":
+  {
+    "css": true,
+    "version": "0.4.0",
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.css"
+  },
+  "gridstack.js":
+  {
+    "uglify": false,
+    "version": "0.4.0",
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.js"
+  },
+  "gridstack.jqui.js":
+  {
+    "uglify": false,
+    "version": "0.4.0",
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.jQueryUI.min.js"
   }
 }
