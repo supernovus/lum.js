@@ -32,16 +32,13 @@
   /**
    * Extend a new class using a parent base class.
    *
-   * @param {function} baseclass The base class we are extending from.
-   *
-   * @param {function|null} [subclass] The sub class we are creating.
-   *
-   * @param {boolean} copyall If true, copy all public properties from the
-   *                          base class to the sub-class. (default false.)
+   * @param {function} base  The base class we are extending from.
+   * @param {function} sub  The sub class we are creating.
+   * @param {boolean|object} copyDef  See below.
    *
    * @return {function} The new class after extending has been completed.
    *
-   * If the 'subclass' parameter is undefined or null, we will create a default
+   * If the subclass parameter is undefined or null, we'll create a default
    * function that simply calls the base class constructor with all arguments
    * passed as is. This allows for easy construction of child classes:
    *
@@ -54,8 +51,19 @@
    *
    * If you need to specify your own child class constructor,
    * make sure it calls any necessary parent constructors.
+   *
+   * If copyDef is the boolean true value, it becomes {copyProperties: true}.
+   * If copyDef is an object, it may have the following properties:
+   *
+   *  copyProperties: A propOpts value to be passed to Nano.copyProperties();
+   *  copyInto: An array of sources to send to Nano.copyInto();
+   *
+   * The copyProperties call if used will look like:
+   *  Nano.copyProperties(base, sub, copyDef.copyProperties);
+   *
+   * The copyProperties and copyInto copyDef properties can be used together.
    */
-  Nano.extend = function (base, sub, copyall)
+  Nano.extend = function (base, sub, copyDef)
   {
 //    console.error("Nano.extend()", base, sub, copyall);
     if (typeof base !== 'function')
@@ -81,16 +89,34 @@
 
     sub.prototype = Object.create(base.prototype);
 
-    if (copyall)
+    // Shortcut for copying all base class properties.
+    if (copyDef === true)
     {
-      Nano.copy(sub, base);
+      copyDef = {copyProperties: true};
+    }
+
+    // Copy class properties from the base class.
+    if (copyDef && copyDef.copyProperties)
+    {
+      Nano.copyProperties(base, sub, copyDef.copyProperties);
+    }
+
+    // Copy properties in from mixin/trait objects.
+    if (copyDef && copyDef.copyInto)
+    {
+      var copyInto = [sub];
+      for (var c = 0; c < copyDef.copyInto.length; c++)
+      {
+        copyInto.push(copyDef.copyInto[c]);
+      }
+      Nano.copyInto.apply(Nano, copyInto);
     }
 
     return sub;
   }
 
   /**
-   * Copy public properties between objects. Can be used for mixins.
+   * Copy properties between objects. Can be used for mixins/traits.
    *
    * @param  {object|function} target   The target we are copying into.
    * @params {...(object|function|boolean)} sources The sources we copy from.
@@ -99,8 +125,11 @@
    * properties with the same name already in the target will be overwritten.
    * If 'overwrite' is false (the default) then they will not be overwritten.
    *
+   * This calls
+   *  Nano.copyProperties(source, target, {all: true, overwrite: overwrite})
+   * for each of the sources specified (with the current overwrite value.)
    */
-  Nano.copy = function (target)
+  Nano.copyInto = function (target)
   {
     var overwrite = false;
     var sources = Array.prototype.slice.call(arguments, 1);
@@ -117,14 +146,86 @@
       else if (stype === 'object' || stype === 'function')
       {
 //        console.log("copying properties", source);
-        for (var prop in source)
+        Nano.copyProperties(source, target, {all: true, overwrite: overwrite});
+      }
+    }
+  }
+
+  /**
+   * Copy properties from one object to another.
+   *
+   * @param {object|function} source  The object to copy properties from.
+   * @param {object|function} target  The target to copy properties to.
+   * @param {object} propOpts  Options, see below.
+   *
+   * If propOpts is anythig other than a non-null object, assume {all: true};
+   *
+   * Options supported:
+   *
+   *  all:       boolean      If true, copy ALL properties from the source.
+   *  props:     array        A list of properties to copy.
+   *  overrides: object       A map of descriptor overrides for properties.
+   *  overwrite: boolean      Overwrite existing properties if true.
+   *  exclude:   array        A list of properties NOT to copy.
+   * 
+   * If 'all' is true, then 'props' is ignored.
+   * If 'props' is not specified, 'all' is not true, and 'overrides' is set,
+   * only the properties named in the 'overrides' will be copied.
+   *
+   * Be very careful with 'overwrite', it's a dangerous option.
+   *
+   * @return void
+   */
+  Nano.copyProperties = function (source, target, propOpts)
+  {
+    if (propOpts === null || typeof propOpts !== 'object')
+      propOpts = {all: true};
+
+    var defOverrides = 'overrides' in propOpts ? propOpts.overrides : {};
+    var overwrite    = 'overwrite' in propOpts ? propOpts.overwrite : false;
+
+    var exclude = Array.isArray(propOpts.exclude) ? propOpts.exclude : null;
+
+    var propDefs;
+
+    if (propOpts.all)
+    {
+      propDefs = Object.getOwnPropertyNames(source); 
+    }
+    else if (propOpts.props && Array.isArray(propOpts.props))
+    {
+      propDefs = propOpts.props;
+    }
+    else if (propOpts.overrides)
+    {
+      propDefs = Object.keys(propdefs);
+    }
+
+    if (!propDefs)
+    {
+      console.error("Could not determine properties to copy", propOpts);
+      return;
+    }
+
+    // For each propDef found, add it to the target.
+    for (var p = 0; p < propDefs.length; p++)
+    {
+      var prop = propDefs[p];
+      if (exclude && exclude.indexOf(prop) !== -1)
+        continue; // Excluded property.
+      var def = Object.getOwnPropertyDescriptor(source, prop)
+      if (def === undefined) continue; // Invalid property.
+      if (prop in defOverrides && typeof defOverrides[prop] === 'object')
+      {
+        for (var key in defOverrides[prop])
         {
-          if (overwrite || target[prop] === undefined)
-          {
-//            console.log("copying", prop, source[prop]);
-            target[prop] = source[prop];
-          }
+          var val = defOverrides[prop][key];
+          def[key] = val;
         }
+      }
+      if (overwrite || target[prop] === undefined)
+      { // Property doesn't already exist, let's add it.
+        Object.defineProperty(target, prop, def);
       }
     }
   }
@@ -183,21 +284,23 @@
 
   /**
    * Clone a simple object, using a simple JSON chain.
+   *
+   * Can also clone extended properties that aren't serialized in JSON.
+   *
+   * @param {Object}                object           Object to clone.
+   * @param {boolean|array|object}  copyProperties   See below.
+   *
+   * @return {Object}  A clone of the object.
+   *
+   * If copyProperties is defined, and is a non-false value, then we'll
+   * call Nano.copyProperties(object, clone, copyProperties);
    */
   Nano.clone = function clone (object, copyProperties)
   {
     var clone = JSON.parse(JSON.stringify(object));
     if (copyProperties)
     {
-      for (var prop in copyProperties)
-      {
-        var configurable = copyProperties[prop];
-        if (clone[prop] === undefined)
-        {
-          var opts = {configurable: configurable};
-          Nano.addProperty(clone, prop, object[prop], opts);
-        }
-      }
+      Nano.copyProperties(object, clone, copyProperties);
     }
     return clone;
   }
