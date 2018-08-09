@@ -126,7 +126,7 @@
    * If 'overwrite' is false (the default) then they will not be overwritten.
    *
    * This calls
-   *  Nano.copyProperties(source, target, {all: true, overwrite: overwrite})
+   *  Nano.copyProperties(source, target, {default: true, overwrite: overwrite})
    * for each of the sources specified (with the current overwrite value.)
    */
   Nano.copyInto = function (target)
@@ -146,7 +146,7 @@
       else if (stype === 'object' || stype === 'function')
       {
 //        console.log("copying properties", source);
-        Nano.copyProperties(source, target, {all: true, overwrite: overwrite});
+        Nano.copyProperties(source, target, {default: true, overwrite: overwrite});
       }
     }
   }
@@ -158,18 +158,22 @@
    * @param {object|function} target  The target to copy properties to.
    * @param {object} propOpts  Options, see below.
    *
-   * If propOpts is anythig other than a non-null object, assume {all: true};
+   * If propOpts is anything other than a non-null object, it's the same as
+   * passing {default: true}.
    *
    * Options supported:
    *
-   *  all:       boolean      If true, copy ALL properties from the source.
+   *  default:   boolean      If true, copy enumerable properties.
+   *  all:       boolean      If true, copy ALL properties.
    *  props:     array        A list of properties to copy.
    *  overrides: object       A map of descriptor overrides for properties.
    *  overwrite: boolean      Overwrite existing properties if true.
    *  exclude:   array        A list of properties NOT to copy.
    * 
-   * If 'all' is true, then 'props' is ignored.
-   * If 'props' is not specified, 'all' is not true, and 'overrides' is set,
+   * If 'props' is set, it overrides all other options for which properties
+   * to copy. If 'all' is true, all properties including special ones will
+   * be copied. If 'default' is true, all enumerable properties will be copied.
+   * If none of those are specified, but 'overrides is set,
    * only the properties named in the 'overrides' will be copied.
    *
    * Be very careful with 'overwrite', it's a dangerous option.
@@ -179,7 +183,7 @@
   Nano.copyProperties = function (source, target, propOpts)
   {
     if (propOpts === null || typeof propOpts !== 'object')
-      propOpts = {all: true};
+      propOpts = {default: true};
 
     var defOverrides = 'overrides' in propOpts ? propOpts.overrides : {};
     var overwrite    = 'overwrite' in propOpts ? propOpts.overwrite : false;
@@ -188,17 +192,21 @@
 
     var propDefs;
 
-    if (propOpts.all)
-    {
-      propDefs = Object.getOwnPropertyNames(source); 
-    }
-    else if (propOpts.props && Array.isArray(propOpts.props))
+    if (propOpts.props && Array.isArray(propOpts.props))
     {
       propDefs = propOpts.props;
     }
+    else if (propOpts.all)
+    {
+      propDefs = Object.getOwnPropertyNames(source); 
+    }
+    else if (propOpts.default)
+    {
+      propDefs = Object.keys(source);
+    }
     else if (propOpts.overrides)
     {
-      propDefs = Object.keys(propdefs);
+      propDefs = Object.keys(propDefs);
     }
 
     if (!propDefs)

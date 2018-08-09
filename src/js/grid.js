@@ -24,6 +24,7 @@
       minCols: 5,
       maxCols: 0,
       fillMax: false,
+      conflictResolution: null,
     };
     this.applySettings(settings, options);
 
@@ -76,6 +77,15 @@
   }
 
   var gp = Grid.prototype;
+
+  gp._constructor = Grid;
+
+  gp.clone = function ()
+  {
+    var settings = Nano.clone(this.settings);
+    settings.items = Nano.clone(this.items);
+    return new this._constructor(settings);
+  }
   
   gp.applySettings = function (settings, options)
   {
@@ -160,7 +170,11 @@
   {
     if (currentOnly)
     {
-      return this.grid.length;
+      if (this.grid[0])
+      {
+        return this.grid[0].length;
+      }
+      return 0;
     }
     else
     {
@@ -204,26 +218,29 @@
     this.initGrid();
   }
 
-  gp.buildGrid = function ()
+  gp.buildGrid = function (addOpts)
   {
     this.trigger('preBuildGrid', this.grid)
     this.resetGrid();
     for (var i = 0; i < this.items.length; i++)
     {
-      this.addToGrid(this.items[i]);
+      this.addToGrid(this.items[i], addOpts);
     }
     this.trigger('postBuildGrid', this.grid);
   }
 
-  gp.addToGrid = function (item)
+  gp.addToGrid = function (item, opts)
   {
-    console.debug("addToGrid", item);
+    console.debug("addToGrid", item, opts);
 
-    if ('x' in item && 'y' in item && !this.resolveConflicts(item))
+    if ('x' in item && 'y' in item)
     {
-      return false;
+      if (!this.resolveConflicts(item, opts))
+      {
+        return false;
+      }
     }
-    else if (!this.findEmptyPosition(item))
+    else if (!this.findEmptyPosition(item, opts))
     {
       return false;
     }
@@ -241,25 +258,162 @@
     return true;
   }
 
-  gp.itemFits = function (item)
+  gp.itemFits = function (item, pos)
   {
+    pos = pos || {};
+    if (pos.x === undefined)
+    {
+      pos.x = (item.x !== undefined ? item.x : 0);
+    }
+    if (pos.y === undefined)
+    {
+      pos.y = (item.y !== undefined ? item.y : 0);
+    }
+
+    if (pos.x < 0 || pos.y < 0)
+    { // No negatives.
+      return false;
+    }
+
+    if (this.settings.maxRows && pos.y + pos.h > this.settings.maxRows)
+    { // Cannot exceed maximum rows.
+      return false;
+    }
+
+    if (this.settings.maxCols && pos.x + pos.w > this.settings.maxCols)
+    { // Cannot exceed maximum cols.
+      return false;
+    }
+
+    var conflicts = [];
+
+    for (var y = pos.y; y < pos.y + item.h; y++)
+    {
+      var row = this.grid[y];
+      if (!row) continue; // Non-defined row.
+      for (var x = pos.x; x < pos.x + item.w; x++)
+      {
+        var col = row[x];
+        if (col && col !== item)
+        {
+          if (conflicts.indexOf(item) === -1)
+          {
+            conflicts.push(item);
+          }
+        }
+      }
+    }
+
+    if (conflicts.length > 0)
+    {
+      if (pos.conflicts === false)
+        return false;
+      return conflicts;
+    }
+
     return true;
   }
 
-  gp.findEmptyPosition = function (item)
+  gp.findEmptyPosition = function (item, opts)
   {
-    return true;
+    opts = opts || {};
+    var starty = opts.x !== undefined 
+      ? opts.x
+      : (item.y !== undefined ? item.y : 0);
+    var startx = opts.y !== undefined
+      ? opts.y
+      : (item.x !== undefined ? item.x : 0);
+    var endy = this.settings.maxRows
+      ? this.settings.maxRows
+      : this.rowCount() + 1;
+    var endx = this.settings.maxCols
+      ? this.settings.maxCols
+      : this.colCount() + 1;
+    for (var y = starty; y < endy; y++)
+    {
+      for (var x = startx; x < endx; x++)
+      {
+        var fits = this.itemFits(item, {x: x, y: y});
+        if (fits === true)
+        { // The item fits at this position.
+          if (opts.returnPos)
+          { // Return the position we fit at.
+            return {x: x, y: y};
+          }
+          else
+          { // Update the item position, and return true.
+            item.x = x;
+            item.y = y;
+            return true;
+          }
+        }
+        else if (Array.isArray(fits))
+        { // Skip the width of the conflicting item.
+          x += fits[0].w - 1;
+        }
+      }
+    }
+    return false;
   }
 
-  gp.removeFromGrid = function (item)
+  gp.sortItems = function ()
   {
-    return true;
+    this.items.sort(function (item1, item2)
+    {
+      if (item1.y != item2.y)
+      {
+        return item1.y - item2.y;
+      }
+      if (item1.x != item2.x)
+      {
+        return item1.x - item2.x;
+      }
+      return 0;
+    }.bind(this));
   }
 
-  gp.resolveConflicts = function (item)
+  gp.removeFromGrid = function (item, opts)
   {
-    return true;
+    for (var y = item.y; y < item.y + item.h; y++)
+    {
+      if (!this.grid[y]) continue; // Not found in grid.
+      for (var x = item.x; x < item.x + item.w; x++)
+      {
+        if (this.grid[y][x] === item)
+        {
+          this.grid[y][x] = null;
+        }
+      }
+    }
   }
+
+  /**
+   * Use our configured conflict resolution method.
+   */
+  gp.resolveConflicts = function (item, opts)
+  {
+    if (this.itemFits(item))
+    {
+      return true;
+    }
+
+    var meth = this.settings.conflictResolution;
+    if (typeof meth === 'string' && this.resolveConflicts[meth] !== undefined)
+      return this.resolveConflicts[meth].call(this, item, opts);
+    else
+      return false;
+  }
+
+  /**
+   * Use findEmptyPosition() to find an available space.
+   */
+  gp.resolveConflicts.findEmpty = function (item, opts)
+  {
+    return this.findEmptyPosition(item, opts);
+  }
+
+  // TODO: add more extensive conflict resolution methods that move around
+  // existing items to make things fit nicely.
 
   gp.addItem = function (item, options)
   {
@@ -267,9 +421,9 @@
     this.trigger('preAddItem', item, options);
     this.items.push(item);
     if (options.rebuild)
-      this.buildGrid();
+      this.buildGrid(options);
     else if (options.add)
-      this.addToGrid(item);
+      this.addToGrid(item, options);
     this.trigger('postAddItem', item, options);
   }
 
@@ -280,9 +434,9 @@
     var offset = this.items.indexOf(item);
     this.items.splice(offset, 1);
     if (options.rebuild)
-      this.buildGrid();
+      this.buildGrid(options);
     else if (options.remove)
-      this.removeFromGrid(item);
+      this.removeFromGrid(item, otions);
     this.trigger('postRemoveItem', item, options);
   }
 
@@ -325,12 +479,15 @@
 
   var dp = DisplayGrid.prototype;
 
-  dp.setDisplayElement = function (displayElem, cellElem, rebuild)
+  dp._constructor = DisplayGrid;
+
+  dp.setDisplayElement = function (displayElem, options)
   {
     if (!displayElem) return;
     var set = this.settings;
     set.displayWidth = displayElem.offsetWidth;
     set.displayHeight = displayElem.offsetHeight;
+    var cellElem = options.cellElement;
     if (cellElem)
     {
       set.cellWidth = cellElem.offsetWidth;
@@ -347,17 +504,31 @@
       set.maxCols = Math.floor(set.displayWidth / (set.cellWidth+set.cellPadding));
       regen = true;
     }
-    console.debug("set display element", displayElem, cellElem, set, regen);
-    if (regen)
+
+    if (regen && this.items.length > 0)
     {
       this.buildGrid();
     }
-    if (this.display !== undefined && rebuild === undefined)
+
+    var rebuild = options.rebuildDisplay;
+    if (rebuild === undefined && this.items.length > 0)
       rebuild = true;
     if (rebuild)
     { // Rebuild the display.
       this.buildDisplay();
     }
+
+    console.debug("set display element", displayElem, cellElem, set, regen, rebuild);
+  }
+
+  dp.clone = function ()
+  {
+    var clone = gp.clone.call(this);
+    if (clone.items.length > 0)
+    {
+      clone.buildDisplay();
+    }
+    return clone;
   }
 
   dp.buildDisplay = function ()
@@ -381,6 +552,63 @@
       };
       this.display.push(ditem);
     }
+  }
+
+  dp.getCursorPos = function (e)
+  {
+    if (e.pageX === undefined || e.pageY === undefined || e.currentTarget === undefined)
+    {
+      if (e.originalTarget)
+      {
+        return this.getCursorPos(e.originalTarget);
+      }
+      else
+      {
+        console.error("Could not find required event properties.");
+        return null;
+      }
+    }
+    var y = e.pageY - e.currentTarget.offsetTop;
+    var x = e.pageX - e.currentTarget.offsetLeft;
+    return {x: x, y: y};
+  }
+
+  dp.displayItemAt = function (pos)
+  {
+    if (typeof pos !== 'object') return false;
+    var ditem, i, gpos = {};
+    if (pos.pageY !== undefined && pos.pageX !== undefined)
+    { // It's an event, convert it to a pos.
+      pos = this.getCursorPos(pos);
+      if (typeof pos !== 'object') return false;
+    }
+    if (pos.x === undefined || pos.y === undefined)
+    { // No coordinates, cannot continue.
+      return false;
+    }
+
+    // Generate a simplistic grid position value.
+    // Note due to padding, this may not be totally accurate.
+    var cw = this.settings.cellWidth;
+    var ch = this.settings.cellHeight;
+    var drow = (pos.y ? Math.floor(pos.y / ch) : 0);
+    var dcol = (pos.x ? Math.floor(pos.x / cw) : 0);
+    gpos.pos = {x: dcol, y: drow};
+
+    // Now see if there's any existing display items in the same space.
+    for (i = 0; i < this.display.length; i++)
+    {
+      ditem = this.display[i];
+      if (pos.x >= ditem.x && pos.x < ditem.x+ditem.w
+        && pos.y >= ditem.y && pos.y < ditem.y+ditem.h)
+      { // The position is over an item, return the item.
+        gpos.item = ditem;
+        break;
+      }
+    }
+
+    // Return what we found.
+    return gpos;
   }
 
 })();
