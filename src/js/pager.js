@@ -45,7 +45,7 @@ Nano.Pager = function (options)
   }
 
   // Number of items to show per page.
-  this.perpage = 'perpage' in options ? options.perpage : 5;
+  this.perpage = 'perpage' in options ? options.perpage : 10;
 
   // Number of page icons to show.
   this.showmax = 'showmax' in options ? options.showmax : 10;
