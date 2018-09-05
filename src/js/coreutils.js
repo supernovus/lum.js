@@ -211,7 +211,7 @@
 
     if (!propDefs)
     {
-      console.error("Could not determine properties to copy", propOpts);
+      Nano.warn("Could not determine properties to copy", propOpts);
       return;
     }
 

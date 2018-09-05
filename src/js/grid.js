@@ -275,12 +275,12 @@
       return false;
     }
 
-    if (this.settings.maxRows && pos.y + pos.h > this.settings.maxRows)
+    if (this.settings.maxRows && pos.y + item.h > this.settings.maxRows)
     { // Cannot exceed maximum rows.
       return false;
     }
 
-    if (this.settings.maxCols && pos.x + pos.w > this.settings.maxCols)
+    if (this.settings.maxCols && pos.x + item.w > this.settings.maxCols)
     { // Cannot exceed maximum cols.
       return false;
     }
@@ -296,9 +296,9 @@
         var col = row[x];
         if (col && col !== item)
         {
-          if (conflicts.indexOf(item) === -1)
+          if (conflicts.indexOf(col) === -1)
           {
-            conflicts.push(item);
+            conflicts.push(col);
           }
         }
       }
@@ -348,7 +348,7 @@
           }
         }
         else if (Array.isArray(fits))
-        { // Skip the width of the conflicting item.
+        { // Skip the width of the first conflicting item.
           x += fits[0].w - 1;
         }
       }
@@ -412,7 +412,6 @@
     return this.findEmptyPosition(item, opts);
   }
 
-  // TODO: add more extensive conflict resolution methods that move around
   // existing items to make things fit nicely.
 
   gp.addItem = function (item, options)
@@ -440,6 +439,12 @@
     this.trigger('postRemoveItem', item, options);
   }
 
+  /**
+   * DisplayGrid
+   *
+   * An extension of the Grid library with extra features for dealing with
+   * DOM elements and events, for rendering a grid on a web page.
+   */
   var DisplayGrid = Grid.Display = function (options)
   {
     options = options || {};
@@ -457,14 +462,22 @@
     };
     this.applySettings(settings, options);
 
+    // Call our parent constructor.
+    Grid.call(this, options);
+
     // We can also apply displayWidth/displayHeight from a DOM element.
     if ('displayElement' in options)
     {
       this.setDisplayElement(options.displayElement, options);
     }
 
-    // Call our parent constructor.
-    Grid.call(this, options);
+    // And add some event handlers to rebuild the display.
+    var rebuild = function (item, options)
+    {
+      this.buildDisplay();
+    }
+    this.on('postAddItem', rebuild);
+    this.on('postRemoveItem', rebuild);
   }
   Nano.extend(Grid, DisplayGrid,
   {
@@ -573,11 +586,11 @@
     return {x: x, y: y};
   }
 
-  dp.displayItemAt = function (pos)
+  dp.displayPos = function (pos)
   {
     if (typeof pos !== 'object') return false;
     var ditem, i, gpos = {};
-    if (pos.pageY !== undefined && pos.pageX !== undefined)
+    if (pos.originalTarget !== undefined || (pos.pageY !== undefined && pos.pageX !== undefined && pos.currentTarget !== undefined))
     { // It's an event, convert it to a pos.
       pos = this.getCursorPos(pos);
       if (typeof pos !== 'object') return false;
@@ -595,16 +608,46 @@
     var dcol = (pos.x ? Math.floor(pos.x / cw) : 0);
     gpos.pos = {x: dcol, y: drow};
 
-    // Now see if there's any existing display items in the same space.
-    for (i = 0; i < this.display.length; i++)
+    return gpos;
+  }
+
+  dp.displayItemFits = function (pos, dim)
+  {
+    var gpos = this.displayPos(pos);
+
+    if (!gpos)
+    { // It failed, pass through the failure.
+      return gpos;
+    }
+
+    var testpos = {x: gpos.pos.x, y: gpos.pos.y};
+    if (dim !== undefined && dim.h !== undefined)
     {
-      ditem = this.display[i];
-      if (pos.x >= ditem.x && pos.x < ditem.x+ditem.w
-        && pos.y >= ditem.y && pos.y < ditem.y+ditem.h)
-      { // The position is over an item, return the item.
-        gpos.item = ditem;
-        break;
-      }
+      testpos.h = dim.h;
+    }
+    else
+    {
+      testpos.h = 1;
+    }
+    if (dim !== undefined && dim.w !== undefined)
+    {
+      testpos.w = dim.w;
+    }
+    else
+    {
+      testpos.w = 1;
+    }
+
+    var fits = this.itemFits(testpos);
+    if (typeof fits === 'boolean')
+    { // Return value is if the item fits, no conflicts detected.
+      gpos.fits = fits;
+      gpos.conflicts = [];
+    }
+    else
+    { // Return value is a list of conflicts, obvious the item doesn't fit.
+      gpos.fits = false;
+      gpos.conflicts = fits;
     }
 
     // Return what we found.
