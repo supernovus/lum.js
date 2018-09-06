@@ -19,9 +19,9 @@
     // Default settings, can be overridden by the options.
     var settings =
     {
-      minRows: 5,
+      minRows: 2,
       maxRows: 0,
-      minCols: 5,
+      minCols: 2,
       maxCols: 0,
       fillMax: false,
       conflictResolution: null,
@@ -456,9 +456,9 @@
       displayHeight: 0,     // Height of the display area.
       cellWidth:     0,     // Width of a single 'cell'.
       cellHeight:    0,     // Height of a single 'cell'.
-      cellPadding:   5,     // Padding between cells.
+      cellPadding:   0,     // Padding between cells.
       resizeMaxRows: false, // If displayHeight changes, update maxRows.
-      resizeMaxCols: true,  // If displayWidth changes, update maxCols.
+      resizeMaxCols: false, // If displayWidth changes, update maxCols.
     };
     this.applySettings(settings, options);
 
