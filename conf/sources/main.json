@@ -177,5 +177,14 @@
     {
       "json": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/bower.json"
     }
+  },
+  "ua-parser.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/faisalman/ua-parser-js/master/dist/ua-parser.min.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/faisalman/ua-parser-js/master/bower.json"
+    }
   }
 }
