@@ -15,7 +15,7 @@ if [ "$#" -lt 1 ]; then
   exit 1
 fi
 
-PKGS="http-request uglify-js uglify-es yargs"
+PKGS="http-request uglify-js uglify-es yargs compare-versions"
 
 if [ "$1" = "gulp4" ]; then
   if [ "$2" = "-g" ]; then

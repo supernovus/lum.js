@@ -1,9 +1,9 @@
-# Nano.js v1.5
+# Nano.js v1.5+
 
 ## Summary
 
 A bunch of common Javascript stuff for my projects that makes life easier.
-
+ bin
 ## Requirements
 
 * Node.js, the Javascript runtime. The scripts expect it to be called 'node'.
@@ -24,7 +24,7 @@ Pick whichever one you are more familiar with.
 ## Setup
 
 * Run './bin/setup.sh' to install development dependencies.
-* Run './bin/download-deps.js' to download external resource scripts.
+* Run './bin/deps.js install' to download external resource scripts.
 * Run 'gulp' or 'grunt' to compile the source files into website scripts.
 
 ## Optional Features
@@ -35,11 +35,21 @@ Pick whichever one you are more familiar with.
 
 ## Updating downloaded dependencies
 
-Eventually the download-deps script will have proper version checking and will 
-be able to redownload only outdated scripts. Until then, you can force the
-script to redownload all dependencies using the following:
+You can update downloaded dependencies using the deps.js script:
 
-  ./bin/download-deps.js --redownload
+  ./bin/deps.js upgrade
+
+Or you can simply force re-downloading all script using:
+
+  ./bin/deps.js install --force
+
+## More help with deps.js
+
+Try one of the following:
+
+  ./bin/deps.js --help
+  ./bin/deps.js --help install
+  ./bin/deps.js --help upgrade
 
 ## Use in your own projects
 

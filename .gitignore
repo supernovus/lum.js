@@ -11,3 +11,4 @@
 /gulpfile.js
 /.gulp-cache*
 /package-lock.json
+/conf/installed_deps.json

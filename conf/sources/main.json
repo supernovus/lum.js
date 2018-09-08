@@ -70,7 +70,7 @@
     "uglify": false,
     "version":
     {
-      "regex": "Underscore.js\\s+(\\d+\\.\\d+\\(\\.\\d+)?)",
+      "regex": "Underscore.js\\s+(\\d+\\.\\d+(\\.\\d+)?)",
       "match": 1
     },
     "url": "http://underscorejs.org/underscore-min.js"
@@ -80,7 +80,7 @@
     "uglify": false,
     "version":
     {
-      "regex": "version\\s+:\\s+(\\d+\\.\\d+(\\.\\d+)?)",
+      "regex": "version=[\"'](\\d+\\.\\d+(\\.\\d+)?)[\"']",
       "match": 1
     },
     "url": "http://momentjs.com/downloads/moment.min.js"
@@ -98,15 +98,6 @@
       "json": "https://raw.githubusercontent.com/alexei/sprintf.js/master/package.json"
     },
     "url": "https://raw.githubusercontent.com/alexei/sprintf.js/master/dist/sprintf.min.js"
-  },
-  "bowser.js":
-  {
-    "uglify": false,
-    "version":
-    {
-      "json": "https://raw.githubusercontent.com/ded/bowser/master/package.json"
-    },
-    "url": "https://raw.githubusercontent.com/ded/bowser/master/bowser.min.js"
   },
   "uri.js":
   {
@@ -144,30 +135,6 @@
     "uglify": false,
     "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/lodash.min.js",
     "version": "4.17.10"
-  },
-  "gridstack.css":
-  {
-    "css": true,
-    "version": "0.4.0",
-    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.css"
-  },
-  "gridstack-extra.css":
-  {
-    "css": true,
-    "version": "0.4.0",
-    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack-extra.min.css"
-  },
-  "gridstack.js":
-  {
-    "uglify": false,
-    "version": "0.4.0",
-    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.js"
-  },
-  "gridstack.jqui.js":
-  {
-    "uglify": false,
-    "version": "0.4.0",
-    "url": "https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.jQueryUI.min.js"
   },
   "jquery-ui-touch-punch.js":
   {
