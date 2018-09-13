@@ -58,7 +58,7 @@
       var items = options.items;
       for (var i = 0; i < items.length; i++)
       {
-        this.addItem(items[i], false);
+        this.addItem(items[i], {add: false});
       }
     }
 
@@ -440,7 +440,7 @@
     this.items.push(item);
     if (options.rebuild)
       this.buildGrid(options);
-    else if (options.add)
+    else if (options.add !== false)
       this.addToGrid(item, options);
     this.trigger('postAddItem', item, options);
   }
@@ -453,7 +453,7 @@
     this.items.splice(offset, 1);
     if (options.rebuild)
       this.buildGrid(options);
-    else if (options.remove)
+    else if (options.remove !== false)
       this.removeFromGrid(item, options);
     this.trigger('postRemoveItem', item, options);
   }
@@ -465,14 +465,22 @@
       console.error("Invalid position", newpos);
       return;
     }
-    options = options || {};
-    if (options.add === undefined)
-      options.add = true;
-    if (options.remove === undefined)
-      options.remove = true;
     this.removeFromGrid(item, options);
     item.x = newpos.x;
     item.y = newpos.y;
+    this.addToGrid(item, options);
+  }
+
+  gp.resizeItem = function (item, newdim, options)
+  {
+    if (!newdim || newdim.w === undefined || newdim.h === undefined)
+    {
+      console.error("Invalid dimensions", newdim);
+      return;
+    }
+    this.removeFromGrid(item, options);
+    item.w = newdim.w;
+    item.h = newdim.h;
     this.addToGrid(item, options);
   }
 
@@ -654,9 +662,22 @@
     return gpos;
   }
 
-  dp.displayItemFits = function (pos, dim)
+  dp.displayItemFits = function (pos, dim, isGpos)
   {
-    var gpos = this.displayPos(pos);
+    var gpos;
+   
+    if (isGpos)
+    {
+      gpos = {pos:{x:0, y:0}};
+      if (pos.x !== undefined)
+        gpos.pos.x = pos.x;
+      if (pos.y !== undefined)
+        gpos.pos.y = pos.y;
+    }
+    else
+    {
+      gpos = this.displayPos(pos);
+    }
 
     if (!gpos)
     { // It failed, pass through the failure.
@@ -684,6 +705,10 @@
     if (dim !== undefined && dim.id !== undefined)
     {
       testpos.id = dim.id;
+    }
+    else if (pos.id !== undefined)
+    {
+      testpos.id = pos.id;
     }
 
     var fits = this.itemFits(testpos);
@@ -727,6 +752,7 @@
     {
       resizeDisplayHeight: false, // If true, resize the workspace height.
       resizeDisplayWidth:  false, // If true, resize the workspace width.
+      resizeUseCallback:   false, // If true, use a watch callback to resize.
     };
     this.applySettings(settings, options);
 
@@ -815,6 +841,173 @@
     delem.height(ditem.h);
     delem.width(ditem.w);
     this.trigger('postAddItemToDisplay', ditem, delem);
+  }
+
+  up.getElementDimensions = function (delem)
+  {
+    var set = this.settings;
+    var h = Math.round(delem.height() / set.cellHeight);
+    var w = Math.round(delem.width() / set.cellWidth);
+    return {h: h, w: w};
+  }
+
+  /**
+   * Build a resize object that can respond to mouse events
+   * to handle resizing an object. You'll have to make mouse event
+   * listeners to call this, as well as the methods returned.
+   *
+   * @param Event event   An event object, usually from a mousedown event.
+   * @param Element element  A jQuery element object.
+   * @param object item  The underlying Grid item.
+   * @param object options  Any options or extra variables to include.
+   *
+   * Recognized options:
+   *
+   *  useCallback: boolean   Use a callback to calculate the dimensions.
+   *  interval:    integer   The interval to run the callback (if used.)
+   *  onCalculate: function (el, newWidth, newHeight, conf)  See below.
+   *  doCalculate: function (el, newWidth, newHeight, conf)  See below.
+   *
+   * The onCalculate and doCalcuate options are mutually exclusive. If the
+   * doCalculate function is defined, it will override the default behavior.
+   * If the onCalculate function is defined, it will be done in addition to the
+   * default calculation behavior. The 'conf' is a copy of the Grid instance
+   * settings (i.e. the same as gridObj.settings).
+   *
+   * NOTE: This directly modifies the 'options' object, turning it into the
+   *       resizeObj, so don't pass something you don't want modified!
+   *
+   * @return object  The resizeObj object.
+   *
+   * Example usage:
+   *
+   *   // Assuming a view controller object called 'gui' with certain methods.
+   *
+   *   var gridObj = gui.getGridObject(); // Get your grid object.
+   *   var resizeObj = null;
+   *
+   *   $('.grid-item .resize-grip').on('mousedown', function (e)
+   *   {
+   *     // Find the item element that is being resized.
+   *     var element = $(this).closest('.grid-item');
+   *
+   *     // Find the Grid item for the element.
+   *     var id = element.prop(id).replace('grid-item-','');
+   *     var item = gridObj.items[id];
+   *
+   *     // Create a resizeObj instance.
+   *     resizeObj = gridObj.startResize(e, element, item);
+   *   });
+   *
+   *   $(body).on('mousemove', function (e)
+   *   {
+   *     if (resizeObj)
+   *     {
+   *       resizeObj.update(e);
+   *     }
+   *   });
+   *
+   *   $(body).on('mouseup', function (e)
+   *   {
+   *     if (resizeObj)
+   *     {
+   *       resizeObj.finish();     // Finish the move.
+   *       resizeObj = null;       // Clear the resizeObj.
+   *       gridObj.buildDisplay(); // Rebuild the display items.
+   *       gui.redrawDisplay();    // Your method to redraw the display.
+   *     }
+   *   });
+   *
+   */
+  up.startResize = function (event, element, item, options)
+  {
+    options = options || {};
+    if (options.useCallback === undefined)
+      options.useCallback = this.settings.resizeUseCallBack;
+
+    // Populate the rest of the object properties we require.
+    options.grid = this;
+    options.element = element;
+    options.item = item;
+    options.startX = event.clientX;
+    options.startY = event.clientY;
+    options.currentX = event.clientX;
+    options.currentY = event.clientY;
+    options.width = element.width();
+    options.height = element.height();
+
+    // A method for handling mousemove events.
+    options.update = function (event)
+    {
+      this.currentX = event.clientX;
+      this.currentY = event.clientY;
+      if (!this.useCallback)
+      { // We're going to directly calculate the resize now.
+        this.calculate();
+      }
+    }
+
+    // A method for calculating and previewing the current size.
+    options.calculate = function ()
+    {
+      var newWidth  = this.width
+                    + this.currentX
+                    - this.startX;
+      var newHeight = this.height
+                    + this.currentY
+                    - this.startY;
+
+      var set = this.grid.settings;
+
+//      console.debug(newWidth, newHeight, set.cellWidth, set.cellHeight);
+
+      var el = this.element;
+      if (typeof this.doCalculate === 'function')
+      { // We're overriding the calcuation.
+        this.doCalculate(element, newWidth, newHeight, set);
+      }
+      else
+      { // Do the standard calculation, resizing the element on the screen.
+        if (newWidth >= set.cellWidth)
+          el.width(newWidth);
+        if (newHeight >= set.cellHeight)
+          el.height(newHeight);
+        if (typeof this.onCalculate === 'function')
+        {
+          this.onCalculate(element, newWidth, newHeight, set);
+        }
+      }
+    }
+
+    // A method for finishing the resize operation.
+    options.finish = function ()
+    {
+      if (this.useCallback)
+      {
+        clearInterval(this.watch);
+      }
+      var el = this.element;
+      var item = this.item;
+      var newdim = this.grid.getElementDimensions(el);
+      // TODO: handle conflict resolution when resizing.
+      var finfo = this.grid.displayItemFits(item, newdim, true);
+      if (finfo && finfo.fits)
+      {
+        this.grid.resizeItem(item, newdim);
+      }
+    }
+
+    if (options.useCallback)
+    { // Register a watch callback to update the element size.
+      var callback = function ()
+      {
+        options.calculate();
+      }
+      var interval = options.interval ? options.interval : 25;
+      options.watch = setInterval(callback, interval);
+    }
+
+    return options;
   }
 
 })();
