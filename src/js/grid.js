@@ -80,9 +80,16 @@
 
   gp._constructor = Grid;
 
+  gp._copySettings = [];
+
   gp.clone = function ()
   {
     var settings = Nano.clone(this.settings);
+    for (var s in this._copySettings)
+    {
+      var setting = this._copySettings;
+      settings[setting] = this.settings[setting];
+    }
     settings.items = Nano.clone(this.items);
     return new this._constructor(settings);
   }
@@ -107,7 +114,7 @@
       cols = this.colCount();
     for (var i = 0; i < cols; i++)
     {
-      if (!row[i])
+      if (row[i] === undefined)
       {
         row.push(null);
       }
@@ -116,7 +123,7 @@
 
   gp.addRow = function ()
   {
-    console.debug("addRow");
+//    console.debug("addRow");
     if (this.settings.maxRows)
     {
       var rowCount = this.rowCount(true);
@@ -134,7 +141,7 @@
   gp.addCol = function ()
   {
     var curCols = this.colCount(true);
-    if (this.settings.maxCols && curCols == this.settings.maxCols)
+    if (this.settings.maxCols && curCols >= this.settings.maxCols)
     {
       return false;
     }
@@ -195,13 +202,13 @@
 
   gp.initGrid = function (rows, cols)
   {
-    console.debug("initGrid", rows, cols);
+//    console.debug("initGrid", rows, cols);
     if (!rows)
       rows = this.rowCount();
-    console.debug("initGrid.rows", rows);
+//    console.debug("initGrid.rows", rows);
     for (var i = 0; i < rows; i++)
     {
-      if (!this.grid[i])
+      if (this.grid[i] === undefined)
       {
         this.addRow();
       }
@@ -231,7 +238,8 @@
 
   gp.addToGrid = function (item, opts)
   {
-    console.debug("addToGrid", item, opts);
+//    console.debug("addToGrid", item, opts);
+    var set = this.settings;
 
     if ('x' in item && 'y' in item)
     {
@@ -248,9 +256,17 @@
     // If we reached here, we can save the item to the grid.
     for (var y = item.y; y < item.y + item.h; y++)
     {
+      if (this.grid[y] === undefined)
+      {
+        this.addRow();
+      }
       for (var x = item.x; x < item.x + item.w; x++)
       {
-        console.debug("adding item", item, y, x);
+//        console.debug("adding item", item, y, x);
+        if (this.grid[y][x] === undefined)
+        {
+          this.addCol();
+        }
         this.grid[y][x] = item;
       }
     }
@@ -294,8 +310,11 @@
       for (var x = pos.x; x < pos.x + item.w; x++)
       {
         var col = row[x];
-        if (col && col !== item)
+        if (col)
         {
+          if (col === item) continue; // Skip the item itself.
+          if (col.id !== undefined && item.id !== undefined 
+            && col.id === item.id) continue; // Skip an item with the same id.
           if (conflicts.indexOf(col) === -1)
           {
             conflicts.push(col);
@@ -435,8 +454,26 @@
     if (options.rebuild)
       this.buildGrid(options);
     else if (options.remove)
-      this.removeFromGrid(item, otions);
+      this.removeFromGrid(item, options);
     this.trigger('postRemoveItem', item, options);
+  }
+
+  gp.moveItem = function (item, newpos, options)
+  {
+    if (!newpos || newpos.x === undefined || newpos.y === undefined)
+    {
+      console.error("Invalid position", newpos);
+      return;
+    }
+    options = options || {};
+    if (options.add === undefined)
+      options.add = true;
+    if (options.remove === undefined)
+      options.remove = true;
+    this.removeFromGrid(item, options);
+    item.x = newpos.x;
+    item.y = newpos.y;
+    this.addToGrid(item, options);
   }
 
   /**
@@ -456,7 +493,6 @@
       displayHeight: 0,     // Height of the display area.
       cellWidth:     0,     // Width of a single 'cell'.
       cellHeight:    0,     // Height of a single 'cell'.
-      cellPadding:   0,     // Padding between cells.
       resizeMaxRows: false, // If displayHeight changes, update maxRows.
       resizeMaxCols: false, // If displayWidth changes, update maxCols.
     };
@@ -494,10 +530,17 @@
 
   dp._constructor = DisplayGrid;
 
+  dp._copySettings = ['displayElement'];
+
   dp.setDisplayElement = function (displayElem, options)
   {
-    if (!displayElem) return;
+    if (!displayElem && !this.settings.displayElement) return;
+    if (!displayElem)
+      displayElem = this.settings.displayElement;
+//    console.log("setDisplayElement", displayElem);
+    options = options || {};
     var set = this.settings;
+    set.displayElement = displayElem;
     set.displayWidth = displayElem.offsetWidth;
     set.displayHeight = displayElem.offsetHeight;
     var cellElem = options.cellElement;
@@ -509,12 +552,12 @@
     var regen = false;
     if (set.resizeMaxRows && set.displayHeight && set.cellHeight)
     {
-      set.maxRows = Math.floor(set.displayHeight / (set.cellHeight+set.cellPadding));
+      set.maxRows = Math.floor(set.displayHeight / (set.cellHeight));
       regen = true;
     }
     if (set.resizeMaxCols && set.displayWidth && set.cellWidth)
     {
-      set.maxCols = Math.floor(set.displayWidth / (set.cellWidth+set.cellPadding));
+      set.maxCols = Math.floor(set.displayWidth / (set.cellWidth));
       regen = true;
     }
 
@@ -531,7 +574,7 @@
       this.buildDisplay();
     }
 
-    console.debug("set display element", displayElem, cellElem, set, regen, rebuild);
+//    console.debug("set display element", displayElem, cellElem, set, regen, rebuild);
   }
 
   dp.clone = function ()
@@ -546,25 +589,26 @@
 
   dp.buildDisplay = function ()
   {
+    this.trigger('preBuildDisplay');
     this.display = [];
     var set = this.settings;
     var cw = set.cellWidth;
     var ch = set.cellHeight;
-    var cpFirst = set.cellPadding;
-    var cpNext = cpFirst * 2;
     for (var i = 0; i < this.items.length; i++)
     {
       var gitem = this.items[i];
       var ditem = 
       {
         item: gitem,
-        x: gitem.x * cw + (gitem.x ? cpNext : cpFirst),
-        y: gitem.y * ch + (gitem.y ? cpNext : cpFirst),
+        x: gitem.x * cw,
+        y: gitem.y * ch,
         w: gitem.w * cw,
         h: gitem.h * ch,
       };
       this.display.push(ditem);
+      this.trigger('buildDisplayItem', ditem);
     }
+    this.trigger('postBuildDisplay');
   }
 
   dp.getCursorPos = function (e)
@@ -601,7 +645,6 @@
     }
 
     // Generate a simplistic grid position value.
-    // Note due to padding, this may not be totally accurate.
     var cw = this.settings.cellWidth;
     var ch = this.settings.cellHeight;
     var drow = (pos.y ? Math.floor(pos.y / ch) : 0);
@@ -638,6 +681,11 @@
       testpos.w = 1;
     }
 
+    if (dim !== undefined && dim.id !== undefined)
+    {
+      testpos.id = dim.id;
+    }
+
     var fits = this.itemFits(testpos);
     if (typeof fits === 'boolean')
     { // Return value is if the item fits, no conflicts detected.
@@ -652,6 +700,121 @@
 
     // Return what we found.
     return gpos;
+  }
+
+  // Everything past here requires jQuery UI to be loaded.
+  if (window.jQuery === undefined || window.jQuery.ui === undefined)
+  {
+    console.log("No jQuery UI, skipping Grid.UI class registration.");
+    return;
+  }
+
+  // A local jQuery reference just in case globals aren't being set.
+  var $ = window.jQuery;
+
+  /**
+   * UIGrid
+   *
+   * An extension of the DisplayGrid library that uses jQuery UI to perform
+   * item placement, and other UI related tasks.
+   */
+  var UIGrid = Grid.UI = function (options)
+  {
+    options = options || {};
+
+    // Apply our settings.
+    var settings =
+    {
+      resizeDisplayHeight: false, // If true, resize the workspace height.
+      resizeDisplayWidth:  false, // If true, resize the workspace width.
+    };
+    this.applySettings(settings, options);
+
+    // Call our parent constructor.
+    DisplayGrid.call(this, options);
+  }
+  Nano.extend(DisplayGrid, UIGrid);
+
+  var up = UIGrid.prototype;
+
+  up._constructor = UIGrid;
+
+  up.getDisplayItem = function (ditem)
+  {
+    var dtype = typeof ditem;
+    if (dtype === 'number' || dtype === 'string')
+    { // An offset value.
+      ditem = this.display[ditem];
+    }
+    if (typeof ditem !== 'object' || ditem.x === undefined || ditem.y === undefined || ditem.h === undefined || ditem.w === undefined)
+    { // Don't know what to do with this.
+      console.error("Invalid item passed to addItemToDisplay()", ditem);
+      return;
+    }
+    return ditem;
+  }
+
+  up.resizeDisplayForItem = function (ditem)
+  {
+    ditem = this.getDisplayItem(ditem);
+    if (ditem === undefined) return;
+    var set = this.settings;
+    var ws = $(set.displayElement);
+    var changed = false;
+    if (set.resizeDisplayHeight)
+    {
+      var wsHeight = ws.height();
+      var cellHeight = ditem.h+ditem.y;
+      if (cellHeight >= wsHeight)
+      {
+        var padding = set.cellHeight;
+        ws.height(cellHeight+padding);
+        changed = true;
+      }
+    }
+    if (set.resizeDisplayWidth)
+    {
+      var wsWidth = ws.width();
+      var cellWidth = ditem.w+ditem.x;
+      if (cellWidth >= wsWidth)
+      {
+        var padding = set.cellWidth;
+        ws.width(cellWidth+padding);
+        changed = true;
+      }
+    }
+
+    if (changed)
+    { // Refresh some other settings for the current display element.
+      this.setDisplayElement(null, {rebuild: false});
+    }
+  }
+
+  up.addItemToDisplay = function (ditem, delem)
+  {
+    ditem = this.getDisplayItem(ditem);
+    if (ditem === undefined) return;
+    if (delem.position === undefined)
+    {
+      console.error("Invalid element passed to addItemToDisplay()", delem);
+      return;
+    }
+    this.trigger('preAddItemToDisplay', ditem, delem);
+    var set = this.settings;
+    var ws = $(set.displayElement);
+    ws.append(delem);
+    var at = "left+"+ditem.x+" top+"+ditem.y;
+    var my = "left top";
+    delem.position(
+    {
+      my: my,
+      at: at,
+      of: ws,
+      collision: 'none',
+    });
+    delem.height(ditem.h);
+    delem.width(ditem.w);
+    this.trigger('postAddItemToDisplay', ditem, delem);
   }
 
 })();
