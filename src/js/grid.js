@@ -19,9 +19,9 @@
     // Default settings, can be overridden by the options.
     var settings =
     {
-      minRows: 2,
+      minRows: 1,
       maxRows: 0,
-      minCols: 2,
+      minCols: 1,
       maxCols: 0,
       fillMax: false,
       conflictResolution: null,
@@ -864,9 +864,13 @@
    * Recognized options:
    *
    *  useCallback: boolean   Use a callback to calculate the dimensions.
+   *  useEvents:   boolean   If true, register mousemove and mouseup events.
+   *  rootElement: string    Selector for root element (default 'body'.)
    *  interval:    integer   The interval to run the callback (if used.)
    *  onCalculate: function (el, newWidth, newHeight, conf)  See below.
    *  doCalculate: function (el, newWidth, newHeight, conf)  See below.
+   *  onUpdate:    function (event)  To be called when we update the size.
+   *  onFinish:    function (item, finfo)  To be called when we're done.
    *
    * The onCalculate and doCalcuate options are mutually exclusive. If the
    * doCalculate function is defined, it will override the default behavior.
@@ -895,9 +899,23 @@
    *     var id = element.prop(id).replace('grid-item-','');
    *     var item = gridObj.items[id];
    *
+   *     var opts =
+   *     {
+   *       useEvents: true,
+   *       onFinish: function (item, finfo)
+   *       {
+   *         gridObj.buildDisplay(); // Rebuild the display items.
+   *         gui.redrawDisplay();    // Your method to redraw the display.
+   *         resizeObj = null;       // Clear the resizeObj.
+   *       }
+   *     };
+   *
    *     // Create a resizeObj instance.
-   *     resizeObj = gridObj.startResize(e, element, item);
+   *     resizeObj = gridObj.startResize(e, element, item, opts);
    *   });
+   *
+   *   // If 'useEvents' is false, then you'll need to add event handlers
+   *   // yourself, an example is below:
    *
    *   $(body).on('mousemove', function (e)
    *   {
@@ -912,9 +930,6 @@
    *     if (resizeObj)
    *     {
    *       resizeObj.finish();     // Finish the move.
-   *       resizeObj = null;       // Clear the resizeObj.
-   *       gridObj.buildDisplay(); // Rebuild the display items.
-   *       gui.redrawDisplay();    // Your method to redraw the display.
    *     }
    *   });
    *
@@ -936,6 +951,19 @@
     options.width = element.width();
     options.height = element.height();
 
+    // A couple default event handlers.
+    var DefaultEvents =
+    {
+      mouseMove: function (e)
+      {
+        options.update(e);
+      },
+      mouseUp: function (e)
+      {
+        options.finish();
+      },
+    }
+
     // A method for handling mousemove events.
     options.update = function (event)
     {
@@ -944,6 +972,10 @@
       if (!this.useCallback)
       { // We're going to directly calculate the resize now.
         this.calculate();
+      }
+      if (typeof this.onUpdate === 'function')
+      {
+        this.onUpdate();
       }
     }
 
@@ -995,6 +1027,28 @@
       {
         this.grid.resizeItem(item, newdim);
       }
+      if (typeof this.onFinish === 'function')
+      {
+        this.onFinish(item, finfo);
+      }
+      if (this.useEvents)
+      {
+        var root = this.getRootElement();
+        root.off('mousemove', DefaultEvents.mouseMove);
+        root.off('mouseup',   DefaultEvents.mouseUp);
+      }
+    }
+
+    options.getRootElement = function ()
+    {
+      return ('rootElement' in this ? $(this.rootElement) : $('body'));
+    }
+
+    if (options.useEvents)
+    {
+      var root = options.getRootElement();
+      root.on('mousemove', DefaultEvents.mouseMove);
+      root.on('mouseup',   DefaultEvents.mouseUp);
     }
 
     if (options.useCallback)
