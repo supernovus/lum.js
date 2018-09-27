@@ -12,6 +12,7 @@
 
   var cmenu = Nano.ContextMenu = function (options)
   {
+    this.options = options;
     this.onCancel = options.onCancel;
     this.onShow   = options.onShow;
     if (options.element !== undefined)
@@ -103,6 +104,11 @@
       var menuInstance = menu.data('menu');
       menuInstance.showMenu(ev, loc);
     }
+
+    $.fn.getMenu = function ()
+    {
+      return this.data('menu');
+    }
   }
 
   cmenu.prototype.registerMenu = function (el, options)
@@ -123,6 +129,24 @@
     }
     this.menuElem.data('menu', this);
     return this.menuElem;
+  }
+
+  cmenu.prototype.unregisterMenu = function ()
+  {
+    var options = this.options;
+    if (options.handler)
+    {
+      var itemEl = options.childItem ? options.childItem : 'li';
+      this.menuElem.off('click', itemEl, options.handler);
+    }
+    else if (options.items)
+    {
+      for (var item in options.items)
+      {
+        this.menuElem.off('click', item, options.items[item]);
+      }
+    }
+    this.menuElem.removeData('menu');
   }
 
   cmenu.prototype.showMenu = function (ev, loc)
