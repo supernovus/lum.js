@@ -33,14 +33,13 @@
   {
     $.fn.makeMenu = function (options)
     {
-      if (options === undefined)
-        options = {};
-      var menu = new Nano.ContextMenu(options);
+      options = options || {};
       if ('element' in options)
       { // that's not valid!
         console.error("options.element is ignored with $.makeMenu");
         delete options.element;
       }
+      var menu = new Nano.ContextMenu(options);
       menu.registerMenu(this, options);
     }
 
