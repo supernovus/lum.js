@@ -852,6 +852,7 @@
       console.error("Invalid element passed to addItemToDisplay()", delem);
       return;
     }
+//    console.debug("addItemToDisplay", ditem, delem);
     this.trigger('preAddItemToDisplay', ditem, delem);
     this.resizeDisplayForItem(ditem);
     var set = this.settings;
@@ -859,13 +860,14 @@
     ws.append(delem);
     var at = "left+"+ditem.x+" top+"+ditem.y;
     var my = "left top";
-    delem.position(
+    var qpos =     
     {
       my: my,
       at: at,
       of: ws,
       collision: 'none',
-    });
+    };
+    delem.position(qpos);
     delem.height(ditem.h);
     delem.width(ditem.w);
     this.trigger('postAddItemToDisplay', ditem, delem);
