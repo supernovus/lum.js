@@ -12,6 +12,7 @@
 
   var cmenu = Nano.ContextMenu = function (options)
   {
+    options = options || {};
     this.options = options;
     this.onCancel = options.onCancel;
     this.onShow   = options.onShow;
@@ -113,6 +114,11 @@
   cmenu.prototype.registerMenu = function (el, options)
   {
 //    console.log("registerMenu", el, options);
+    if (options === undefined)
+    {
+      console.error("registerMenu requires options");
+      return;
+    }
     this.menuElem = $(el);
     if (options.handler)
     {

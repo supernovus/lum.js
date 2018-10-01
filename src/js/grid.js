@@ -110,43 +110,49 @@
 
   gp.initRow = function (row, cols)
   {
+//    console.debug("initRow", row, cols);
     if (!cols)
       cols = this.colCount();
+
     for (var i = 0; i < cols; i++)
     {
       if (row[i] === undefined)
       {
-        row.push(null);
+        row[i] = null;
       }
     }
   }
 
-  gp.addRow = function ()
+  gp.addRow = function (rowCount)
   {
-//    console.debug("addRow");
-    if (this.settings.maxRows)
-    {
-      var rowCount = this.rowCount(true);
-      if (rowCount == this.settings.maxRows)
-      {
-        return false;
-      }
-    }
-    var row = [];
-    this.initRow(row);
-    this.grid.push(row)
-    return true;
-  }
+//    console.debug("addRow", rowCount);
+    if (!rowCount)
+      rowCount = this.rowCount(true);
 
-  gp.addCol = function ()
-  {
-    var curCols = this.colCount(true);
-    if (this.settings.maxCols && curCols >= this.settings.maxCols)
+    rowCount++;
+
+    if (this.settings.maxRows && rowCount > this.settings.maxRows)
     {
       return false;
     }
-    var newCols = curCols++;
-    this.initGrid(null, newCols);
+
+    this.initGrid(rowCount, null);
+    return true;
+  }
+
+  gp.addCol = function (newCount)
+  {
+    if (!newCount)
+      newCount = this.colCount(true);
+
+    newCount++;
+
+    if (this.settings.maxCols && newCount > this.settings.maxCols)
+    {
+      return false;
+    }
+
+    this.initGrid(null, newCount);
     return true;
   }
 
@@ -210,12 +216,10 @@
     {
       if (this.grid[i] === undefined)
       {
-        this.addRow();
+        var row = [];
+        this.grid[i] = row;
       }
-      else
-      {
-        this.initRow(this.grid[i], cols);
-      }
+      this.initRow(this.grid[i], cols);
     }
   }
 
@@ -258,14 +262,24 @@
     {
       if (this.grid[y] === undefined)
       {
-        this.addRow();
+//        console.debug("Adding row", y);
+        if (!this.addRow(y))
+        {
+          console.error("Adding row failed", y, this);
+          return false;
+        }
       }
       for (var x = item.x; x < item.x + item.w; x++)
       {
 //        console.debug("adding item", item, y, x);
         if (this.grid[y][x] === undefined)
         {
-          this.addCol();
+//          console.debug("Adding col", x);
+          if (!this.addCol(x))
+          {
+            console.error("Adding col failed", x, this);
+            return false;
+          }
         }
         this.grid[y][x] = item;
       }
@@ -545,7 +559,7 @@
     if (!displayElem && !this.settings.displayElement) return;
     if (!displayElem)
       displayElem = this.settings.displayElement;
-//    console.log("setDisplayElement", displayElem);
+//    console.debug("setDisplayElement", displayElem);
     options = options || {};
     var set = this.settings;
     set.displayElement = displayElem;
@@ -560,12 +574,12 @@
     var regen = false;
     if (set.resizeMaxRows && set.displayHeight && set.cellHeight)
     {
-      set.maxRows = Math.floor(set.displayHeight / (set.cellHeight));
+      set.maxRows = Math.floor(set.displayHeight / set.cellHeight);
       regen = true;
     }
     if (set.resizeMaxCols && set.displayWidth && set.cellWidth)
     {
-      set.maxCols = Math.floor(set.displayWidth / (set.cellWidth));
+      set.maxCols = Math.floor(set.displayWidth / set.cellWidth);
       regen = true;
     }
 
@@ -607,12 +621,13 @@
       var gitem = this.items[i];
       var ditem = 
       {
-        item: gitem,
+        gridItem: gitem,
         x: gitem.x * cw,
         y: gitem.y * ch,
         w: gitem.w * cw,
         h: gitem.h * ch,
       };
+      gitem.displayItem = ditem;
       this.display.push(ditem);
       this.trigger('buildDisplayItem', ditem);
     }
@@ -772,12 +787,24 @@
     { // An offset value.
       ditem = this.display[ditem];
     }
+    else if (dtype === 'object' && typeof ditem.displayItem === 'object')
+    { // Looks like we were passed a Grid item.
+      ditem = ditem.displayItem;
+    }
+
     if (typeof ditem !== 'object' || ditem.x === undefined || ditem.y === undefined || ditem.h === undefined || ditem.w === undefined)
     { // Don't know what to do with this.
       console.error("Invalid item passed to addItemToDisplay()", ditem);
       return;
     }
     return ditem;
+  }
+
+  up.resetDisplaySize = function ()
+  {
+    var set = this.settings;
+    var ws = $(set.displayElement);
+    ws.height(set.cellHeight);
   }
 
   up.resizeDisplayForItem = function (ditem)
@@ -826,6 +853,7 @@
       return;
     }
     this.trigger('preAddItemToDisplay', ditem, delem);
+    this.resizeDisplayForItem(ditem);
     var set = this.settings;
     var ws = $(set.displayElement);
     ws.append(delem);
@@ -897,7 +925,7 @@
    *
    *     // Find the Grid item for the element.
    *     var id = element.prop(id).replace('grid-item-','');
-   *     var item = gridObj.items[id];
+   *     var item = Nano.oQuery.get(id, gridObj.items);
    *
    *     var opts =
    *     {
@@ -917,7 +945,7 @@
    *   // If 'useEvents' is false, then you'll need to add event handlers
    *   // yourself, an example is below:
    *
-   *   $(body).on('mousemove', function (e)
+   *   $('body').on('mousemove', function (e)
    *   {
    *     if (resizeObj)
    *     {
@@ -925,7 +953,7 @@
    *     }
    *   });
    *
-   *   $(body).on('mouseup', function (e)
+   *   $('body').on('mouseup', function (e)
    *   {
    *     if (resizeObj)
    *     {

@@ -60,5 +60,24 @@
     return ps;
   }
 
+  Nano.array.random = function (array)
+  {
+    return array[Math.floor(Math.random()*array.length)];
+  }
+
+  Nano.array.extend = function (array, method)
+  {
+    // Don't override existing methods.
+    if (array[method] === undefined && typeof Nano.array[method] === 'function')
+    {
+      Nano.addProperty(array, method, function ()
+      {
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift(this);
+        return Nano.array[method].apply(Nano.array, args);
+      });
+    }
+  }
+
 })();
 
