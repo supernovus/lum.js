@@ -84,6 +84,7 @@
 
   gp.clone = function ()
   {
+    this.trigger('preClone', this.items, this.settings);
     var settings = Nano.clone(this.settings);
     for (var s in this._copySettings)
     {
@@ -91,6 +92,7 @@
       settings[setting] = this.settings[setting];
     }
     settings.items = Nano.clone(this.items);
+    this.trigger('postClone', this.items, this.settings);
     return new this._constructor(settings);
   }
   
@@ -457,6 +459,7 @@
     else if (options.add !== false)
       this.addToGrid(item, options);
     this.trigger('postAddItem', item, options);
+    this.trigger('changed');
   }
 
   gp.removeItem = function (item, options)
@@ -470,6 +473,7 @@
     else if (options.remove !== false)
       this.removeFromGrid(item, options);
     this.trigger('postRemoveItem', item, options);
+    this.trigger('changed');
   }
 
   gp.moveItem = function (item, newpos, options)
@@ -483,6 +487,7 @@
     item.x = newpos.x;
     item.y = newpos.y;
     this.addToGrid(item, options);
+    this.trigger('changed');
   }
 
   gp.resizeItem = function (item, newdim, options)
@@ -496,6 +501,7 @@
     item.w = newdim.w;
     item.h = newdim.h;
     this.addToGrid(item, options);
+    this.trigger('changed');
   }
 
   /**
@@ -534,8 +540,9 @@
     {
       this.buildDisplay();
     }
-    this.on('postAddItem', rebuild);
-    this.on('postRemoveItem', rebuild);
+    this.on('changed', rebuild);
+//    this.on('postAddItem', rebuild);
+//    this.on('postRemoveItem', rebuild);
   }
   Nano.extend(Grid, DisplayGrid,
   {
@@ -571,6 +578,7 @@
       set.cellWidth = cellElem.offsetWidth;
       set.cellHeight = cellElem.offsetHeight;
     }
+//    console.debug("setDisplayElement", set, options, displayElem);
     var regen = false;
     if (set.resizeMaxRows && set.displayHeight && set.cellHeight)
     {
@@ -616,18 +624,19 @@
     var set = this.settings;
     var cw = set.cellWidth;
     var ch = set.cellHeight;
+    var CF = {configurable: true};
     for (var i = 0; i < this.items.length; i++)
     {
       var gitem = this.items[i];
       var ditem = 
       {
-        gridItem: gitem,
         x: gitem.x * cw,
         y: gitem.y * ch,
         w: gitem.w * cw,
         h: gitem.h * ch,
       };
-      gitem.displayItem = ditem;
+      Nano.addProperty(ditem, 'gridItem', gitem, CF);
+      Nano.addProperty(gitem, 'displayItem', ditem, CF);
       this.display.push(ditem);
       this.trigger('buildDisplayItem', ditem);
     }
