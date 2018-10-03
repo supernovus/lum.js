@@ -803,7 +803,7 @@
 
     if (typeof ditem !== 'object' || ditem.x === undefined || ditem.y === undefined || ditem.h === undefined || ditem.w === undefined)
     { // Don't know what to do with this.
-      console.error("Invalid item passed to addItemToDisplay()", ditem);
+      console.error("Invalid item passed to getDisplayItem()", ditem);
       return;
     }
     return ditem;
