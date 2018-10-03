@@ -265,12 +265,16 @@ function make_handler (source, dest, finfo, processing, argv)
     if (source.uglify)
     {
   //    console.log('string>>>'+string);
-      var output = UglifyJS.minify(string, {fromString:true});
+      var output = UglifyJS.minify(string);
       if (output && output.code)
       {
 //        console.log('minified>>>'+output.code);
         console.log("Writing minified file.");
         file.write(output.code);
+      }
+      else
+      {
+        console.error("Error minifying file", output);
       }
     }
     else

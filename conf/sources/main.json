@@ -92,12 +92,12 @@
   },
   "sprintf.js":
   {
-    "uglify": false,
+    "uglify": true,
     "version":
     {
       "json": "https://raw.githubusercontent.com/alexei/sprintf.js/master/package.json"
     },
-    "url": "https://raw.githubusercontent.com/alexei/sprintf.js/master/dist/sprintf.min.js"
+    "url": "https://raw.githubusercontent.com/alexei/sprintf.js/master/src/sprintf.js"
   },
   "uri.js":
   {
