@@ -20,7 +20,8 @@
    *                           the jQuery Deferred class, and offer it's API.
    *                           If false or omitted, the Promise will have
    *                           an extremely simple API based on an example
-   *                           from the Riot.js v1 example application.
+   *                           from the Riot.js v1 example application, but
+   *                           modified to accept any number of arguments.
    *                           In either case, 'done, 'fail', and 'always'
    *                           methods will be available to send handlers to.
    */
@@ -44,9 +45,18 @@
       var self = observable(this);
       $.map(['done', 'fail', 'always'], function(name) 
       {
-        self[name] = function(arg) 
+        self[name] = function()  // arg
         {
-          return self[$.isFunction(arg) ? 'on' : 'trigger'](name, arg);
+          var args = Array.prototype.slice.call(arguments);
+          if (args.length === 1 && typeof args[0] === "function")
+          {
+            return self.on(name, args[0]);
+          }
+          else
+          {
+            return self.trigger.apply(self, args);
+          }
+//          return self[$.isFunction(arg) ? 'on' : 'trigger'](name, arg);
         };
       });
     }
@@ -57,23 +67,26 @@
    *
    * @param mixed  obj      The object to send to the done().
    * @param str    ts       The textStatus to send to done().
+   * @param mixed  xhr      Object to use as XHR (default is this.)
    * @param int    timeout  The timeout (in ms) defaults to 5.
    */
-  Nano.Promise.prototype.deferDone = function (obj, ts, timeout)
+  Nano.Promise.prototype.deferDone = function (obj, ts, xhr, timeout)
   {
     var self = this;
     if (timeout === undefined)
       timeout = 5; // 5ms should be enough time to register .done events.
+    if (xhr === undefined)
+      xhr = self;
     self.doneTimer = setTimeout(function() 
     { 
       if (typeof self.resolve === 'function')
       {
-        self.resolve(obj, ts, self);
+        self.resolve(obj, ts, xhr);
       }
       else
       {
-        self.always(obj, ts, self);
-        self.done(obj, ts, self); 
+        self.always(obj, ts, xhr);
+        self.done(obj, ts, xhr); 
       }
     }, timeout);
   }
@@ -83,13 +96,16 @@
    *
    * @param mixed  error    The message, code, or object to send to fail().
    * @param str    ts       The textStatus to send to fail().
+   * @param mixed  xhr      Object to use as XHR (default is this.)
    * @param int    timeout  The timeout (in ms) defaults to 5.
    */
-  Nano.Promise.prototype.deferFail = function (error, ts, timeout)
+  Nano.Promise.prototype.deferFail = function (error, ts, xhr, timeout)
   {
     var self = this;
     if (timeout === undefined)
       timeout = 5;
+    if (xhr === undefined)
+      xhr = self;
     self.failTimer = setTimeout(function () 
     {
       if (typeof self.reject === 'function')

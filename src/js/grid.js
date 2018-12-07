@@ -25,6 +25,7 @@
       maxCols: 0,
       fillMax: false,
       conflictResolution: null,
+      resolutionOrder: null,
     };
     this.applySettings(settings, options);
 
@@ -352,18 +353,35 @@
   gp.findEmptyPosition = function (item, opts)
   {
     opts = opts || {};
-    var starty = opts.x !== undefined 
-      ? opts.x
+    var starty = opts.startY !== undefined 
+      ? opts.startY
       : (item.y !== undefined ? item.y : 0);
-    var startx = opts.y !== undefined
-      ? opts.y
+    var startx = opts.startX !== undefined
+      ? opts.startX
       : (item.x !== undefined ? item.x : 0);
-    var endy = this.settings.maxRows
-      ? this.settings.maxRows
-      : this.rowCount() + 1;
-    var endx = this.settings.maxCols
-      ? this.settings.maxCols
-      : this.colCount() + 1;
+    var endy = opts.endY != undefined
+      ? opts.endY
+      : (this.settings.maxRows
+        ? this.settings.maxRows
+        : this.rowCount() + 1);
+    var endx = opts.endX !== undefined
+      ? opts.endX
+      : (this.settings.maxCols
+        ? this.settings.maxCols
+        : this.colCount() + 1);
+
+    if (opts.reverse)
+    {
+      return this._find_empty_reverse(starty, endy, startx, endx, item);
+    }
+    else
+    {
+      return this._find_empty_forward(starty, endy, startx, endx, item);
+    }
+  }
+
+  gp._find_empty_forward = function (starty, endy, startx, endx, item)
+  {
     for (var y = starty; y < endy; y++)
     {
       for (var x = startx; x < endx; x++)
@@ -371,24 +389,97 @@
         var fits = this.itemFits(item, {x: x, y: y});
         if (fits === true)
         { // The item fits at this position.
-          if (opts.returnPos)
-          { // Return the position we fit at.
-            return {x: x, y: y};
-          }
-          else
-          { // Update the item position, and return true.
-            item.x = x;
-            item.y = y;
-            return true;
-          }
+          return this._found_empty(y, x, item, opts);
         }
-        else if (Array.isArray(fits))
+        else if (startx != endx && Array.isArray(fits))
         { // Skip the width of the first conflicting item.
-          x += fits[0].w - 1;
+          x += (fits[0].w - 1);
         }
       }
     }
     return false;
+  }
+
+  gp.find_empty_reverse = function (starty, endy, startx, endx, item)
+  {
+    for (var y = endy; y >= starty; y--)
+    {
+      for (var x = endx; x >= startx; x--)
+      {
+        var fits = this.itemFits(item, {x: x, y: y});
+        if (fits === true)
+        { // The item fits at this position.
+          return this._found_empty(y, x, item, opts);
+        }
+        else if (startx != endx && Array.isArray(fits))
+        { // Skip the width of the first conflicting item.
+          x -= fits[0].w;
+        }
+      }
+    }
+    return false;
+  }
+
+  gp._found_empty = function (y, x, item, opts)
+  {
+    if (opts.returnPos)
+    { // Return the position we fit at.
+      return {x: x, y: y};
+    }
+    else
+    { // Update the item position, and return true.
+      item.x = x;
+      item.y = y;
+      return true;
+    }
+  }
+
+  gp._find_empty_horizontal = function (item, opts)
+  {
+    opts = opts || {};
+    if (item.x === undefined || item.y === undefined)
+      return false; // Cannot use with an item that doesn't have coords.
+    opts.startX = item.x;
+    opts.endX   = this.settings.maxCols !== undefined
+      ? this.settings.maxCols
+      : this.colCount() + 1;
+    opts.startY = item.y;
+    opts.endY   = item.y;
+    return this.findEmptyPosition(item, opts);
+  }
+
+  gp._find_empty_vertical = function (item, opts)
+  {
+    opts = opts || {};
+    if (item.x === undefined || item.y === undefined)
+      return false; // Cannot use with an item that doesn't have coords.
+    opts.startY = item.y;
+    opts.endY   = this.settings.maxRows !== undefined
+      ? this.settings.maxRows
+      : this.rowCount() + 1;
+    opts.startX = item.x;
+    opts.endX   = item.x;
+    return this.findEmptyPosition(item, opts);
+  }
+
+  gp.findEmptyToLeft = function (item, opts)
+  {
+    return this._find_empty_horizontal(item, {reverse: true});
+  }
+
+  gp.findEmptyToRight = function (item, opts)
+  {
+    return this._find_empty_horizontal(item);
+  }
+
+  gp.findEmptyAbove = function (item, opts)
+  {
+    return this._find_empty_vertical(item, {reverse: true});
+  }
+
+  gp.findEmptyBelow = function (item, opts)
+  {
+    return this._find_empty_vertical(item);
   }
 
   gp.sortItems = function ()
@@ -427,14 +518,20 @@
    */
   gp.resolveConflicts = function (item, opts)
   {
-    if (this.itemFits(item))
+    var conflicts = this.itemFits(item);
+    if (conflicts === true)
     {
       return true;
     }
 
+    // Force the returnPos to be false.
+    opts = opts || {};
+    opts.returnPos = false;
+
+    // Pass it off onto the conflict resolution method.
     var meth = this.settings.conflictResolution;
     if (typeof meth === 'string' && this.resolveConflicts[meth] !== undefined)
-      return this.resolveConflicts[meth].call(this, item, opts);
+      return this.resolveConflicts[meth].call(this, item, conflicts, opts);
     else
       return false;
   }
@@ -442,13 +539,226 @@
   /**
    * Use findEmptyPosition() to find an available space.
    */
-  gp.resolveConflicts.findEmpty = function (item, opts)
+  gp.resolveConflicts.findEmpty = function (item, conflicts, opts)
   {
     return this.findEmptyPosition(item, opts);
   }
 
-  // existing items to make things fit nicely.
+  gp.resolutionOrder = function ()
+  {
+    var valid = ['l','r','u','d'];
+    var resOrder = this.settings.resolutionOrder;
+    if (resOrder !== null && $.isArray(resOrder))
+    { // A custom order was specified.
+      var order = [];
+      for (var o = 0; o < resOrder.length; o++)
+      {
+        var dir = resOrder[o].substr(0,1).toLowerCase();
+        if (valid.indexOf(dir) !== -1 && order.indexOf(dir) === -1)
+        {
+          order.push(dir);
+        }
+      }
+      if (order.length > 0)
+      {
+        return order;
+      }
+      else
+      {
+        console.error("Invalid order specified", resOrder, "using default.");
+        return valid;
+      }
+    }
+    else
+    { // Use the default.
+      return valid;
+    }
+  }
 
+  /**
+   * A simplistic form of non-cascading item shuffling.
+   * it will fall back on @findEmpty@ if it fails.
+   *
+   * It tries shifting conflicts left, right, above, below, in that order.
+   * If all of those fail, it moves the conflicts to an empty position.
+   */
+  gp.resolveConflicts.moveConflicting = function (item, conflicts, opts)
+  {
+    if (conflicts === false)
+    { // No conflicts, try to find an optimal position for the item.
+      // TODO: try shifting desired position just a little.
+      return this.findEmptyPosition(item, opts);
+    }
+
+    var fallback = opts.fallback !== undefined ? opts.fallback : true;
+    var order = this.resolutionOrder();
+    var meths =
+    {
+      l: 'findEmptyToLeft',
+      r: 'findEmptyToRight',
+      u: 'findEmptyAbove',
+      d: 'findEmptyBelow',
+    };
+
+    resolve: for (var c in conflicts)
+    {
+      var citem = conflicts[c];
+      for (var o = 0; o < order.length; o++)
+      {
+        var mname = order[o].substr(0,1).toLowerCase();
+        var meth = meths[mname];
+        if (meth && this[meth](citem, opts))
+        {
+          continue resolve;
+        }
+      }
+
+      // If we reached here, none of the above worked.
+      if (fallback)
+      {
+        if (!this.findEmptyPosition(citem, opts))
+        { // We couldn't move this item at all.
+          // This shouldn't happen unless the whole grid is full.
+          return false;
+        }
+      }
+      else
+      { // No fallback, we return false immediately.
+        return false;
+      }
+    }
+
+    // If we reached here, all conflicts were resolved.
+    return true;
+  }
+
+  gp.resolveConflicts.shiftDown = function (item, conflicts, opts)
+  {
+    if (conflicts === false)
+    { // No conflicts.
+      return this.findEmptyPosition(item, opts);
+    }
+
+    var reverse = opts.reverse !== undefined ? opts.reverse : false;
+
+    // Next we'll recurse the conflict resolution on each conflicting item.
+    for (var c in conflicts)
+    {
+      var citem = conflicts[c];
+      var pos =
+      {
+        x: item.x,
+        y: reverse ? item.y-item.h : item.y+item.h,
+      };
+      if (reverse && pos.y < 0) pos.y = 0; // No negatives.
+      var fits = this.itemFits(item, pos);
+      if (fits === false)
+      { // No space? Uh oh.
+        return false;
+      }
+      else if (Array.isArray(fits))
+      { // A list of conflicts, let's shift them down.
+        var subfits = this.resolveConflicts(citem, fits, opts);
+        if (!subfits)
+        { // Something failed to be moved, which means we're out of space.
+          return false;
+        }
+      }
+      item.y = y;
+    }
+
+    // If we reached here, everything fit.
+    return true;
+  }
+
+  gp.resolveConflicts.shiftUp = function (item, conflicts, opts)
+  {
+    opts.reverse = true;
+    return this.resolveConflicts.shiftConflictsDown.call(this, item, conflicts, opts);
+  }
+
+  gp.shiftRight = function (item, conflicts, opts)
+  {
+    if (conflicts === false)
+    { // No conflicts.
+      return this.findEmptyPosition(item, opts);
+    }
+
+    var reverse = opts.reverse !== undefined ? opts.reverse : false;
+
+    // Next we'll recurse the conflict resolution on each conflicting item.
+    for (var c in conflicts)
+    {
+      var citem = conflicts[c];
+      var pos =
+      {
+        x: reverse ? item.x-item.w : item.x+item.w,
+        y: item.y,
+      };
+      if (reverse && item.x < 0) item.x = 0; // No negatives.
+      var fits = this.itemFits(item, pos);
+      if (fits === false)
+      { // No space? Uh oh.
+        return false;
+      }
+      else if (Array.isArray(fits))
+      { // A list of conflicts, let's shift them down.
+        var subfits = this.resolveConflicts(citem, fits, opts);
+        if (!subfits)
+        { // Something failed to be moved, which means we're out of space.
+          return false;
+        }
+      }
+      item.y = y;
+    }
+
+    // If we reached here, everything fit.
+    return true;
+  }
+
+  gp.resolveConflicts.shiftLeft = function (item, conflicts, opts)
+  {
+    opts.reverse = true;
+    return this.resolveConflicts.shiftConflictsRights.call(this, item, conflicts, opts);
+  }
+
+  /**
+   * A cascading form of item shuffling.
+   *
+   * It tries shifting conflicts left, right, above, below, in that order.
+   * If all of those fail, it moves the conflicts to an empty position.
+   */
+  gp.resolveConflicts.shiftAll = function (item, conflicts, opts)
+  {
+    if (conflicts === false)
+    { // No conflicts, try to find an optimal position for the item.
+      // TODO: try shifting desired position just a little.
+      return this.findEmptyPosition(item, opts);
+    }
+
+    var order = this.resolutionOrder();
+    var meths =
+    {
+      l: 'shiftLeft',
+      r: 'shiftRight',
+      u: 'shiftUp',
+      d: 'shiftDown',
+    };
+
+    for (var o = 0; o < order.length; o++)
+    {
+      var mname = order[o];
+      var meth = meths[mname];
+      if (meth && this.resolveConflicts[meth].call(this, item, conflicts, opts))
+      {
+        return true;
+      }
+    }
+
+    // Nothing else worked, fall back on findEmptyPosition.
+    return this.findEmptyPosition(item, opts);
+  }
+  
   gp.addItem = function (item, options)
   {
     options = options || {};
@@ -541,19 +851,8 @@
       this.buildDisplay();
     }
     this.on('changed', rebuild);
-//    this.on('postAddItem', rebuild);
-//    this.on('postRemoveItem', rebuild);
   }
-  Nano.extend(Grid, DisplayGrid,
-  {
-    /*
-    copyProperties:
-    {
-      all: true, 
-      exclude: ['Display']
-    }
-    */
-  });
+  Nano.extend(Grid, DisplayGrid);
 
   var dp = DisplayGrid.prototype;
 

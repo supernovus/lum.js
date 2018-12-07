@@ -249,7 +249,8 @@ Nano.Listing = function (options)
   pagerOpts.noRender = true;
 
   // If there is a location hash, it's the default page.
-  if (window.location.hash !== '')
+  this.useHash = 'useHash' in options ? options.useHash : false;
+  if (this.useHash && window.location.hash !== '')
   {
     var pagenum = window.location.hash.substr(1); // cut off the #
     pagenum = parseInt(pagenum);

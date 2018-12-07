@@ -7,6 +7,11 @@
  * using Nano.extend() or jQuery.extend()
  *
  * Requires jQuery, JSON and the coreutils library.
+ *
+ * NOTE: This library is overdue for a complete rewrite. It's gotten a lot of
+ * cruft accumulating in it over the years. So sometime in the near future, 
+ * I'm planning on replacing it. I'll include a compatibility wrapper that can
+ * be used as a drop in for apps using the old APIs.
  */
 
 (function ($) // Set here, but we're not indenting.
@@ -305,6 +310,39 @@ Nano.WebService.prototype._build_request = function (method_spec)
     if (this._auto_get === true && request.type == 'GET')
     { // Use the jQuery request data format.
       request.data = data;
+    }
+    else if (request.type == 'UPLOAD')
+    { // File uploads use some dark magic.
+      // TODO: replace this with something nicer in the new version.
+      // I really don't like using the fake HTTP method. Yuck!
+      if (window.FormData === undefined)
+      {
+        console.error("Missing FormData API, cannot continue.");
+        return;
+      }
+      request.type = 'POST';
+      var fdata = new FormData();
+      for (var key in data)
+      {
+        fdata.append(key, data[key]);
+      }
+      request.data = fdata;
+      request.contentType = false;
+      request.processData = false;
+      delete request.dataType;
+      if (typeof def.upload === "function")
+      {
+        var uploadHandler = def.upload;
+        request.xhr = function ()
+        {
+          var xhr = $.ajaxSettings.xhr();
+          if (xhr.upload)
+          {
+            xhr.upload.addEventListener('progress', uploadHandler, false)
+          }
+          return xhr;
+        }
+      }
     }
     else
     { // Auto-content generation.
