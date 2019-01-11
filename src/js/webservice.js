@@ -324,6 +324,7 @@ Nano.WebService.prototype._build_request = function (method_spec)
       var fdata = new FormData();
       for (var key in data)
       {
+//        console.debug("Adding form data", key, data, fdata);
         fdata.append(key, data[key]);
       }
       request.data = fdata;

@@ -248,9 +248,19 @@
 //    console.debug("addToGrid", item, opts);
     var set = this.settings;
 
+    var cr = this.getConflictResolution();
+    var postConflict = false;
+    var conflicts = null;
+
     if ('x' in item && 'y' in item)
     {
-      if (!this.resolveConflicts(item, opts))
+      conflicts = this.itemFits(item);
+      if (cr && cr.addFirst)
+      {
+        postConflict = true;
+      }
+      else if (conflicts !== true && 
+        !this.resolveConflicts(item, conflicts, opts))
       {
         return false;
       }
@@ -285,6 +295,15 @@
           }
         }
         this.grid[y][x] = item;
+      }
+    }
+
+    if (postConflict)
+    { // We'll try to resolve all conflicts after adding the item to the grid.
+      if (conflicts !== true && conflicts !== null && 
+        !this.resolveConflicts(item, conflicts, opts))
+      {
+        console.error("Post-placement conflict resolution encountered errors.", item, opts);
       }
     }
 
@@ -372,15 +391,15 @@
 
     if (opts.reverse)
     {
-      return this._find_empty_reverse(starty, endy, startx, endx, item);
+      return this._find_empty_reverse(starty, endy, startx, endx, item, opts);
     }
     else
     {
-      return this._find_empty_forward(starty, endy, startx, endx, item);
+      return this._find_empty_forward(starty, endy, startx, endx, item, opts);
     }
   }
 
-  gp._find_empty_forward = function (starty, endy, startx, endx, item)
+  gp._find_empty_forward = function (starty, endy, startx, endx, item, opts)
   {
     for (var y = starty; y < endy; y++)
     {
@@ -400,7 +419,7 @@
     return false;
   }
 
-  gp.find_empty_reverse = function (starty, endy, startx, endx, item)
+  gp._find_empty_reverse = function (starty, endy, startx, endx, item, opts)
   {
     for (var y = endy; y >= starty; y--)
     {
@@ -422,6 +441,7 @@
 
   gp._found_empty = function (y, x, item, opts)
   {
+//    console.debug("found_empty", y, x, item, opts);
     if (opts.returnPos)
     { // Return the position we fit at.
       return {x: x, y: y};
@@ -439,10 +459,18 @@
     opts = opts || {};
     if (item.x === undefined || item.y === undefined)
       return false; // Cannot use with an item that doesn't have coords.
-    opts.startX = item.x;
-    opts.endX   = this.settings.maxCols !== undefined
-      ? this.settings.maxCols
-      : this.colCount() + 1;
+    if (opts.reverse)
+    {
+      opts.startX = 0;
+      opts.endX = item.y;
+    }
+    else
+    {
+      opts.startX = item.x;
+      opts.endX   = this.settings.maxCols !== undefined
+        ? this.settings.maxCols
+        : this.colCount() + 1;
+    }
     opts.startY = item.y;
     opts.endY   = item.y;
     return this.findEmptyPosition(item, opts);
@@ -453,10 +481,18 @@
     opts = opts || {};
     if (item.x === undefined || item.y === undefined)
       return false; // Cannot use with an item that doesn't have coords.
-    opts.startY = item.y;
-    opts.endY   = this.settings.maxRows !== undefined
-      ? this.settings.maxRows
-      : this.rowCount() + 1;
+    if (opts.reverse)
+    {
+      opts.startY = 0;
+      opts.endY = item.y;
+    }
+    else
+    {
+      opts.startY = item.y;
+      opts.endY   = this.settings.maxRows !== undefined
+        ? this.settings.maxRows
+        : this.rowCount() + 1;
+    }
     opts.startX = item.x;
     opts.endX   = item.x;
     return this.findEmptyPosition(item, opts);
@@ -513,12 +549,22 @@
     }
   }
 
+  gp.getConflictResolution = function ()
+  {
+    var meth = this.settings.conflictResolution;
+//    console.debug("getConflictResolution", meth);
+    if (typeof meth === 'string' && this.resolveConflicts[meth] !== undefined)
+    {
+      return this.resolveConflicts[meth];
+    }
+  }
+
   /**
    * Use our configured conflict resolution method.
    */
-  gp.resolveConflicts = function (item, opts)
+  var rc = gp.resolveConflicts = function (item, conflicts, opts)
   {
-    var conflicts = this.itemFits(item);
+//    console.debug("resolveConflicts", item, conflicts, opts);
     if (conflicts === true)
     {
       return true;
@@ -529,17 +575,21 @@
     opts.returnPos = false;
 
     // Pass it off onto the conflict resolution method.
-    var meth = this.settings.conflictResolution;
-    if (typeof meth === 'string' && this.resolveConflicts[meth] !== undefined)
-      return this.resolveConflicts[meth].call(this, item, conflicts, opts);
+    var meth = this.getConflictResolution();
+    if (meth)
+    {
+      return meth.call(this, item, conflicts, opts);
+    }
     else
+    {
       return false;
+    }
   }
 
   /**
    * Use findEmptyPosition() to find an available space.
    */
-  gp.resolveConflicts.findEmpty = function (item, conflicts, opts)
+  rc.findEmpty = function (item, conflicts, opts)
   {
     return this.findEmptyPosition(item, opts);
   }
@@ -582,8 +632,9 @@
    * It tries shifting conflicts left, right, above, below, in that order.
    * If all of those fail, it moves the conflicts to an empty position.
    */
-  gp.resolveConflicts.moveConflicting = function (item, conflicts, opts)
+  rc.moveConflicting = function (item, conflicts, opts)
   {
+//    console.debug("moveConflicting", item, conflicts, opts);
     if (conflicts === false)
     { // No conflicts, try to find an optimal position for the item.
       // TODO: try shifting desired position just a little.
@@ -608,7 +659,8 @@
         var mname = order[o].substr(0,1).toLowerCase();
         var meth = meths[mname];
         if (meth && this[meth](citem, opts))
-        {
+        { // We successfully resolved.
+          this.moveItem(citem);
           continue resolve;
         }
       }
@@ -616,7 +668,11 @@
       // If we reached here, none of the above worked.
       if (fallback)
       {
-        if (!this.findEmptyPosition(citem, opts))
+        if (this.findEmptyPosition(citem, opts))
+        { // We moved the item with findEmptyPosition()
+          this.moveItem(citem);
+        }
+        else
         { // We couldn't move this item at all.
           // This shouldn't happen unless the whole grid is full.
           return false;
@@ -631,8 +687,9 @@
     // If we reached here, all conflicts were resolved.
     return true;
   }
+  rc.moveConflicting.addFirst = true;
 
-  gp.resolveConflicts.shiftDown = function (item, conflicts, opts)
+  rc.shiftDown = function (item, conflicts, opts)
   {
     if (conflicts === false)
     { // No conflicts.
@@ -651,7 +708,7 @@
         y: reverse ? item.y-item.h : item.y+item.h,
       };
       if (reverse && pos.y < 0) pos.y = 0; // No negatives.
-      var fits = this.itemFits(item, pos);
+      var fits = this.itemFits(citem, pos);
       if (fits === false)
       { // No space? Uh oh.
         return false;
@@ -664,20 +721,23 @@
           return false;
         }
       }
-      item.y = y;
+      citem.y = y;
+      this.moveItem(citem);
     }
 
     // If we reached here, everything fit.
     return true;
   }
+  rc.shiftDown.addFirst = true;
 
-  gp.resolveConflicts.shiftUp = function (item, conflicts, opts)
+  rc.shiftUp = function (item, conflicts, opts)
   {
     opts.reverse = true;
-    return this.resolveConflicts.shiftConflictsDown.call(this, item, conflicts, opts);
+    return this.resolveConflicts.shiftDown.call(this, item, conflicts, opts);
   }
+  rc.shiftUp.addFirst = true;
 
-  gp.shiftRight = function (item, conflicts, opts)
+  rc.shiftRight = function (item, conflicts, opts)
   {
     if (conflicts === false)
     { // No conflicts.
@@ -696,7 +756,7 @@
         y: item.y,
       };
       if (reverse && item.x < 0) item.x = 0; // No negatives.
-      var fits = this.itemFits(item, pos);
+      var fits = this.itemFits(citem, pos);
       if (fits === false)
       { // No space? Uh oh.
         return false;
@@ -709,18 +769,21 @@
           return false;
         }
       }
-      item.y = y;
+      citem.y = y;
+      this.moveItem(citem);
     }
 
     // If we reached here, everything fit.
     return true;
   }
+  rc.shiftRight.addFirst = true;
 
-  gp.resolveConflicts.shiftLeft = function (item, conflicts, opts)
+  rc.shiftLeft = function (item, conflicts, opts)
   {
     opts.reverse = true;
-    return this.resolveConflicts.shiftConflictsRights.call(this, item, conflicts, opts);
+    return this.resolveConflicts.shiftRight.call(this, item, conflicts, opts);
   }
+  rc.shiftLeft.addFirst = true;
 
   /**
    * A cascading form of item shuffling.
@@ -728,7 +791,7 @@
    * It tries shifting conflicts left, right, above, below, in that order.
    * If all of those fail, it moves the conflicts to an empty position.
    */
-  gp.resolveConflicts.shiftAll = function (item, conflicts, opts)
+  rc.shiftAll = function (item, conflicts, opts)
   {
     if (conflicts === false)
     { // No conflicts, try to find an optimal position for the item.
@@ -758,6 +821,7 @@
     // Nothing else worked, fall back on findEmptyPosition.
     return this.findEmptyPosition(item, opts);
   }
+  rc.shiftAll.addFirst = true;
   
   gp.addItem = function (item, options)
   {
@@ -788,28 +852,28 @@
 
   gp.moveItem = function (item, newpos, options)
   {
-    if (!newpos || newpos.x === undefined || newpos.y === undefined)
-    {
-      console.error("Invalid position", newpos);
-      return;
-    }
     this.removeFromGrid(item, options);
-    item.x = newpos.x;
-    item.y = newpos.y;
+    if (typeof newpos === 'object' 
+      && typeof newpos.x === 'number' 
+      && typeof newpos.y === 'number')
+    {
+      item.x = newpos.x;
+      item.y = newpos.y;
+    }
     this.addToGrid(item, options);
     this.trigger('changed');
   }
 
   gp.resizeItem = function (item, newdim, options)
   {
-    if (!newdim || newdim.w === undefined || newdim.h === undefined)
-    {
-      console.error("Invalid dimensions", newdim);
-      return;
-    }
     this.removeFromGrid(item, options);
-    item.w = newdim.w;
-    item.h = newdim.h;
+    if (typeof newdim === 'object' 
+      && typeof newdim.w === 'number' 
+      && typeof newdim.h === 'number')
+    {
+      item.w = newdim.w;
+      item.h = newdim.h;
+    }
     this.addToGrid(item, options);
     this.trigger('changed');
   }
@@ -1359,9 +1423,8 @@
       var el = this.element;
       var item = this.item;
       var newdim = this.grid.getElementDimensions(el);
-      // TODO: handle conflict resolution when resizing.
       var finfo = this.grid.displayItemFits(item, newdim, true);
-      if (finfo && finfo.fits)
+      if (finfo && (finfo.fits || finfo.conflicts.length > 0))
       {
         this.grid.resizeItem(item, newdim);
       }
