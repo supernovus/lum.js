@@ -1052,6 +1052,8 @@
   dp.displayItemFits = function (pos, dim, isGpos)
   {
     var gpos;
+
+    var cr = this.getConflictResolution();
    
     if (isGpos)
     {
@@ -1106,7 +1108,7 @@
     }
     else
     { // Return value is a list of conflicts, obvious the item doesn't fit.
-      gpos.fits = false;
+      gpos.fits = (cr && cr.addFirst);
       gpos.conflicts = fits;
     }
 
@@ -1424,7 +1426,7 @@
       var item = this.item;
       var newdim = this.grid.getElementDimensions(el);
       var finfo = this.grid.displayItemFits(item, newdim, true);
-      if (finfo && (finfo.fits || finfo.conflicts.length > 0))
+      if (finfo && finfo.fits)
       {
         this.grid.resizeItem(item, newdim);
       }
