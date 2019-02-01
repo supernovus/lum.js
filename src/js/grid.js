@@ -656,7 +656,7 @@
       var citem = conflicts[c];
       for (var o = 0; o < order.length; o++)
       {
-        var mname = order[o].substr(0,1).toLowerCase();
+        var mname = order[o];
         var meth = meths[mname];
         if (meth && this[meth](citem, opts))
         { // We successfully resolved.

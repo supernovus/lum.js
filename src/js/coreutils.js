@@ -8,6 +8,18 @@
 {
   "use strict";
 
+  /**
+   * Polyfill for Array.isArray() to support old browsers.
+   */
+  if (!Array.isArray)
+  {
+    console.log("Your browser is old, adding Array.isArray() method.");
+    Array.isArray = function (arg)
+    {
+      return Object.prototype.toString.call(arg) === '[object Array]';
+    }
+  }
+
   /** 
    * Set up the Nano namespace.
    */

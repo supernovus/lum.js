@@ -1,6 +1,8 @@
 /**
  * Debugging Helpers.
  *
+ * TODO: this needs a rewrite using modern methodologies.
+ *
  * Requires: jquery, JSON, json.jq, exists.jq and format_json.
  */
 

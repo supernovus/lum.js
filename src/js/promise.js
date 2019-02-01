@@ -1,64 +1,183 @@
 /**
- * A Promise interface that provides the jQuery Deferred API.
+ * A Promise interface that provides a simple API based on jQuery.Deferred
  */
 
-(function($, observable)
+(function(observable)
 { 
   "use strict";
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    throw new Error("Nano core not loaded");
   }
 
   /**
    * Build the Promise object.
    *
-   * @param boolean  deferred  Use the jQuery Deferred as base class?
-   *                           If true, the Promise will be derived from
-   *                           the jQuery Deferred class, and offer it's API.
-   *                           If false or omitted, the Promise will have
-   *                           an extremely simple API based on an example
-   *                           from the Riot.js v1 example application, but
-   *                           modified to accept any number of arguments.
-   *                           In either case, 'done, 'fail', and 'always'
-   *                           methods will be available to send handlers to.
+   * @param (object|boolean) options Options for the Promise object.
+   *
+   *  If options is a boolean, it's assumed to be the 'jquery' option.
+   *
+   *  Recognized properties if options is an object:
+   *
+   *   jquery: (boolean)  If true, run this._extendJQuery(options);
+   *                      If false, run this._extendObservable(options);
+   *
    */
-  Nano.Promise = function (deferred)
+  Nano.Promise = function (options)
   {
-    if (deferred)
+    if (typeof options === 'boolean')
+    { // Assume the 'jquery' option was passed implicitly.
+      options = {jquery: options};
+    }
+    else
+    { // Ensure options is an object.
+      options = options || {};
+    }
+
+    if (options.jquery)
     {
-      var def = $.Deferred();
-      for (var f in def)
-      {
-        this[f] = def[f];
-      }
+      this._extendJQuery(options)
     }
     else
     {
-      if (observable === undefined)
+      this._extendObservable(options);
+    }
+  }
+
+  /**
+   * Add the methods from jQuery.Deferred to ourself.
+   *
+   * If jQuery is not loaded, this will throw an error.
+   */
+  Nano.Promise.prototype._extendJQuery = function (options)
+  {
+    if (window.jQuery === undefined)
+    {
+      throw new Error("Cannot use 'jquery' without jQuery loaded.");
+    }
+    var def = jQuery.Deferred();
+    for (var f in def)
+    {
+      this[f] = def[f];
+    }
+  }
+
+  /**
+   * Use the observable library, and add the following methods:
+   *
+   *  Setters:             done(), fail(), always(), progress()
+   *  Triggers:            resolve(), reject(), notify()
+   *  Info:                state()
+   *
+   * If observable isn't loaded, this will throw an error.
+   *
+   * NOTE: this is very limited compared to the jQuery version, and
+   * has not been tested well. Use with caution.
+   */
+  Nano.Promise.prototype._extendObservable = function (options)
+  {
+    if (typeof observable !== 'function')
+    {
+      throw new Error("No observable library loaded.");
+    }
+
+    // Using observable to add 'on' and 'trigger', used for event handlers.
+    var self = observable(this);
+
+    // Private storage for the state of the Promise.
+    var state = 'pending';
+
+    // Private storage for the arguments used to resolve/reject.
+    var final_args;
+
+    // Private function to create a listener.
+    function create_listener (name)
+    {
+      var listener = function ()
       {
-        console.log("fatal error: No observable method found");
-        return;
-      }
-      var self = observable(this);
-      $.map(['done', 'fail', 'always'], function(name) 
-      {
-        self[name] = function()  // arg
+        var args = Array.prototype.slice.call(arguments);
+        for (var i = 0; i < args.length; i++)
         {
-          var args = Array.prototype.slice.call(arguments);
-          if (args.length === 1 && typeof args[0] === "function")
+          if (typeof args[i] === 'object' && Array.isArray(args[i]))
+          { // An array of callbacks, recurse them.
+            listener.apply(self, args[i]);
+          }
+          else if (typeof args[i] === 'function')
           {
-            return self.on(name, args[0]);
+            if (state === 'pending')
+            { // Add the callback to the appropriate listener queue.
+              self.on(name, args[i]);
+            }
+            else if (
+              (state === 'resolved' && (name === 'done' || name === 'always'))
+              || 
+              (state === 'rejected' && (name === 'fail' || name === 'always'))
+            )
+            { // Execute the callback now.
+              args[i].apply(self, final_args);
+            }
           }
           else
           {
-            return self.trigger.apply(self, args);
+            console.warn("Unhandled parameter passed to "+name, args[i]);
           }
-//          return self[$.isFunction(arg) ? 'on' : 'trigger'](name, arg);
-        };
-      });
+        }
+        return self;
+      }
+      return listener;
+    }
+
+    // Add our event assignment methods.
+    var meths = ['done','fail','always','progress'];
+    for (var m in meths)
+    {
+      var name = meths[m];
+      self[name] = create_listener(name);
+    }
+
+    // Add our trigger methods.
+    self.resolve = function ()
+    {
+      if (state === 'pending')
+      {
+        state = 'resolved';
+        final_args = Array.prototype.slice.call(arguments);
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift('always');
+        self.trigger.apply(self, args)
+        args[0] = 'done';
+        self.trigger.apply(self, args);
+      }
+    }
+
+    self.reject = function ()
+    {
+      if (state === 'pending')
+      {
+        state = 'rejected';
+        final_args = Array.prototype.slice.call(arguments);
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift('always');
+        self.trigger.apply(self, args);
+        args[0] = 'fail';
+        self.trigger.apply(self, args);
+      }
+    }
+
+    self.notify = function ()
+    {
+      if (state === 'pending')
+      {
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift('progress');
+        self.trigger.apply(self, args);
+      }
+    }
+
+    self.state = function ()
+    {
+      return state;
     }
   }
 
@@ -79,15 +198,7 @@
       xhr = self;
     self.doneTimer = setTimeout(function() 
     { 
-      if (typeof self.resolve === 'function')
-      {
-        self.resolve(obj, ts, xhr);
-      }
-      else
-      {
-        self.always(obj, ts, xhr);
-        self.done(obj, ts, xhr); 
-      }
+      self.resolve(obj, ts, xhr);
     }, timeout);
   }
 
@@ -108,22 +219,15 @@
       xhr = self;
     self.failTimer = setTimeout(function () 
     {
-      if (typeof self.reject === 'function')
-      {
-        self.reject(self, ts, error);
-      }
-      else
-      {
-        self.always(self, ts, error);
-        self.fail(self, ts, error); 
-      }
+      self.reject(self, ts, error);
     }, timeout);
   }
 
 })(
-jQuery,                          // jQuery must exist with its full name.
-window.riot 
-  ? window.riot.observable       // If 'riot' exists, use it.
-  : window.Nano.observable       // Nano may contain the observable trait.
+(window.Nano && window.Nano.observable) 
+  ? window.Nano.observable
+  : window.riot 
+  ? window.riot.observable
+  : null
 ); 
 
