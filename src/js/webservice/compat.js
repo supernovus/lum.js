@@ -43,6 +43,7 @@
   wsp._http_method_options.UPLOAD =
   {
     formData: true,
+    cloneData: false,
     http: 'POST',
     _deprecated: "Using 'UPLOAD' magic HTTP method",
   }

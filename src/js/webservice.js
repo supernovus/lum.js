@@ -248,6 +248,14 @@
   }
 
   /**
+   * Update the base URL.
+   */
+  wsp._setURL = function (new_url)
+  {
+    this._options.url = new_url;
+  }
+
+  /**
    * Build a Request object, and possibly send it.
    *
    * This isn't typically called manually, but is used when we call a method
