@@ -625,6 +625,10 @@
    */
   wsr._parse_object_spec = function (spec)
   {
+    if ('http' in spec)
+    { // Set the HTTP method, handling magic methods automatically.
+      this.setMethod(spec.http);
+    }
     if ('path' in spec)
     {
       this.appendPath(spec.path);
@@ -653,10 +657,6 @@
     if (this.formData && 'onUpload' in spec)
     {
       this._addCallbacks('onUpload', spec.onUpload);
-    }
-    if ('http' in spec)
-    { // Set the HTTP method, handling magic methods automatically.
-      this.setMethod(spec.http);
     }
     if ('reqOptions' in spec)
     { // Set additional request options.
