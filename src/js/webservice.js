@@ -136,6 +136,18 @@
   }
 
   /**
+   * Add a custom HTTP method.
+   */
+  wsp._addHTTP = function (name, options)
+  {
+    this._known_http_methods.push(name);
+    if (typeof options === 'object' && options !== null)
+    {
+      this._http_method_options[name] = options;
+    }
+  }
+
+  /**
    * Load options, applying defaults. 
    */
   wsp._loadOptions = function (specified)
@@ -392,7 +404,7 @@
 
   wsr._addCallbacks = function (slot, callbacks)
   {
-    if (slot !== 'onDone' && slot !== 'onFail')
+    if (typeof this[slot] !== 'object' || !Array.isArray(this[slot]))
     {
       throw new Error("Invalid slot sent to _addCallback: "+slot);
     }
@@ -415,6 +427,7 @@
   wsr.done = function (callbacks)
   {
     this._addCallbacks('onDone', callbacks);
+    return this;
   }
 
   /**
@@ -423,6 +436,16 @@
   wsr.fail = function (callbacks)
   {
     this._addCallbacks('onFail', callbacks);
+    return this;
+  }
+
+  /**
+   * Add to our onUpload callbacks.
+   */
+  wsr.progress = function (callbacks)
+  {
+    this._addCallbacks('onUpload', callbacks);
+    return this;
   }
 
   /**
@@ -555,6 +578,21 @@
   }
 
   /**
+   * Parse an array argument.
+   */
+  wsr._parse_array_args = function (arg)
+  {
+    if (this.data === undefined)
+    {
+      this.setData(arg);
+    }
+    else
+    {
+      console.warn("Unknown array argument passed after data has been set, skipping.");
+    }
+  }
+
+  /**
    * A function argument is assumed to be an onDone callback.
    */
   wsr._parse_function_args = function (arg)
@@ -643,7 +681,7 @@
     }
     var opts = 
     [
-      'cloneData','preserveClone','attachBefore','sendImmediately',
+      'cloneData', 'preserveClone', 'attachBefore', 'sendImmediately',
       'parsePath', 'responseClass', 'wrapResponse', 'contentType', 'formData',
     ];
     for (var i in opts)
@@ -656,7 +694,7 @@
     }
     if (this.formData && 'onUpload' in spec)
     {
-      this._addCallbacks('onUpload', spec.onUpload);
+      this.progress(spec.onUpload);
     }
     if ('reqOptions' in spec)
     { // Set additional request options.
@@ -774,11 +812,11 @@
     }
     else
     {
-      var noEmpty = (this.http == 'GET' || this.http == 'DELETE');
+      var buildOpts = this._get_build_options();
       var buildFunc = "_build_" + this.dataType + "_request_data";
       if (typeof this[buildFunc] === 'function')
       {
-        return this[buildFunc]({noEmpty: noEmpty});
+        return this[buildFunc](buildOpts);
       }
       else
       {
@@ -787,11 +825,24 @@
     }
   }
 
-  wsr._build_request_form_data = function ()
+  wsr._get_build_options = function ()
+  {
+    var options =
+    {
+      noEmpty: (this.http == 'GET' || this.http == 'DELETE'),
+    };
+    return options;
+  }
+
+  wsr._build_request_form_data = function (data)
   {
     if (window.FormData === undefined)
     {
       throw new Error("Missing FormData API");
+    }
+    if (data === undefined)
+    {
+      data = this.data;
     }
     var fdata = new FormData();
     for (var key in data)
@@ -803,7 +854,15 @@
 
   wsr._build_json_request_data = function (options)
   {
-    var json = JSON.stringify(this.data);
+    var json;
+    if (typeof this.data === 'string')
+    { // Assume JSON data.
+      json = this.data;
+    }
+    else
+    { // Stringify the data.
+      json = JSON.stringify(this.data);
+    }
     if (options.noEmpty)
     {
       if (json == '{}' || json == '[]' || json == 'null')

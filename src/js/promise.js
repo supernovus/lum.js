@@ -30,9 +30,9 @@
     { // Assume the 'jquery' option was passed implicitly.
       options = {jquery: options};
     }
-    else
-    { // Ensure options is an object.
-      options = options || {};
+    else if (typeof options !== 'object' || options === null)
+    { // Ensure options is an object, and auto-select jQuery if it's loaded.
+      options = {jquery: (window.jQuery !== undefined)};
     }
 
     if (options.jquery)

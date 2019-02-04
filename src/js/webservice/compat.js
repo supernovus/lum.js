@@ -4,13 +4,13 @@
  * Makes v4 support MOST v3 features that were removed or changed.
  *
  * Should only be used on legacy code.
- * To that end, it will by default report any deprecated method calls or
- * usages to the Javascript console. This can optionally be turned off, but
- * I recommend refactoring the code to use the new APIs directly instead.
+ * To that end, it will report any deprecated method calls or
+ * usages to the Javascript console. Once you've refactored your code, you
+ * can stop loading this library, as it does add a bit of overhead.
  *
- * This does not guarantee 100% backwards compatibility, as some features are
- * simply not supported anymore. If your code was using really obscure features
- * that depending on certain internal structures, you'll have to fix it.
+ * This does not guarantee 100% backwards compatibility, as if your code was
+ * using any internal structures, they've all pretty much changed. It was never
+ * recommended using internal structures to begin with, so refactor your code!
  */
 (function ()
 {
@@ -26,11 +26,15 @@
     throw new Error("Missing Nano.WebService library");
   }
 
+  console.log("Using WebService compat library. Look for DEPRECATED messages.");
+
   var wsp = Nano.WebService.prototype;
   var wsr = Nano.WebService.Request.prototype;
 
-  // Change this to false if you want to not show deprecation messages.
-  wsp._optionDefaults.reportDeprecated = true;
+  function deprecated (message)
+  {
+    console.log("DEPRECATED", message);
+  }
 
   // The old default for namedAlias was true.
   wsp._optionDefaults.namedAlias = true;
@@ -39,32 +43,24 @@
   wsp._optionDefaults.cloneData = true;
 
   // Add the magic 'UPLOAD' method.
-  wsp._known_http_methods.push('UPLOAD');
-  wsp._http_method_options.UPLOAD =
+  wsp._addHTTP('UPLOAD',
   {
     formData: true,
     cloneData: false,
     http: 'POST',
-    _deprecated: "Using 'UPLOAD' magic HTTP method",
-  }
+    _deprecated: "Using 'UPLOAD' magic HTTP method, use {http: 'POST', formData: true, cloneData: false} in your method definition instead. If you really want to keep using 'UPLOAD', add it yourself to your WebService instance with: wsInstance._addHTTP('UPLOAD', {http: 'POST', formData: true, cloneData: false});",
+  });
 
   wsp._addHandler = function (method_name, method_handler)
   {
-    var wo = this._options;
-    if (wo.reportDeprecated)
-    {
-      console.log("DEPRECATED", "Call to _addHandler()");
-    }
+    deprecated("Call to _addHandler(), use _addMethod() instead.");
     return this._addMethod(method_name, method_handler);
   }
 
   wsr._parse_function_spec = function (spec)
   {
     var wo = this.ws._options;
-    if (wo.reportDeprecated)
-    {
-      console.log("DEPRECATED", "Using raw function as method call");
-    }
+    deprecated("Using raw function as method call. Use something nicer.");
     this.parsePath = false;
     this.appendPath(this.name);
     if (wo.defaultHTTP === undefined)
@@ -84,18 +80,26 @@
     var ws = this.ws;
     var req = this;
 
+    // We create a horrible approximation of the old request wrapper.
+    var wrapper =
+    {
+      spec:    req,
+      request: req,
+      preserve: req.cloneData,
+      handler: (req.onDone.length > 0 ? req.onDone[0] : undefined),
+    };
+
     var onError = wo.onError || ws._onError;
     var onSuccess = wo.onSuccess || ws._onSuccess;
 
+    var appendMsg = " refactor using a Response class. Note that the request wrapper is simulated, so if you depended on internal structures, things will likely be broken.";
+
     if (onError)
     {
-      if (wo.reportDeprecated)
-      {
-        console.log("DEPRECATED", "Using onError handler");
-      }
+      deprecated("Using 'onError' handler,"+appendMsg);
       promise.fail(function (jq, msg, http)
       {
-        onError.call(ws, jq, msg, http, req);
+        onError.call(ws, jq, msg, http, wrapper);
       });
     }
     else
@@ -105,13 +109,10 @@
 
     if (onSuccess)
     {
-      if (wo.reportDeprecated)
-      {
-        console.log("DEPRECATED", "Using onSuccess handler");
-      }
+      deprecated("Using 'onSuccess' handler,"+appendMsg);
       promise.done(function (res, msg, jq)
       {
-        onSuccess.call(ws, res, msg, jq, req);
+        onSuccess.call(ws, res, msg, jq, wrapper);
       });
     }
     else
@@ -124,61 +125,47 @@
   wsr._parse_object_spec_orig = wsr._parse_object_spec;
   wsr._parse_object_spec = function (spec)
   {
-    var wo = this.ws._options;
     if ('_deprecated' in spec)
     {
-      if (wo.reportDeprecated)
-      {
-        console.log("DEPRECATED", spec._deprecated);
-      }
+      deprecated(spec._deprecated);
     }
     if ('func' in spec)
     {
-      if (wo.reportDeprecated)
-      {
-        console.log("DEPRECATED", "Using 'func' in method call spec");
-      }
+      deprecated("Using 'func' in method call spec, use 'onDone' instead.");
       this.done(spec.func);
     }
     if ('keep' in spec)
     {
-      if (wo.reportDeprecated)
-      {
-        console.log("DEPRECATED", "Using 'keep' in method call spec");
-      }
+      deprecated("Using 'keep' in method call spec, use 'preserveClone' instead.");
       this.preserveClone = spec.keep;
     }
     if ('upload' in spec)
     {
-      if (wo.reportDeprecated)
-      {
-        console.log("DEPRECATED", "Using 'upload' in method call spec");
-      }
-      this._addCallbacks('onUpload', spec.upload);
+      deprecated("Using 'upload' in method call spec, use 'onUpload' instead.");
+      this.progress(spec.upload);
     }
     return this._parse_object_spec_orig(spec);
   }
 
   wsr._parse_string_args = function (arg)
   {
-    var wo = this.ws._options;
-    if (wo.reportDeprecated)
-    {
-      console.log("DEPRECATED", "Passing path string directly to method call");
-    }
+    deprecated("Passing path string directly to method call. You should be using placeholders instead.");
     this.appendPath(arg)
   }
 
+  // We replace the build in version with a version that supports the old
+  // array of path arguments option.
   wsr._parse_array_args = function (arg)
   {
-    var wo = this.ws._options;
-    if (wo.reportDeprecated)
+    if (this.data === undefined)
     {
-      console.log("DEPRECATED", "Passing array of paths directly to method call");
+      this.setData(arg);
     }
-    this.appendPath(arg);
+    else
+    {
+      deprecated("Passing array of paths directly to method call. You should be using placeholders instead, or if you really need to append an arbitrary number of paths, get the Request object and call req.appendPath(paths) on it.");
+      this.appendPath(arg);
+    }
   }
-
-  // TODO: add backwards compatibility code.
 
 })();
