@@ -41,10 +41,14 @@
     this.autoFade = options.autoFade;
   }
 
+  Mask.prototype.isHidden = function ()
+  {
+    return this.element.css('display') == 'none';
+  }
+
   Mask.prototype.show = function (fade)
   {
-    var hidden = this.element.css('display') == 'none' ? true : false;
-    if (hidden)
+    if (this.isHidden())
     {
       if (fade === undefined)
         fade = this.autoFade;
