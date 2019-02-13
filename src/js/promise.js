@@ -1,8 +1,11 @@
 /**
- * A Promise interface that provides a simple API based on jQuery.Deferred
+ * A Promise-like object that offers the jQuery Deferred API.
+ *
+ * You might want to just use native Promises for most things. This is only
+ * for cases where existing apps/libraries expect done(), fail(), etc.
  */
 
-(function(observable)
+(function()
 { 
   "use strict";
 
@@ -21,7 +24,7 @@
    *  Recognized properties if options is an object:
    *
    *   jquery: (boolean)  If true, run this._extendJQuery(options);
-   *                      If false, run this._extendObservable(options);
+   *                      If false, run this._extendInternal(options);
    *
    */
   Nano.Promise = function (options)
@@ -41,7 +44,7 @@
     }
     else
     {
-      this._extendObservable(options);
+      this._extendInternal(options);
     }
   }
 
@@ -64,26 +67,19 @@
   }
 
   /**
-   * Use the observable library, and add the following methods:
+   * Create our own internal represenation of the Deferred API.
    *
    *  Setters:             done(), fail(), always(), progress()
+   *  Promise chaining:    then(), catch()
    *  Triggers:            resolve(), reject(), notify()
+   *  Targetted triggers:  resolveWith(), rejectWith(), notifyWith()
    *  Info:                state()
    *
-   * If observable isn't loaded, this will throw an error.
-   *
-   * NOTE: this is very limited compared to the jQuery version, and
-   * has not been tested well. Use with caution.
    */
-  Nano.Promise.prototype._extendObservable = function (options)
+  Nano.Promise.prototype._extendInternal = function (options)
   {
-    if (typeof observable !== 'function')
-    {
-      throw new Error("No observable library loaded.");
-    }
-
-    // Using observable to add 'on' and 'trigger', used for event handlers.
-    var self = observable(this);
+    // A copy of this for use in closures.
+    var self = this;
 
     // Private storage for the state of the Promise.
     var state = 'pending';
@@ -91,8 +87,41 @@
     // Private storage for the arguments used to resolve/reject.
     var final_args;
 
+    // Private storage for the 'this' object to use in callbacks.
+    var final_this = this;
+
+    var callbacks =
+    {
+      always: [],
+      done: [],
+      fail: [],
+      progress: [],
+    };
+
+    // Private function to run registered callbacks.
+    function apply_callbacks (name, args, current_this)
+    {
+      if (args === undefined)
+      {
+        args = final_args;
+      }
+      if (current_this === undefined)
+      {
+        current_this = final_this;
+      }
+      var cbs = callbacks[name];
+      if (cbs && cbs.length)
+      {
+        for (var i = 0; i < cbs.length; i++)
+        {
+          var cb = cbs[i];
+          cb.apply(current_this, args);
+        }
+      }
+    }
+
     // Private function to create a listener.
-    function create_listener (name)
+    function create_listener (name, validStates)
     {
       var listener = function ()
       {
@@ -107,15 +136,11 @@
           {
             if (state === 'pending')
             { // Add the callback to the appropriate listener queue.
-              self.on(name, args[i]);
+              callbacks[name].push(args[i]);
             }
-            else if (
-              (state === 'resolved' && (name === 'done' || name === 'always'))
-              || 
-              (state === 'rejected' && (name === 'fail' || name === 'always'))
-            )
+            else if (validStates.indexOf(state) != -1)
             { // Execute the callback now.
-              args[i].apply(self, final_args);
+              args[i].apply(final_this, final_args);
             }
           }
           else
@@ -129,11 +154,17 @@
     }
 
     // Add our event assignment methods.
-    var meths = ['done','fail','always','progress'];
-    for (var m in meths)
+    var meths = 
     {
-      var name = meths[m];
-      self[name] = create_listener(name);
+      done: ['resolved'],
+      fail: ['rejected'],
+      always: ['resolved', 'rejected'],
+      progress: [],
+    };
+    for (var mname in meths)
+    {
+      var mstate = meths[mname];
+      self[mname] = create_listener(mname, mstate);
     }
 
     // Add our trigger methods.
@@ -143,11 +174,19 @@
       {
         state = 'resolved';
         final_args = Array.prototype.slice.call(arguments);
-        var args = Array.prototype.slice.call(arguments);
-        args.unshift('always');
-        self.trigger.apply(self, args)
-        args[0] = 'done';
-        self.trigger.apply(self, args);
+        apply_callbacks('always');
+        apply_callbacks('done');
+      }
+    }
+
+    self.resolveWith = function (withObj)
+    {
+      if (state === 'pending')
+      {
+        final_this = withObj;
+        final_args = Array.prototype.slice.call(arguments, 1);
+        apply_callbacks('always');
+        apply_callbacks('done');
       }
     }
 
@@ -157,11 +196,20 @@
       {
         state = 'rejected';
         final_args = Array.prototype.slice.call(arguments);
-        var args = Array.prototype.slice.call(arguments);
-        args.unshift('always');
-        self.trigger.apply(self, args);
-        args[0] = 'fail';
-        self.trigger.apply(self, args);
+        apply_callbacks('always');
+        apply_callbacks('fail');
+      }
+    }
+
+    self.rejectWith = function (withObj)
+    {
+      if (state === 'pending')
+      {
+        final_this = withObj;
+        state = 'rejected';
+        final_args = Array.prototype.slice.call(arguments, 1);
+        apply_callbacks('always');
+        apply_callbacks('fail');
       }
     }
 
@@ -170,9 +218,86 @@
       if (state === 'pending')
       {
         var args = Array.prototype.slice.call(arguments);
-        args.unshift('progress');
-        self.trigger.apply(self, args);
+        apply_callbacks('progress', args);
       }
+    }
+
+    self.notifyWith = function (withObj)
+    {
+      if (state === 'pending')
+      {
+        var args = Array.prototype.slice.call(arguments, 1);
+        apply_callbacks('progress', args, withObj);
+      }
+    }
+
+    self.catch = function (failFilter)
+    {
+      return self.then(null, failFilter);
+    }
+
+    self.then = function (doneFilter, failFilter, progressFilter)
+    {
+      var newPromise = new Nano.Promise(false);
+
+      function make_callback (filterSpec)
+      {
+        var callback = function ()
+        {
+          var useWith = (this !== self);
+          var args = Array.prototype.slice.call(arguments);
+          var result = filterSpec.filter.apply(this, args);
+          if (typeof result.then === 'function' 
+            && typeof result.state === 'function')
+          {
+            // TODO: handle Promise result.
+            console.warn("Nano.Promise internal Deferred API doesn't currently handle recursive Promise evaluation. Passing directly to child promise.");
+          }
+          if (useWith)
+          {
+            newPromise[filterSpec.methodWith](this, result);
+          }
+          else
+          {
+            newPromise[filterSpec.methodName](result);
+          }
+        }
+        return callback;
+      }
+
+      var filterSpecs =
+      {
+        done:
+        {
+          filter: doneFilter,
+          methodName: 'resolve',
+          methodWith: 'resolveWith',
+        },
+        fail:
+        {
+          filter: failFilter,
+          methodName: 'reject',
+          methodWith: 'rejectWith',
+        },
+        progress:
+        {
+          filter: progressFilter,
+          methodName: 'notify',
+          methodWith: 'notifyWith',
+        },
+      };
+
+      for (var onName in filterSpecs)
+      {
+        var filterSpec = filterSpecs[onName];
+        if (typeof filterSpec.filter === 'function')
+        {
+          var callback = make_callback(filterSpec);
+          self[onName](callback);
+        }
+      }
+
+      return newPromise;
     }
 
     self.state = function ()
@@ -191,6 +316,7 @@
    */
   Nano.Promise.prototype.deferDone = function (obj, ts, xhr, timeout)
   {
+    console.warn("deferDone is deprecated, just use resolve()");
     var self = this;
     if (timeout === undefined)
       timeout = 5; // 5ms should be enough time to register .done events.
@@ -212,6 +338,7 @@
    */
   Nano.Promise.prototype.deferFail = function (error, ts, xhr, timeout)
   {
+    console.warn("deferFail is deprecated, just use reject()");
     var self = this;
     if (timeout === undefined)
       timeout = 5;
@@ -223,11 +350,5 @@
     }, timeout);
   }
 
-})(
-(window.Nano && window.Nano.observable) 
-  ? window.Nano.observable
-  : window.riot 
-  ? window.riot.observable
-  : null
-); 
+})(); 
 

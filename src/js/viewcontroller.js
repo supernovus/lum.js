@@ -68,6 +68,7 @@
       {
         self.trigger("ready", api);
       }
+
       // Once we've triggered all of our handlers, tell the API.
       if (typeof api.trigger === 'function')
       {

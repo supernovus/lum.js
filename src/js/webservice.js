@@ -967,6 +967,9 @@
     return reqopts;
   }
 
+  // TODO: Add transport for 'fetch' using Nano.Promise for Deferred object.
+  // TODO: Add transports for other common transports in plugin files.
+
   /**
    * Here we set the default 'requestClass' to Nano.WebService.Request
    */
@@ -974,6 +977,9 @@
 
   /**
    * And we set the default 'transportClass' to Nano.WebService.jQueryTransport
+   *
+   * In the future we should detect what features are available and auto-select
+   * an appropriate transport based on that. Users can always override it.
    */
   wsp._optionDefaults.transportClass = Nano.WebService.jQueryTransport;
 
