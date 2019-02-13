@@ -172,10 +172,22 @@
     {
       if (state === 'pending')
       {
-        state = 'resolved';
-        final_args = Array.prototype.slice.call(arguments);
-        apply_callbacks('always');
-        apply_callbacks('done');
+        var args = Array.prototype.slice.call(arguments);
+        if (args.length === 1 && typeof args[0] === 'object' && 
+          typeof args[0].then === 'function')
+        { // Passed a promise. We'll 'then' it, and resolve again from it.
+          args[0].then(function ()
+          {
+            self.resolve.apply(self, arguments);
+          });
+        }
+        else
+        { // Not a promise, let's do this.
+          state = 'resolved';
+          final_args = args;
+          apply_callbacks('always');
+          apply_callbacks('done');
+        }
       }
     }
 
@@ -184,9 +196,8 @@
       if (state === 'pending')
       {
         final_this = withObj;
-        final_args = Array.prototype.slice.call(arguments, 1);
-        apply_callbacks('always');
-        apply_callbacks('done');
+        var resolveArgs = Array.prototype.slice.call(arguments, 1);
+        self.resolve.apply(self, resolveArgs);
       }
     }
 
@@ -194,10 +205,22 @@
     {
       if (state === 'pending')
       {
-        state = 'rejected';
-        final_args = Array.prototype.slice.call(arguments);
-        apply_callbacks('always');
-        apply_callbacks('fail');
+        var args = Array.prototype.slice.call(arguments);
+        if (args.length === 1 && typeof args[0] === 'object' && 
+          typeof args[0].then === 'function')
+        { // Passed a promise. We'll 'then' it, and resolve again from it.
+          args[0].then(null, function ()
+          {
+            self.resolve.apply(self, arguments);
+          });
+        }
+        else
+        { // Not a promise, let's do this.
+          state = 'rejected';
+          final_args = args;
+          apply_callbacks('always');
+          apply_callbacks('fail');
+        }
       }
     }
 
@@ -206,10 +229,8 @@
       if (state === 'pending')
       {
         final_this = withObj;
-        state = 'rejected';
-        final_args = Array.prototype.slice.call(arguments, 1);
-        apply_callbacks('always');
-        apply_callbacks('fail');
+        var rejectArgs = Array.prototype.slice.call(arguments, 1);
+        self.reject.apply(self, rejectArgs);
       }
     }
 
@@ -218,7 +239,18 @@
       if (state === 'pending')
       {
         var args = Array.prototype.slice.call(arguments);
-        apply_callbacks('progress', args);
+        if (args.length === 1 && typeof args[0] === 'object' && 
+          typeof args[0].then === 'function')
+        { // Passed a promise. We'll 'then' it, and resolve again from it.
+          args[0].then(null, null, function ()
+          {
+            self.notify.apply(self, arguments);
+          });
+        }
+        else
+        { // Not a promise, let's do this.
+          apply_callbacks('progress', args);
+        }
       }
     }
 
@@ -227,7 +259,20 @@
       if (state === 'pending')
       {
         var args = Array.prototype.slice.call(arguments, 1);
-        apply_callbacks('progress', args, withObj);
+        if (args.length === 1 && typeof args[0] === 'object' && 
+          typeof args[0].then === 'function')
+        { // Passed a promise. We'll 'then' it, and resolve again from it.
+          args[0].then(null, null, function ()
+          {
+            var subargs = Array.prototype.slice.call(arguments);
+            subargs.unshift(withObj);
+            self.notifyWith.apply(self, subargs);
+          });
+        }
+        else
+        { // Not a promise, let's do this.
+          apply_callbacks('progress', args, withObj);
+        }
       }
     }
 
@@ -247,12 +292,6 @@
           var useWith = (this !== self);
           var args = Array.prototype.slice.call(arguments);
           var result = filterSpec.filter.apply(this, args);
-          if (typeof result.then === 'function' 
-            && typeof result.state === 'function')
-          {
-            // TODO: handle Promise result.
-            console.warn("Nano.Promise internal Deferred API doesn't currently handle recursive Promise evaluation. Passing directly to child promise.");
-          }
           if (useWith)
           {
             newPromise[filterSpec.methodWith](this, result);
