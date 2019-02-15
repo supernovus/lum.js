@@ -340,7 +340,7 @@
         }
         else if (typeof changeHandler === 'function')
         {
-          changeHandler(this, target);
+          changeHandler(this, target, element);
         }
       });
 
@@ -349,7 +349,7 @@
       Nano.addProperty(jsondata, 'json', function (format)
       {
         var json = JSON.stringify(this);
-        if (format)
+        if (format && typeof Nano.format_json === 'function')
           return Nano.format_json(json);
         else
           return json;

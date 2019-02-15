@@ -211,6 +211,66 @@
     return template;
   }
 
+  Nano.ViewController.prototype.formChanged = function (options)
+  {
+    if (typeof options === 'boolean')
+    {
+      options = {toggle: options};
+    }
+    else if (typeof options !== 'object' || options === null)
+    {
+      options = {};
+    }
+
+    var toggle = true;
+    if (typeof options.toggle === 'boolean')
+    {
+      toggle = options.toggle;
+    }
+    else if (typeof options.toggle === 'function')
+    {
+      toggle = options.toggle.call(this, options);
+    }
+
+    if (toggle)
+    {
+      if (!this._formChanged)
+      {
+        this._formChanged = function ()
+        {
+          return "All unsaved changes will be lost if you proceed.";
+        }
+        $(window).on('beforeunload', this._formChanged);
+      }
+    }
+    else
+    {
+      if (this._formChanged)
+      {
+        $(window).off('beforeunload', this._formChanged);
+        delete this._formChanged;
+      }
+    }
+
+    if (typeof this.trigger === 'function')
+    {
+      this.trigger('formChanged', toggle);
+    }
+  }
+
+  Nano.ViewController.prototype.watchChanges = function (options)
+  {
+    var formEl = 'form' in options ? options.form : 'form';
+    var eventName = 'event' in options ? options.event : 'change';
+    var childSelector = 'selector' in options ? options.selector
+      : 'input,select,textarea';
+    var self = this;
+    $(formEl).on(eventName, childSelector, function (e)
+    {
+      self.formChanged(true);
+    });
+  }
+
   Nano.ViewController.makeGUI = function (replicate)
   {
     return Nano.extend(this, null, replicate);
