@@ -271,6 +271,50 @@
     });
   }
 
+  Nano.ViewController.prototype.selectFile = function (opts)
+  {
+    var self = this;
+    opts = opts || {};
+    var fileBox;
+    if (typeof opts.fileSelector === 'string')
+    {
+      fileBox = $(opts.fileSelector);
+    }
+    else if (typeof opts.fileElement === 'object')
+    {
+      fileBox = opts.fileElement;
+    }
+    else
+    {
+      fileBox = $('<input type="file">');
+    }
+
+    var clickNow = opts.clickNow;
+
+    var callback = opts.onSelect;
+    if (typeof callback === 'function')
+    {
+      fileBox.on('change', function (e)
+      {
+        if (e.target && e.target.files)
+        { // One or more files found.
+          callback.call(self, e.target.files, e);
+        }
+      });
+      if (typeof clickNow !== 'boolean')
+      { // If a callback is specified, but clickNow isn't, default to true.
+        clickNow = true;
+      }
+    }
+
+    if (clickNow)
+    { // Click the box, you know you want to!
+      fileBox.click();
+    }
+
+    return fileBox;
+  }
+
   Nano.ViewController.makeGUI = function (replicate)
   {
     return Nano.extend(this, null, replicate);
