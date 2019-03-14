@@ -123,11 +123,17 @@
 
   Nano.ViewController.prototype.addTemplate = function (name, def, register)
   {
-    if (typeof name !== 'string')
+    if (def === undefined && register === undefined)
+    { // Passed a single option.
+      def = name;
+      register = false;
+    }
+    else if (typeof name !== 'string')
     {
       console.error("Invalid template name", name, def);
       return;
     }
+
     if (typeof def === 'string')
     {
       def = {html: def};
@@ -198,6 +204,7 @@
     {
       register = true;
     }
+
     if (register)
     {
       var prop = this.defaultTmplNamespace;

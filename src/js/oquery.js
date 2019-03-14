@@ -100,6 +100,14 @@ var oq = Nano.oQuery = function (query, objarr, opts)
           }
         }
       }
+      else if (typeof query[key] === 'function')
+      { // Pass the item through the function, and see what it returns.
+        if (!query[key](item[key]))
+        {
+          match = false;
+          break;
+        }
+      }
       else if (item[key] != query[key])
       {
         match = false;
