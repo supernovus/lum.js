@@ -267,6 +267,7 @@
 
   Nano.ViewController.prototype.watchChanges = function (options)
   {
+    options = options || {};
     var formEl = 'form' in options ? options.form : 'form';
     var eventName = 'event' in options ? options.event : 'change';
     var childSelector = 'selector' in options ? options.selector
