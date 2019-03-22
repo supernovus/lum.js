@@ -233,6 +233,28 @@
       return 1;
     });
 
+    Nano.addProperty(notification, 'remove', function ()
+    {
+      if (this.key)
+      {
+        if (this.key in this.parent.keyCount && this.parent.keyCount[this.key] > 0)
+        { // Remove one from the key count.
+          this.parent.keyCount[this.key]--;
+          if (this.parent.keyCount[this.key] == 0)
+          { // We've removed all messages of this key.
+            this.parent.shown[this.key] = false;
+          }
+        }
+      }
+      if (this.class)
+      {
+        if (this.class in this.parent.hasStatus && this.parent.hasStatus[this.class] > 0)
+        { // Remove one from the status count.
+          this.parent.hasStatus[this.class]--;
+        }
+      }
+    });
+
     if (notification.key)
     {
       if (notification.key in this.keyCount)
@@ -241,7 +263,13 @@
         this.keyCount[notification.key] = 1;
     }
 
-    this.hasStatus[notification.class] = true;
+    if (notification.class)
+    {
+      if (notification.class in this.hasStatus)
+        this.hasStatus[notification.class]++;
+      else
+        this.hasStatus[notification.class] = 1;
+    }
 
     return notification;
   } // extendNotification
@@ -373,6 +401,7 @@
         if (notice.opts.tag === tag)
         {
           removed.push(notice);
+          notice.remove();
         }
         else
         {
@@ -383,6 +412,9 @@
     else
     {
       removed = this.notifications;
+      this.hasStatus = {};
+      this.keyCount  = {};
+      this.shown     = {};
     }
 
     this.notifications = filtered;
