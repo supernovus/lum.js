@@ -1,9 +1,9 @@
-# Nano.js v1.5+
+# Nano.js v1.6.x
 
 ## Summary
 
 A bunch of common Javascript stuff for my projects that makes life easier.
- bin
+
 ## Requirements
 
 * Node.js, the Javascript runtime. The scripts expect it to be called 'node'.
@@ -14,24 +14,21 @@ This is tested on a Linux operating system, but should work anywhere Node.js doe
 
 ## Build System
 
-Nano.js supports either 'gulp' or 'grunt' as a build system. You could actually
-install both of them if you want, you'll just use more disk space.
-
-I started with grunt when I began the project, but have switched to gulp now.
-
-Pick whichever one you are more familiar with.
+Nano.js v1.6 has moved to Gulp v4 exclusively.
 
 ## Setup
 
-* Run './bin/setup.sh' to install development dependencies.
-* Run './bin/deps.js install' to download external resource scripts.
-* Run 'gulp' or 'grunt' to compile the source files into website scripts.
+  sudo npm install -g gulp-cli
+  npm install --no-save
+  ./bin/deps.js install
+  gulp
 
 ## Optional Features
 
-* Run 'git submodule init && git submodule update' to install:
-    * Ace editor libraries.
-    * Crypto.js libraries.
+Run 'git submodule init && git submodule update' to install:
+
+* Ace editor libraries.
+* Crypto.js libraries.
 
 ## Updating downloaded dependencies
 
@@ -54,21 +51,13 @@ Try one of the following:
 ## Use in your own projects
 
 * Copy or symbolically link the 'node_modules' directory.
-* If using 'gulp', copy the 'gulpfile.js' into your own project and customize as required for your needs.
-* If using 'grunt', copy or symlink the 'Gruntfile.js' into your own project.
-* If using 'grunt', copy the contents of the grunt/ directory into your project and customize them as required for your needs.
-* When Nano.php is added to Github, it has a script which can set up new projects, and install both it and Nano.js into your project root. I will update this documentation when it is available.
+* Copy the 'gulpfile.js' into your own project and customize as required.
 
 ## Cleanup
 
-* If using 'gulp'
-    * Run 'gulp clean' to remove compiled libraries.
-    * Run 'gulp cleandeps' to remove downloaded libraries.
-    * Run 'gulp distclean' to remove everything.
-* If using 'grunt'
-    * Run 'grunt clean:release' to remove compiled libraries.
-    * Run 'grunt clean:downloads' to remove downloaded libraries.
-    * Run 'grunt clean' to remove everything.
+* Run 'gulp clean' to remove compiled libraries.
+* Run 'gulp cleandeps' to remove downloaded libraries.
+* Run 'gulp distclean' to remove everything.
 
 There is no automated way to remove the modules installed by npm.
 Just delete the 'node_modules' directory if you really want a clean slate.

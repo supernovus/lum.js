@@ -1,0 +1,26 @@
+{
+  "name": "nano.js",
+  "version": "1.5.20190517",
+  "license": "Artistic-2.0",
+  "description": "A set of client-side libraries.",
+  "homepage": "https://github.com/supernovus/nano.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/supernovus/nano.js.git"
+  },
+  "dependencies": {
+    "http-request": "*",
+    "uglify-js": "*",
+    "uglify-es": "*",
+    "yargs": "*",
+    "compare-versions": "*",
+    "gulp": "^4.0",
+    "gulp-uglify": "*",
+    "gulp-sourcemaps": "*",
+    "gulp-file-cache": "*",
+    "del": "*",
+    "gulp-sass": "*",
+    "gulp-clean-css": "*",
+    "gulp-concat": "*"
+  }
+}
