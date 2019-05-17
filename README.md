@@ -18,14 +18,16 @@ Nano.js v1.6 has moved to Gulp v4 exclusively.
 
 ## Setup
 
+```
   sudo npm install -g gulp-cli
   npm install --no-save
   ./bin/deps.js install
   gulp
+```
 
 ## Optional Features
 
-Run 'git submodule init && git submodule update' to install:
+Run `git submodule init && git submodule update` to install:
 
 * Ace editor libraries.
 * Crypto.js libraries.
@@ -44,9 +46,11 @@ Or you can simply force re-downloading all script using:
 
 Try one of the following:
 
+```
   ./bin/deps.js --help
   ./bin/deps.js --help install
   ./bin/deps.js --help upgrade
+```
 
 ## Use in your own projects
 
@@ -55,14 +59,14 @@ Try one of the following:
 
 ## Cleanup
 
-* Run 'gulp clean' to remove compiled libraries.
-* Run 'gulp cleandeps' to remove downloaded libraries.
-* Run 'gulp distclean' to remove everything.
+* Run `gulp clean` to remove compiled libraries.
+* Run `gulp cleandeps` to remove downloaded libraries.
+* Run `gulp distclean` to remove everything.
 
 There is no automated way to remove the modules installed by npm.
 Just delete the 'node_modules' directory if you really want a clean slate.
 
-## Note
+## Branch Note
 
 This is based on the Nano.js v2 project that I built to be an ES6 library
 set using Babel to transpile the code to ES5. It was based on using RequireJS
