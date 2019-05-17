@@ -1,5 +1,12 @@
 # Nano.js v1.5+
 
+## DEPRECATION NOTICE
+
+This branch is now retired, see branch 'v1.6' for new work.
+
+Do note if you are using gulp3 or grunt, this is the last branch that supports
+either of those build systems. The newer v1.6 branch supports gulp4 only.
+
 ## Summary
 
 A bunch of common Javascript stuff for my projects that makes life easier.
@@ -84,8 +91,6 @@ of the advanced features from the v2 implementation. Eventually when every
 major browser supports ES6 out of the box, and Babel and RequireJS are no
 longer needed, I will make a new v3 using the v2 syntax, but all of the
 updates from these libraries.
-
-This is to be considered the active branch of Nano.js
 
 ## Author
 
