@@ -24,14 +24,29 @@
     this.paddingLeft = ('paddingLeft' in options) ? options.paddingLeft : 5;
   }
 
-  // Change to true if you need to.
-  cmenu.registerDynamic = false;
+  // Don't change this manually.
+  cmenu.$registered = false;
 
   /**
    * Register jQuery handlers made to be compatible with menu.jq.js
    */
-  cmenu.$register = function ()
+  cmenu.$register = function (registerOptions)
   {
+    if (cmenu.$registered) return;
+
+    var registerDynamic = false;
+    if (typeof registerOptions === 'boolean')
+    {
+      registerDynamic = registerOptions;
+    }
+    else if (typeof registerOptions === 'object')
+    {
+      if (typeof registerOptions.registerDynamic === 'boolean')
+      {
+        registerDynamic = registerOptions.registerDynamic;
+      }
+    }
+    
     $.fn.makeMenu = function (options)
     {
       options = options || {};
@@ -66,7 +81,7 @@
 
         if (this.data('menu') === undefined)
         {
-          if (cmenu.registerDynamic)
+          if (registerDynamic)
           { // register dynamically.
             this.makeMenu(opts);
           }
@@ -109,6 +124,8 @@
     {
       return this.data('menu');
     }
+
+    cmenu.$registered = true;
   }
 
   cmenu.prototype.registerMenu = function (el, options)
