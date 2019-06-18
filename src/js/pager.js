@@ -44,6 +44,11 @@ Nano.Pager = function (options)
     this.listSelector = '.list_pages';
   }
 
+  if (typeof options.drawFunction === 'function')
+  { // Override the default draw method.
+    this.draw = options.drawFunction;
+  }
+
   // Number of items to show per page.
   this.perpage = 'perpage' in options ? options.perpage : 10;
 
@@ -78,6 +83,35 @@ Nano.Pager = function (options)
   {
     this.linkTag = 'a';
   }
+
+  if ('getLinkText' in options)
+  {
+    this.getLinkText = options.getLinkText;
+  }
+  else
+  { // Backwards compatibility.
+    this.getLinkText = true;
+  }
+
+  if ('getLinkVal' in options)
+  {
+    this.getLinkVal = options.getLinkVal;
+  }
+  else
+  {
+    this.getLinkVal = false;
+  }
+
+  if ('getLinkId' in options)
+  {
+    this.getLinkId = options.getLinkId;
+  }
+  else
+  {
+    this.getLinkId = false;
+  }
+
+  this.getLinkAttr = options.getLinkAttr;
 
   if ('currentTag' in options)
   {
@@ -144,9 +178,42 @@ Nano.Pager.prototype.countPages = function (itemcount)
  * <a/> element. Set an 'onChange' handler that takes the page number as
  * its parameter, and it will be called when changing pages.
  */
-Nano.Pager.prototype.changePage = function (anchor)
+Nano.Pager.prototype.changePage = function (page)
 {
-  var page = anchor.text();
+  if (typeof page === 'object')
+  {
+    var anchor = $(page);
+    page = NaN;
+
+    if (typeof this.getLinkAttr === 'string')
+    {
+      page = anchor.attr(this.getLinkAttr);
+    }
+    if (this.getLinkId && !page)
+    {
+      page = anchor.prop('id');
+    }
+    if (this.getLinkVal && !page)
+    {
+      page = anchor.val();
+    }
+    if (this.getLinkText && !page)
+    {
+      page = anchor.text();
+    }
+
+    page = parseInt(page, 10);
+  }
+  else if (typeof page === 'string')
+  {
+    page = parseInt(page, 10);
+  }
+
+  if (isNaN(page))
+  {
+    throw new Error("Could not determine page number.");
+  }
+
   var func = this.events.onChange;
   var success = true;
   if (func !== null && func !== undefined)
@@ -219,6 +286,12 @@ Nano.Pager.prototype.render = function ()
 
 /**
  * Draw a page.
+ *
+ * This should have more features, and we could support multiple rendering
+ * engines directly from this method. For now you can fully override this
+ * method by passing a 'drawFunction' construction parameter with the custom
+ * rendering method, which requires quite a bit of internal knowledge of the
+ * properties of the Pager object.
  */
 Nano.Pager.prototype.draw = function (list, page)
 {

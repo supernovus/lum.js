@@ -56,6 +56,18 @@ Nano.Listing = function (options)
     return false;
   }
 
+  if (options.namespace)
+  {
+    if (Array.isArray(options.namespace))
+    {
+      this.setNS.apply(this, options.namespace);
+    }
+    else
+    {
+      this.setNS(options.namespace);
+    }
+  }
+
   // A function that returns the active data set.
   this.getData = options.getData;
 
@@ -276,16 +288,65 @@ Nano.Listing = function (options)
 /** 
  * Get the current listing namespace.
  *
- * We use the full URL path minus any hash elements, and if the
- * listing element has an 'id' attribute, we append it with a hash.
+ * If the namespace has not been set already, then the setNS() method will
+ * be called with a blank namespace, and appendURI and appendId as true.
  */
 Nano.Listing.prototype.getNS = function ()
 {
-  var uri = window.location.href.split('#', 2)[0];
-  var eid = this.element.prop('id');
-  if (eid)
-    uri += '#'+eid;
-  return uri; 
+  if (!this._namespace)
+  { // Set a sane default with backwards compatibility with old implementation.
+    this.setNS('', {appendURI: true, appendId: true});
+  }
+  return this._namespace;
+}
+
+/**
+ * Set the namespace.
+ *
+ * @param string namespace  The namespace value.
+ * @param object options    Options (see below).
+ *
+ * Options:
+ *
+ *  'appendURI' (bool)   Append the URI path to the namespace?
+ *  'appendId'  (bool)   Append the element id to the namespace?
+ *
+ * If the first parameter is an object and the second is omitted, then
+ * the first parameter will be consider the options, with a new option
+ * called 'value' used to specify a custom namespace value.
+ */
+Nano.Listing.prototype.setNS = function (namespace, options)
+{
+  if (typeof namespace === 'object' && options === undefined)
+  {
+    options = namespace;
+    namespace = options.value;
+  }
+  
+  if (typeof namespace !== 'string')
+  {
+    namespace = '';
+  }
+
+  if (options.appendURI)
+  {
+    var uri = window.location.href.split('#', 2)[0];
+    namespace += uri;
+  }
+
+  if (options.appendId)
+  {
+    var eid = this.element.prop('id');
+    if (eid)
+      namespace += '#'+eid;
+  }
+
+  if (namespace === '')
+  {
+    namespace = 'DEFAULT';
+  }
+
+  this._namespace = namespace;
 }
 
 /**
@@ -888,6 +949,11 @@ Nano.Listing.prototype.showPage = function (page)
     list.append(item);
   }
   return true;
+}
+
+Nano.Listing.prototype.changePage = function (page)
+{
+  return this.pager.changePage(page);
 }
 
 // End of module.
