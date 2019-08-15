@@ -2,6 +2,7 @@
 /.sync/*
 /scripts/ext/*
 /scripts/nano/*
+/scripts/nano-es5/*
 /style/ext/*
 /node_modules/*
 /npm-debug.log

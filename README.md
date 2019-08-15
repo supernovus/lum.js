@@ -1,4 +1,4 @@
-# Nano.js v1.6.x
+# Nano.js v3
 
 ## Summary
 
@@ -14,7 +14,7 @@ This is tested on a Linux operating system, but should work anywhere Node.js doe
 
 ## Build System
 
-Nano.js v1.6 has moved to Gulp v4 exclusively.
+Nano.js v3 uses Gulp 4 as it's build system.
 
 ## Setup
 
@@ -68,17 +68,27 @@ Just delete the 'node_modules' directory if you really want a clean slate.
 
 ## Branch Note
 
-This is based on the Nano.js v2 project that I built to be an ES6 library
-set using Babel to transpile the code to ES5. It was based on using RequireJS
-as a script loader, and was simply too complicated to work well.
+There are several branches of Nano.js:
 
-This version retains the v1 libraries and ES5 syntax, while supporting some
-of the advanced features from the v2 implementation. Eventually when every
-major browser supports ES6 out of the box, and Babel and RequireJS are no
-longer needed, I will make a new v3 using the v2 syntax, but all of the
-updates from these libraries.
+* v1 is the original scripts, and hasn't been updated in years.
+* v2 was the first attempt at a ES2015 version, but was abandoned.
+* v1.5 was the longest lasting ES5 version with multiple build systems.
+* v1.6 is the current ES5+ stable release, using Gulp 4 as it's build system.
+* v3 (this) is the current ES2015+ development release.
 
-This is to be considered the active branch of Nano.js
+This release is once again moving to using ES2015+ as it's primary release
+target, with a backwards compatible ES5 build being offered as a solution for
+older browsers.
+
+This time I'm not using ES Modules, but am using classes and other ES2015+
+features. The source code will be compiled into two output paths:
+
+* scripts/nano/ - The ES2015+ release (compiled with terser).
+* scripts/nano-es5/ - The ES5 release (compiled with Babel 7 and uglify-js).
+
+When I have all of the libraries in src/js ported and have tested both the
+ES2015+ (in Chrome, Firefox, Edge, and Safari) and ES5 (in IE11), this will
+become the default branch of Nano.js.
 
 ## Author
 
