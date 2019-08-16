@@ -1,0 +1,23 @@
+html
+{
+  background: white;
+  color: black;
+  font-family: sans-serif;
+}
+
+#navbar li
+{
+  display: inline-block;
+  color: blue;
+  cursor: pointer;
+  &.active
+  {
+    text-decoration: underline;
+  }
+}
+
+.output
+{
+  display: none;
+}
+

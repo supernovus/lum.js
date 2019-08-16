@@ -20,6 +20,7 @@
     "gulp-file-cache": "*",
     "gulp-sass": "*",
     "gulp-sourcemaps": "*",
+    "gulp-template-html": "^0.2.2",
     "gulp-terser": "*",
     "gulp-uglify": "*",
     "http-request": "*",

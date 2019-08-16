@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><!-- build:title --></title>
+    <link rel="stylesheet" href="../style/nano/tests.css" />
+    <!-- build:polyfill -->
+    <script src="../scripts/ext/jquery.js"></script>
+    <script src="../<!-- build:scriptdir -->test.js"></script>
+    <script src="../<!-- build:scriptdir -->tests.js"></script>
+    <script src="../<!-- build:scriptdir -->tests/handler.js"></script>
+    <script>
+      var h = Nano.Tests.Handler;
+      var d = '../<!-- build:scriptdir -->';
+      var testList =
+      [
+        d+'expression.js',
+        d+'tests/expression.js',
+      ];
+      h.loadScripts(testList);
+      $(function()
+      {
+        var testList = $('#navbar');
+        var testPane = $('#testpane');
+        h.runTests(testList, testPane);
+        h.registerEvents(testList, testPane);
+      });
+    </script>
+  </head>
+  <body>
+    <h1><!-- build:title --></h1>
+    <ul id="navbar"></ul>
+    <div id="testpane"></div>
+  </body>
+</html>
