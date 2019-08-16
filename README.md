@@ -36,11 +36,15 @@ Run `git submodule init && git submodule update` to install:
 
 You can update downloaded dependencies using the deps.js script:
 
+```
   ./bin/deps.js upgrade
+```
 
 Or you can simply force re-downloading all script using:
 
+```
   ./bin/deps.js install --force
+```
 
 ## More help with deps.js
 
@@ -57,10 +61,30 @@ Try one of the following:
 * Copy or symbolically link the 'node_modules' directory.
 * Copy the 'gulpfile.js' into your own project and customize as required.
 
+## Building the tests
+
+To build the tests (simple HTML files) simply run:
+
+```
+  gulp build-tests
+```
+
+Then you can open index.html to start browsing the tests.
+
+If you need to launch a quick web server, consider:
+
+```
+  npm install -g local-web-server
+  ws
+```
+
+It's a quick way to run a web server directly from Node.js.
+
 ## Cleanup
 
 * Run `gulp clean` to remove compiled libraries.
-* Run `gulp cleandeps` to remove downloaded libraries.
+* Run `gulp clean-tests` to remove the built tests.
+* Run `gulp clean-deps` to remove downloaded libraries.
 * Run `gulp distclean` to remove everything.
 
 There is no automated way to remove the modules installed by npm.

@@ -50,6 +50,11 @@ gulp.task('clean-css', function ()
   return del([destcss,ccfile]);
 });
 
+gulp.task('clean-tests', function ()
+{
+  return del('tests');
+});
+
 var clean_tasks =
 [
   'clean-js',
@@ -68,7 +73,7 @@ gulp.task('clean-deps', function ()
   return del(cleanitems);
 });
 
-gulp.task('distclean', gulp.parallel('clean', 'clean-deps'));
+gulp.task('distclean', gulp.parallel('clean', 'clean-deps', 'clean-tests'));
 
 gulp.task('build-es6', function ()
 {
