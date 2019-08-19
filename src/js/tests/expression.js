@@ -1,14 +1,14 @@
 (function()
 {
-  if (window.Nano === undefined || Nano.Expression === undefined || Nano.Test === undefined || Nano.Tests === undefined)
+  if (window.Nano === undefined || Nano.Expression === undefined || Nano.Tests === undefined)
   {
     throw new Error("Missing required libraries");
   }
 
-  let tests = Nano.Tests.getInstance();
-  let test = tests.addSet('Expression');
+  let testSuite = Nano.Tests.getInstance();
+  let testSet = testSuite.getSet('expression');
 
-  test.setHandler(function (test)
+  testSet.setHandler(function (test)
   {
     test.plan(32);
 
@@ -131,6 +131,6 @@
     var sqrt_val = exp.evaluate();
     test.is(sqrt_val, 3.0, 'custom operator evaluated');
 
-  }); // test.setTest()
+  }); // testSet.setTest()
 
 })();

@@ -8,22 +8,23 @@
     <script src="../scripts/ext/jquery.js"></script>
     <script src="../<!-- build:scriptdir -->test.js"></script>
     <script src="../<!-- build:scriptdir -->tests.js"></script>
-    <script src="../<!-- build:scriptdir -->tests/handler.js"></script>
     <script>
-      var h = Nano.Tests.Handler;
-      var d = '../<!-- build:scriptdir -->';
-      var testList =
-      [
-        d+'expression.js',
-        d+'tests/expression.js',
-      ];
-      h.loadScripts(testList);
-      $(function()
+      // Run immediately.
+      Nano.Tests.createInstance(
       {
-        var testList = $('#navbar');
-        var testPane = $('#testpane');
-        h.runTests(testList, testPane);
-        h.registerEvents(testList, testPane);
+        scriptRoot: '../<!-- build:scriptdir -->',
+        htmlRoot:   '../testexamples/',
+      });
+    </script>
+    <script src="../<!-- build:scriptdir -->tests/registration.js"></script>
+    <script>
+      // Run when DOM is ready.
+      jQuery(function()
+      {
+        var testSuite = Nano.Tests.getInstance();
+        var listEl = $('#navbar');
+        var outputEl = $('#testpane');
+        testSuite.initialize(listEl, outputEl);
       });
     </script>
   </head>
