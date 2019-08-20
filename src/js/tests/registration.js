@@ -17,12 +17,17 @@
 
   let testSuite = Nano.Tests.getInstance();
 
-  // Expression library.
-  testSuite.addSet('expression', 'Expression', 
-  [
-    '@expression.js',
-    '@tests/expression.js',
-  ]);
+  // For most Nano libraries, this will work.
+  function test (lib, name, deps=[])
+  {
+    deps.push('@'+lib+'.js');
+    deps.push('@tests/'+lib+'.js');
+    testSuite.addSet(lib, name, deps);
+  }
+
+  test('coreutils',  'Core Utils');
+  test('arrayutils', 'Array Utils');
+  test('expression', 'Expression');
 
   // TODO: flesh this out with more tests.
 

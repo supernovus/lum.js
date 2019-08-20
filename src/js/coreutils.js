@@ -8,38 +8,11 @@
 {
   "use strict";
 
-  /**
-   * Polyfill for Array.isArray() to support old browsers.
-   */
-  if (!Array.isArray)
-  {
-    console.log("Your browser is old, adding Array.isArray() method.");
-    Array.isArray = function (arg)
-    {
-      return Object.prototype.toString.call(arg) === '[object Array]';
-    }
-  }
-
   /** 
    * Set up the Nano namespace.
    */
   if (root.Nano === undefined)
     root.Nano = {};
-
-  /**
-   * A wrapper console.error() that falls back to console.log()
-   */
-  Nano.warn = function ()
-  {
-    if (console.error !== undefined)
-    {
-      console.error.apply(console, arguments);
-    }
-    else
-    {
-      console.log.apply(console, arguments);
-    }
-  }
 
   /**
    * Extend a new class using a parent base class.
@@ -74,13 +47,15 @@
    *  Nano.copyProperties(base, sub, copyDef.copyProperties);
    *
    * The copyProperties and copyInto copyDef properties can be used together.
+   *
+   * This can probably be deprecated as ES2015 classes don't need it.
    */
   Nano.extend = function (base, sub, copyDef)
   {
 //    console.error("Nano.extend()", base, sub, copyall);
     if (typeof base !== 'function')
     {
-      Nano.warn("Nano.extend(base): base passed was not function", arguments);
+      console.error("Nano.extend(base): base passed was not function", arguments);
       return;
     }
 
@@ -95,7 +70,7 @@
     }
     else if (typeof sub !== 'function')
     {
-      Nano.warn("Nano.extend(base, sub): sub passed was not function", arguments);
+      console.error("Nano.extend(base, sub): sub passed was not function", arguments);
       return;
     }
 
@@ -141,10 +116,10 @@
    *  Nano.copyProperties(source, target, {default: true, overwrite: overwrite})
    * for each of the sources specified (with the current overwrite value.)
    */
-  Nano.copyInto = function (target)
+  Nano.copyInto = function (target, ...sources)
   {
     var overwrite = false;
-    var sources = Array.prototype.slice.call(arguments, 1);
+    //var sources = Array.prototype.slice.call(arguments, 1);
 //    console.log("Nano.copy()", target, sources);
     for (var s in sources)
     {
@@ -218,12 +193,12 @@
     }
     else if (propOpts.overrides)
     {
-      propDefs = Object.keys(propDefs);
+      propDefs = Object.keys(propOpts.overrides);
     }
 
     if (!propDefs)
     {
-      Nano.warn("Could not determine properties to copy", propOpts);
+      console.error("Could not determine properties to copy", propOpts);
       return;
     }
 
@@ -370,7 +345,7 @@
         {
           if (logerror)
           {
-            Nano.warn("Required namespace not found", namespaces);
+            console.error("Required namespace not found", namespaces);
           }
           return false;
         }

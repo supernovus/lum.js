@@ -2,8 +2,7 @@
 {
   if (window.Nano === undefined)
   {
-    console.log("fatal error: missing Nano global namespace");
-    return;
+    throw new Error("Nano core not loaded");
   }
 
   Nano.ViewController = function ()
@@ -85,7 +84,7 @@
   {
     if (this.readyHandlers)
     {
-      Nano.warn("getHook requires 'observable' library to be loaded.");
+      console.error("getHook requires 'observable' library to be loaded.");
       return;
     }
     var self = this;

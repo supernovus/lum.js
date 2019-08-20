@@ -9,8 +9,7 @@
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    throw new Error("fatal error: Nano core not loaded");
   }
 
 /**
@@ -50,7 +49,7 @@ var oq = Nano.oQuery = function (query, objarr, opts)
   }
   else if (qtype !== 'object')
   {
-    Nano.warn("Invalid query passed to oQuery()");
+    console.debug("Invalid query passed to oQuery()");
     if (opts.single === true)
       return null;
     else

@@ -36,7 +36,13 @@
       listEl.on('click', 'li', function (e)
       {
         var tab = $(this);
-        tab.toggleClass('active');
+        if (tab.hasClass('active')) return; // Already the active tab.
+
+        listEl.find('li').removeClass('active');
+        outputEl.find('.output').removeClass('active');
+
+        tab.addClass('active');
+
         var setId = tab.prop('id').replace('tab_', '');
         var outputId = '#output_'+setId;
         var outputDiv = outputEl.find(outputId);
@@ -50,7 +56,8 @@
             throw new Error("Could not find output div for test: "+setId);
           }
         }
-        outputDiv.toggle();
+
+        outputDiv.addClass('active');
       });
 
       this.renderTests(listEl);

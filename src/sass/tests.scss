@@ -1,16 +1,22 @@
 #navbar li
 {
+  margin-right: 0.5em;
+  border-bottom: dotted silver 1px;
   display: inline-block;
   color: blue;
   cursor: pointer;
   &.active
   {
-    text-decoration: underline;
+    border-bottom: dotted gray 1px;
   }
 }
 
 .output
 {
   display: none;
+  &.active
+  {
+    display: block;
+  }
 }
 

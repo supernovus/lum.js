@@ -8,8 +8,7 @@
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    window.Nano = {};
   }
 
   Nano.array = {};
@@ -65,17 +64,20 @@
     return array[Math.floor(Math.random()*array.length)];
   }
 
-  Nano.array.extend = function (array, method)
+  if (Nano.addProperty !== undefined)
   {
-    // Don't override existing methods.
-    if (array[method] === undefined && typeof Nano.array[method] === 'function')
+    Nano.array.extend = function (array, method)
     {
-      Nano.addProperty(array, method, function ()
+      // Don't override existing methods.
+      if (array[method] === undefined && typeof Nano.array[method] === 'function')
       {
-        var args = Array.prototype.slice.call(arguments);
-        args.unshift(this);
-        return Nano.array[method].apply(Nano.array, args);
-      });
+        Nano.addProperty(array, method, function ()
+        {
+          var args = Array.prototype.slice.call(arguments);
+          args.unshift(this);
+          return Nano.array[method].apply(Nano.array, args);
+        });
+      }
     }
   }
 
