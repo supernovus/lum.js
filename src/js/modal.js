@@ -14,8 +14,7 @@
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    window.Nano = {};
   }
 
   var Mask = Nano.Mask = function (options)

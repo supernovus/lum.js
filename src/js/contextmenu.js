@@ -4,10 +4,11 @@
  */
 (function($)
 {
+  "use strict";
+
   if (window.Nano === undefined)
   {
-    console.error("fatal error: Nano core not loaded");
-    return;
+    window.Nano = {};
   }
 
   var cmenu = Nano.ContextMenu = function (options)

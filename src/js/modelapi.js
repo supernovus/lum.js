@@ -8,6 +8,8 @@
     return;
   }
 
+  var debug = typeof console.debug === 'function' ? console.debug : console.log;
+
   /**
    * A Model API base core. Use this as the foundation for your API objects.
    */
@@ -41,39 +43,14 @@
     self.conf = conf;
 
     /**
-     * Debugging information. Can be a list of tags.
-     */
-    self.debugging = conf.debug !== undefined ? conf.debug : {};
-
-    /**
      * Should we show the 'tag' when using onDebug() calls?
      */
     self.showDebugTag = false;
 
     /**
      * See if we have debugging in the hash.
-     *
-     * TODO: More flexibility in URL hash management.
      */
-    if (location.hash === '#debug')
-    { // Enable all debugging.
-      console.log("Enabling global debugging.");
-      self.debugging['*'] = true;
-    }
-    else
-    { // Look for #debug:[foo,bar] and enable named debugging groups.
-      var match = location.hash.match(/debug\[(.*?)\]/);
-      if (match)
-      {
-        var keywords = match[1].split(',');
-        for (var k in keywords)
-        {
-          var keyword = keywords[k];
-          console.log("Enabling debugging on", keyword);
-          self.debugging[keyword] = true;
-        }
-      }
-    }
+    self.updateDebug(conf.debug);
 
     /**
      * Stuff to do before loading our sources.
@@ -153,11 +130,80 @@
   }
 
   /**
+   * Update debugging flags based on URL hash.
+   *
+   * You can use #debug to toggle the '*' flag, which turns on all debugging.
+   * Or #debug=flag to set a single one.
+   * Or #debug=flag1=flag2=flag3 to set a few.
+   *
+   * If debugValues are passed then:
+   * #debug={"flag1":true,"flag2":false} is also available.
+   */
+  Nano.ModelAPI.prototype.updateDebug = function (debugValues)
+  {
+    var hashOpts = 
+    {
+      json: (debugValues !== undefined)
+    }
+    var debugFlags = Nano.getHashOpt('debug', hashOpts);
+
+    if (debugFlags === undefined)
+    { // Nothing found, we don't do anything.
+      return; 
+    }
+
+    if (debugValues !== undefined)
+    { // Use the pre-determined values.
+      this.debugging = debugValues;
+    }
+    else
+    { // Start with a fresh slate.
+      this.debugging = {};
+    }
+
+    if (debugFlags === null)
+    { // The null value means #debug was passed, which is an alias for '*'
+      debug("Enabling global debugging.");
+      this.debug('*', true);
+      return;
+    }
+
+    if (typeof debugFlags === 'string')
+    { // A single flag was passed.
+      this.debug(debugFlags, true);
+      return;
+    }
+
+    if (Array.isArray(debugFlags))
+    { // Output was an array of debug flags.
+      for (var k in debugFlags)
+      {
+        var keyword = debugFlags[k];
+        debug("Enabling debugging on", keyword);
+        this.debug(keyword, true);
+      }
+      return;
+    }
+
+    if (typeof debugFlags === 'object')
+    { // Advanced use, probably not super useful.
+      for (var key in debugFlags)
+      {
+        var val = debugFlags[key];
+        debug("Settings debug flag", key, val);
+        this.debug(key, val);
+      }
+      return;
+    }
+
+  }
+
+  /**
    * Check to see if debugging is enabled on a certain tag.
    */
   Nano.ModelAPI.prototype.isDebug = function (tag)
   {
-    if ($.isArray(tag))
+    if (Array.isArray(tag))
     { // Check one of a bunch of tags.
       for (var t in tag)
       {
@@ -191,7 +237,7 @@
     {
       var slicePos = this.showDebugTag ? 0 : 1;
       var args = Array.prototype.slice.call(arguments, slicePos);
-      console.log.apply(console, args);
+      debug.apply(console, args);
     }
   }
 
@@ -200,7 +246,7 @@
    */
   Nano.ModelAPI.prototype.debug = function (tag, toggle)
   {
-    if ($.isArray(tag))
+    if (Array.isArray(tag))
     { // An array of tags, recurse it.
       for (var t in tag)
       {
@@ -234,6 +280,21 @@
       { // Check for specific web service.
         if (tag in models && tag in sources && sources[tag].type == 'ws')
           models[tag]._debug = toggle;
+      }
+    }
+  }
+
+  /**
+   * Toggle all currently registered debugging options.
+   */
+  Nano.ModelAPI.prototype.disableDebug = function (toggle)
+  {
+    for (var key in this.debugging)
+    {
+      var val = this.debugging[key];
+      if (val)
+      {
+        this.debug(key, toggle);
       }
     }
   }
@@ -315,7 +376,7 @@
       var save_changes = false;
       if (source.enforceObject === true)
       {
-        if ($.isArray(jsondata) && jsondata.length == 0)
+        if (Array.isArray(jsondata) && jsondata.length == 0)
         {
           jsondata = {};
           save_changes = true;
