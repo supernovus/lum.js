@@ -55,7 +55,7 @@
   test('arrayutils', 'Array Utils');
   //testjq('changetype', 'jQuery Change Type');
   //test('contextmenu', 'Context Menu');
-  //test('css', 'CSS');
+  test('css', 'CSS');
   //test('debug', 'Debug');
   //testjq('disabled', 'jQuery Disabled');
   /* -- FUTURE TEST
