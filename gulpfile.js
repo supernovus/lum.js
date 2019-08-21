@@ -161,13 +161,13 @@ var watch_tasks =
 
 gulp.task('watch', gulp.parallel(watch_tasks));
 
-var watch_all_tasks =
+var watch_ws_tasks =
 [
   'webserver',
   'watch',
 ];
 
-gulp.task('watch-all', gulp.parallel(watch_all_tasks));
+gulp.task('watch-ws', gulp.parallel(watch_ws_tasks));
 
-gulp.task('default', gulp.series('build'));
+gulp.task('default', gulp.series('build-js'));
 

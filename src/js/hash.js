@@ -589,5 +589,20 @@
       return (this._json === JSON_OBJ || this.json === JSON_ALL);
     }
 
+    static getOpts (getOpts, hashOpts)
+    {
+      return new Nano.Hash(hashOpts).getOpts(getOpts);
+    }
+
+    static getOpt (name, getOpts, hashOpts)
+    {
+      return new Nano.Hash(hashOpts).getOpt(name, getOpts);
+    }
+
+    static update (obj, setOpts, hashOpts)
+    {
+      return new Nano.Hash(hashOpts).update(obj, setOpts);
+    }
+
   }
 })();

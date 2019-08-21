@@ -12,7 +12,7 @@
 
   testSet.setHandler(function (test)
   {
-    test.plan(27);
+    test.plan(30);
 
     // We're not using the real browser location.hash as that would
     // add a whole bunch of pages to the history. Instead we're using
@@ -110,7 +110,7 @@
     },
     'attempt to serialize function throws error');
 
-    // Next we'll test custom getter values.
+    // Next we'll test custom getter and setter values.
 
     let custGetters = 
     {
@@ -142,6 +142,21 @@
     hash.update(expected);
     expected = '#first~true::second~false::third~T::fourth~F::fifth~[1,2,3]';
     test.is(currentHash, expected, 'update with custom serialization separators');
+
+    // Finally, test the static class methods.
+   
+    currentHash = '#hello=world;goodbye=galaxy=universe';
+    let staticOpts = Nano.Hash.getOpts({}, hashOpts);
+    test.isJSON(staticOpts, {hello: 'world', goodbye: ['galaxy','universe']}, 'static Nano.Hash.getOpts() call works');
+
+    staticOpts = Nano.Hash.getOpt('hello', {}, hashOpts);
+    test.is(staticOpts, 'world', 'static Nano.Hash.getOpt() call works');
+
+    staticOpts = {name: 'Bob', jobs: ['developer','admin']};
+    expected = '#name=Bob;jobs=developer=admin';
+    Nano.Hash.update(staticOpts, {}, hashOpts);
+    test.is(currentHash, expected, 'static Nano.Hash.update() call works');
+
   });
 
 })();
