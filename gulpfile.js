@@ -5,13 +5,14 @@
 var gulp   = require('gulp');
 var babel  = require('gulp-babel');
 var uglify = require('gulp-uglify');
-var terser = require('gulp-terser');
+var terser = require('gulp-terser-js');
 var del    = require('del');
 var sass   = require('gulp-sass');
 var cssmin = require('gulp-clean-css');
 var srcmap = require('gulp-sourcemaps');
 var fcache = require('gulp-file-cache');
 var template = require('gulp-template-html');
+var connect = require('gulp-connect');
 
 var es6cfile = '.gulp-cache-es6';
 var es5cfile = '.gulp-cache-es5';
@@ -83,7 +84,8 @@ gulp.task('build-es6', function ()
     .pipe(terser())
     .pipe(es6cache.cache())
     .pipe(srcmap.write('maps'))
-    .pipe(gulp.dest(destes6));
+    .pipe(gulp.dest(destes6))
+    .pipe(connect.reload());
 });
 
 gulp.task('build-es5', function ()
@@ -95,7 +97,8 @@ gulp.task('build-es5', function ()
     .pipe(uglify())
     .pipe(es5cache.cache())
     .pipe(srcmap.write('maps'))
-    .pipe(gulp.dest(destes5));
+    .pipe(gulp.dest(destes5))
+    .pipe(connect.reload());
 });
 
 gulp.task('build-js', gulp.parallel('build-es6', 'build-es5'));
@@ -109,7 +112,8 @@ gulp.task('build-css', function ()
     .pipe(cssmin())
     .pipe(csscache.cache())
     .pipe(srcmap.write('maps'))
-    .pipe(gulp.dest(destcss));
+    .pipe(gulp.dest(destcss))
+    .pipe(connect.reload());
 });
 
 gulp.task('build-tests', function ()
@@ -129,6 +133,16 @@ gulp.task('build', gulp.parallel(build_tasks));
 
 gulp.task('rebuild', gulp.series('clean', 'build'));
 
+gulp.task('webserver', function ()
+{
+  connect.server(
+  {
+    livereload: true,
+    port: 8000,
+    host: '0.0.0.0',
+  });
+});
+
 gulp.task('watch-js', function ()
 {
   return gulp.watch(srcjs, gulp.series('build-js'));
@@ -146,6 +160,14 @@ var watch_tasks =
 ];
 
 gulp.task('watch', gulp.parallel(watch_tasks));
+
+var watch_all_tasks =
+[
+  'webserver',
+  'watch',
+];
+
+gulp.task('watch-all', gulp.parallel(watch_all_tasks));
 
 gulp.task('default', gulp.series('build'));
 

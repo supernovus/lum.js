@@ -71,14 +71,15 @@ To build the tests (simple HTML files) simply run:
 
 Then you can open index.html to start browsing the tests.
 
-If you need to launch a quick web server, consider:
+If you need to, you can use gulp to launch a web server on port 8000:
 
 ```
-  npm install -g local-web-server
-  ws
+  gulp webserver
 ```
 
 It's a quick way to run a web server directly from Node.js.
+
+Other options like 'local-web-server' exist as well, use what you like.
 
 ## Cleanup
 

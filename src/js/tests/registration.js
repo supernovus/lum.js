@@ -52,6 +52,7 @@
   // ready to write tests. 
 
   let core = test('coreutils',  'Core Utils');
+  let hash = test('hash', 'URL Hash');
   test('arrayutils', 'Array Utils');
   //testjq('changetype', 'jQuery Change Type');
   //test('contextmenu', 'Context Menu');
@@ -81,7 +82,7 @@
   //let prom = test('promise', 'Nano Promise');
   //let ws = test('webservice', 'Webservice', [core]);
   //testext(ws, 'compat', 'Webservice Compat');
-  //let modelapi = test('modelapi', 'Model API', [core,existsjq,jsonjq]);
+  //let modelapi = test('modelapi', 'Model API', [core,hash,existsjq,jsonjq]);
   //testext(modelapi, 'ws_model', 'Model WS Plugin', [prom]);
   //test('notifications', 'Notifications', [core, spf]);
   //test('oquery', 'oQuery');

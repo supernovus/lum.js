@@ -262,9 +262,10 @@ Nano.Listing = function (options)
 
   // If there is a location hash, it's the default page.
   this.useHash = 'useHash' in options ? options.useHash : false;
-  if (this.useHash)
+  if (this.useHash && Nano.Hash !== undefined)
   {
-    var pagenum = Nano.getHashOpt('page');
+    let hash = new Nano.Hash({shortOpt: true});
+    var pagenum = hash.getOpt('page');
     if (typeof pagenum === 'string')
     {
       pagenum = parseInt(pagenum);

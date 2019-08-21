@@ -12,6 +12,22 @@
 
   /**
    * A Model API base core. Use this as the foundation for your API objects.
+   *
+   * External requirements:
+   *
+   *  jQuery
+   *
+   * Internal requirements:
+   *
+   *  coreutils.js
+   * 
+   * Internal recommendations:
+   *
+   *  hash.js
+   *  observable.js
+   *  exists.jq.js
+   *  json.jq.js
+   *
    */
   Nano.ModelAPI = function ModelAPI (conf)
   {
@@ -141,17 +157,6 @@
    */
   Nano.ModelAPI.prototype.updateDebug = function (debugValues)
   {
-    var hashOpts = 
-    {
-      json: (debugValues !== undefined)
-    }
-    var debugFlags = Nano.getHashOpt('debug', hashOpts);
-
-    if (debugFlags === undefined)
-    { // Nothing found, we don't do anything.
-      return; 
-    }
-
     if (debugValues !== undefined)
     { // Use the pre-determined values.
       this.debugging = debugValues;
@@ -159,6 +164,24 @@
     else
     { // Start with a fresh slate.
       this.debugging = {};
+    }
+
+    if (Nano.Hash === undefined)
+    { // The Hash library wasn't loaded.
+      return;
+    }
+
+    var hashOpts = 
+    {
+      shortOpt: true,
+      json: (debugValues !== undefined)
+    }
+    var hash = new Nano.Hash(hashOpts);
+    var debugFlags = hash.getOpt('debug');
+
+    if (debugFlags === undefined)
+    { // Nothing found, we don't do anything.
+      return; 
     }
 
     if (debugFlags === null)
@@ -287,7 +310,7 @@
   /**
    * Toggle all currently registered debugging options.
    */
-  Nano.ModelAPI.prototype.disableDebug = function (toggle)
+  Nano.ModelAPI.prototype.toggleDebug = function (toggle)
   {
     for (var key in this.debugging)
     {

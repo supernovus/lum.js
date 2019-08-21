@@ -12,7 +12,7 @@
 
   testSet.setHandler(function (test)
   {
-    test.plan(60);
+    test.plan(44);
 
     { // Nano.copyProperties()
       let c1 = {name: 'Bob', job: {type:'IT',position:'developer'}};
@@ -182,66 +182,6 @@
       test.is(q1, 'world', 'getNested with single level works');
       let q2 = Nano.getNested(doc, 'goodbye.job.position');
       test.is(q2, 'developer', 'getNested with more depth works');
-    }
-
-    { // Nano.getHashOpts() and Nano.getHashOpt()
-      // Note, we're not using the real browser location.hash as doing so
-      // adds a page to the history each time we change it. We're using a
-      // fake hash source instead.
-      let currentHash = '';
-
-      function ghs (opts=[])
-      {
-        opts.source = currentHash;
-        return Nano.getHashOpts(opts);
-      }
-      function gho (name, opts=[])
-      {
-        opts.source = currentHash;
-        return Nano.getHashOpt(name, opts);
-      }
-
-      test.isJSON(ghs(), {}, 'getHashOpts with no hash');
-      test.is(gho('page'), undefined, 'getHashOpt with no hash');
-      currentHash = '#page';
-      test.isJSON(ghs(), {page:null}, 'getHashOpts with standalone option');
-      test.is(gho('page'), null, 'getHashOpt with standalone option');
-      currentHash = '#page=1';
-      test.isJSON(ghs(), {page:'1'}, 'getHashOpts with specified option');
-      test.is(gho('page'), '1', 'getHashOpt with specified option');
-      currentHash = '#page=1;name=Bob';
-      test.isJSON(Object.keys(ghs()), ['page','name'], 'getHashOpts with multiple options');
-      test.is(gho('name'), 'Bob', 'getHashOpt with multiple options');
-      currentHash = '#names=Bob=Lisa=Kevin=Michelle';
-      test.is(ghs().names.length, 4, 'getHashOpts with multiple values');
-      test.is(gho('names').length, 4, 'getHashOpt with multiple values');
-      currentHash = '#1';
-      test.is(gho('page'), '1', 'getHashOpt with implicit option value');
-      test.is(gho('page', {forceNamed: true}), undefined, 'getHashOpt with implit option value and forceNamed');
-      currentHash = '#def=[1,2,3,4]';
-      test.isJSON(gho('def', {json: 'array'}), [1,2,3,4], 'getHashOpt with JSON array value');
-      currentHash = '#def={"hello":"world"}';
-      test.isJSON(gho('def', {json: 'object'}), {hello:'world'}, 'getHashOpt with JSON object value');
-      currentHash = '#first=true;second=false;third=yes;fourth=no';
-      test.isJSON(ghs(), {first:true, second: false, third: true, fourth: false}, 'getHashOpts with true/false values');
-      let custOpts = 
-      {
-        separate: /\&|\:\:/,
-        assign: ':',
-        true: /^T$/,
-        false: /^F$/,
-      }
-      currentHash = '#first:true::second:false&third:T::fourth:F&fifth:[1,2,3]';
-      let expected = 
-      {
-        first: 'true',
-        second: 'false',
-        third: true,
-        fourth: false,
-        fifth: "[1,2,3]"
-      }
-      test.isJSON(ghs(custOpts), expected, 'getHashOpts with custom separators');
-
     }
 
   });

@@ -58,13 +58,26 @@
         log.desc = desc;
       }
   
-      if (typeof directive === 'string')
+      if (directive)
       {
         log.directive = directive;
       }
   
       this.log.push(log);
       return log;
+    }
+
+    dies (testfunc, desc)
+    {
+      var ok = false;
+      var err;
+      try { testfunc(); } 
+      catch (e)
+      {
+        ok = true;
+        err = e;
+      }
+      return this.ok(ok, desc, err);
     }
 
     is (got, want, desc, stringify)
@@ -167,6 +180,8 @@
   
       if (typeof this.directive === 'string')
         out += ' # ' + this.directive;
+      else if (typeof this.directive == 'object' && this.directive instanceof Error)
+        out += ' # ' + this.directive.name + ': ' + this.directive.message;
       else if (this.skipped)
         out += ' # SKIP ' + this.skippedReason;
   
