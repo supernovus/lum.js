@@ -6,7 +6,7 @@
 /scripts/nano-es5/*
 /style/ext/*
 /style/nano/*
-/tests/*
+/docs/tests/*
 /node_modules/*
 /npm-debug.log
 /ext/*

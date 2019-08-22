@@ -11,8 +11,10 @@ var sass   = require('gulp-sass');
 var cssmin = require('gulp-clean-css');
 var srcmap = require('gulp-sourcemaps');
 var fcache = require('gulp-file-cache');
-var template = require('gulp-template-html');
 var connect = require('gulp-connect');
+var transform = require('gulp-transform');
+var rename = require('gulp-rename');
+var fs = require('fs');
 
 var es6cfile = '.gulp-cache-es6';
 var es5cfile = '.gulp-cache-es5';
@@ -27,6 +29,9 @@ var destes5 = 'scripts/nano-es5/';
 
 var srccss  = 'src/sass/**/*.scss';
 var destcss = 'style/nano/';
+
+var srctests = 'src/tests/'
+var desttests = 'docs/tests/';
 
 var downloaded_js  = 'scripts/ext';
 var downloaded_css = 'style/ext';
@@ -56,6 +61,11 @@ gulp.task('clean-tests', function ()
   return del('tests');
 });
 
+gulp.task('clean-npm', function ()
+{
+  return del(['package-lock.json','node_modules']);
+});
+
 var clean_tasks =
 [
   'clean-js',
@@ -74,7 +84,9 @@ gulp.task('clean-deps', function ()
   return del(cleanitems);
 });
 
-gulp.task('distclean', gulp.parallel('clean', 'clean-deps', 'clean-tests'));
+gulp.task('distclean', gulp.series(function() {
+  gulp.parallel('clean', 'clean-deps', 'clean-tests')
+}, 'clean-npm'));
 
 gulp.task('build-es6', function ()
 {
@@ -117,10 +129,39 @@ gulp.task('build-css', function ()
 });
 
 gulp.task('build-tests', function ()
-{
-  return gulp.src('src/tests/html/*.html')
-    .pipe(template('src/tests/tmpl/default.html'))
-    .pipe(gulp.dest('tests'));
+{ // I'm using a custom template engine utilizing 'transform' here.
+  var loadedTemplates = {};
+  function parseTemplate (content, file)
+  {
+    var config = JSON.parse(content);
+    if (!config.template)
+    {
+      throw new Error("Missing 'template' in test configuration");
+    }
+    var template;
+    if (config.template in loadedTemplates)
+    {
+      template = loadedTemplates[config.template];
+    }
+    else
+    {
+      template = fs.readFileSync(srctests+config.template, 'utf8');
+      loadedTemplates[config.template] = template;
+    }
+
+    template = template.replace(/\{\{(.*?)\}\}/g, function (fullstr, varname)
+    {
+      varname = varname.trim();
+      return varname in config ? config[varname] : '';
+    });
+
+    return template;
+  }
+
+  return gulp.src(srctests+'*.json')
+    .pipe(transform('utf8', parseTemplate))
+    .pipe(rename({extname: '.html'}))
+    .pipe(gulp.dest(desttests));
 });
 
 var build_tasks =

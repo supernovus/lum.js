@@ -22,7 +22,7 @@ Nano.js v3 uses Gulp 4 as it's build system.
   sudo npm install -g gulp-cli
   npm install --no-save
   ./bin/deps.js install
-  gulp
+  gulp build
 ```
 
 ## Optional Features
@@ -86,10 +86,11 @@ Other options like 'local-web-server' exist as well, use what you like.
 * Run `gulp clean` to remove compiled libraries.
 * Run `gulp clean-tests` to remove the built tests.
 * Run `gulp clean-deps` to remove downloaded libraries.
+* Run `gulp clean-npm` to remove things downloaded by npm.
 * Run `gulp distclean` to remove everything.
 
-There is no automated way to remove the modules installed by npm.
-Just delete the 'node_modules' directory if you really want a clean slate.
+Note if you use `gulp clean-npm` or `gulp distclean` you will need to
+re-run the `npm install` command before you can use gulp again.
 
 ## Branch Note
 

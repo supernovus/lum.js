@@ -17,15 +17,17 @@
 
   let testSuite = Nano.Tests.getInstance();
 
-  const R = '@';       // The @ symbol is replaced by the scriptdir in deps.
-  const T = '@tests/'; // The folder our scripts are stored in.
+  const L = '@';          // Where our library scripts are found.
+  const T = '@tests/';    // The folder the test scripts are stored in.
+  const S = '@@scripts/'; // The 'scripts' folder root.
+  const E = S + 'ext/';   // The 'external' scripts folder.
 
   let ext = '.js'; // Default file extension for our scripts.
 
   // For most Nano libraries, this will work.
   function test (lib, name, deps=[])
   {
-    deps.push(R+lib+ext);
+    deps.push(L+lib+ext);
     deps.push(T+lib+ext);
     return testSuite.addSet(lib, name, deps);
   }
@@ -34,7 +36,7 @@
   function testjq (lib, name, deps=[])
   {
     let ext = '.jq.js'; // We use a different file extension.
-    deps.push(R+lib+ext);
+    deps.push(L+lib+ext);
     deps.push(T+lib+ext);
     return testSuite.addSet(lib+'_jq', name, deps);
   }
@@ -45,14 +47,14 @@
   {
     let pluginId = mainlib.id+'_'+plugin;
     deps.push(mainlib);
-    deps.push(R+mainlib.id+'/'+plugin+ext);
+    deps.push(L+mainlib.id+'/'+plugin+ext);
     deps.push(T+pluginId+ext);
     return testSuite.addSet(pluginId, name, deps);
   }
 
   // A couple of external deps.
-  //let jqui = '../scripts/ext/jquery-ui.js';
-  //let spf = '../scripts/ext/sprintf.js';
+  //let jqui = E+'jquery-ui.js';
+  //let spf = E+'sprintf.js';
 
   // And now the main part, register our tests.
   // I'm putting everything below even if I don't plan on writing the
@@ -70,17 +72,18 @@
   /* -- FUTURE TEST
     test('editor', 'Editor',
     [
-      '../scripts/ace/src-min-noconflict/ace.js',
-      '../scripts/crypto/components/core-min.js',
-      '../scripts/crypto/components/enc-base64-min.js',
+      S+'ace/src-min-noconflict/ace.js',
+      S+'crypto/components/core-min.js',
+      S+'crypto/components/enc-base64-min.js',
     ]);
   */
   let existsjq = testjq('exists', 'jQuery Exists');
   test('expression', 'Expression');
   test('format_json', 'Format JSON');
   test('format_xml', 'Format XML');
-  //test('grid', 'Grid');
-  let jsonjq = testjq('json', 'jQuery JSON');
+  //let oq = test('oquery', 'oQuery');
+  //test('grid', 'Grid', [core]);
+  let jsonjq = testjq('json', 'jQuery JSON', [core]);
   //let pager = test('pager', 'Pager');
   //let riot_tmpl = testSuite.addSet('riot_tmpl', 'Riot 2 Templates', ['@riot.tmpl.js', '@tests/riot_tmpl.js']);
   //let riot_render = testSuite.addSet('riot_render', 'Riot 1 Templates', ['@riot.render.js', '@tests/riot_render.js']);
@@ -93,7 +96,6 @@
   //let modelapi = test('modelapi', 'Model API', [core,hash,existsjq,jsonjq]);
   //testext(modelapi, 'ws_model', 'Model WS Plugin', [prom]);
   //test('notifications', 'Notifications', [core, spf]);
-  //test('oquery', 'oQuery');
   //testjq('selectboxes', 'jQuery Select Boxes');
   //test('tax', 'Tax Calculator');
   //test('userdata', 'User Data');

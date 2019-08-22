@@ -23,6 +23,7 @@
      *
      * @param object options   A set of named options.
      *
+     *  appRoot:     Set the appRoot to this path.
      *  scriptRoot:  Set the scriptRoot to this path.
      *  htmlRoot:    Set the htmlRoot to this path.
      *
@@ -31,6 +32,7 @@
     constructor (options)
     {
       this.testSets = {};
+      this.appRoot = options.appRoot;
       this.scriptRoot = options.scriptRoot;
       this.htmlRoot = options.htmlRoot;
     }
@@ -157,10 +159,18 @@
      * If the callback parameter is specified, the call with be asynchronous,
      * otherwise it will be synchronous.
      *
-     * The URL string can use the '@' symbol to represent the scriptRoot.
+     * The URL string can use the following replacement strings:
+     *
+     *  '@@'  The appRoot (if set.)
+     *  '@'   The scriptRoot (if set.)
+     *
      */
     loadScript (url, callback)
     {
+      if (this.appRoot)
+      {
+        url = url.replace('@@', this.appRoot);
+      }
       if (this.scriptRoot)
       {
         url = url.replace('@', this.scriptRoot);
@@ -216,10 +226,18 @@
      * If the callback parameter is specified, the call with be asynchronous,
      * otherwise it will be synchronous.
      *
-     * The URL string can use the '@' symbol to represent the htmlRoot.
+     * The URL string can use the following replacement strings:
+     *
+     *  '@@'  The appRoot (if set.)
+     *  '@'   The htmlRoot (if set.)
+     *
      */
     loadHTML (url, callback)
     {
+      if (this.appRoot)
+      {
+        url = url.replace('@@', this.appRoot);
+      }
       if (this.htmlRoot)
       {
         url = url.replace('@', this.htmlRoot);

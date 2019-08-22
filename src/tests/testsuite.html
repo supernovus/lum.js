@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="../../style/nano/docs.css" />
+    <link rel="stylesheet" href="../../style/nano/tests.css" />
+    {{ polyfill }}
+    <script src="../../scripts/ext/jquery.js"></script>
+    <script src="../../{{ scriptdir }}test.js"></script>
+    <script src="../../{{ scriptdir }}hash.js"></script>
+    <script src="../../{{ scriptdir }}tests.js"></script>
+    <script>
+      // Run immediately.
+      Nano.Tests.createInstance(
+      {
+        appRoot:    '../../',
+        scriptRoot: '../../{{ scriptdir }}',
+        htmlRoot:   '../../docs/examples/',
+      });
+    </script>
+    <script src="../../{{ scriptdir }}tests/registration.js"></script>
+    <script>
+      // Run when DOM is ready.
+      jQuery(function()
+      {
+        var testSuite = Nano.Tests.getInstance();
+        var listEl = $('#navbar');
+        var outputEl = $('#testpane');
+        testSuite.initialize(listEl, outputEl);
+      });
+    </script>
+  </head>
+  <body>
+    <h1>{{ title }}</h1>
+    <ul id="navbar"></ul>
+    <div id="testpane"></div>
+  </body>
+</html>
