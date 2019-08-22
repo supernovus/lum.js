@@ -10,8 +10,7 @@
 
 if (window.Nano === undefined)
 {
-  console.log("fatal error: Nano core not loaded");
-  return;
+  window.Nano = {};
 }
 
 var VALID_NS = "validation";

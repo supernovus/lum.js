@@ -58,7 +58,7 @@
   //test('contextmenu', 'Context Menu');
   test('css', 'CSS');
   //test('debug', 'Debug');
-  //testjq('disabled', 'jQuery Disabled');
+  testjq('disabled', 'jQuery Disabled');
   /* -- FUTURE TEST
     test('editor', 'Editor',
     [
@@ -67,10 +67,10 @@
       '../scripts/crypto/components/enc-base64-min.js',
     ]);
   */
-  //let existsjq = testjq('exists', 'jQuery Exists');
+  let existsjq = testjq('exists', 'jQuery Exists');
   test('expression', 'Expression');
-  //test('format_json', 'Format JSON');
-  //test('format_xml', 'Format XML');
+  test('format_json', 'Format JSON');
+  test('format_xml', 'Format XML');
   //test('grid', 'Grid');
   //let jsonjq = testjq('json', 'jQuery JSON');
   //let pager = test('pager', 'Pager');

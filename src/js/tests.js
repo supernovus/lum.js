@@ -2,7 +2,7 @@
 {
   "use strict";
 
-  if (window.Nano === undefined || window.Nano.Test === undefined || $ === undefined)
+  if (window.Nano === undefined || Nano.Test === undefined || Nano.Hash === undefined || $ === undefined)
   {
     throw new Error("Missing required libraries");
   }
@@ -58,34 +58,64 @@
 
       var testSuite = this;
 
+      var urlHash = new Nano.Hash();
+      $(window).on('hashchange', function (e)
+      {
+        var testId = urlHash.getOpt('test');
+        if (testId)
+        {
+          testSuite.showTest(testId);
+        }
+        else
+        {
+          testSuite.resetPage();
+        }
+      });
+
       listEl.on('click', 'li', function (e)
       {
-        var tab = $(this);
-        if (tab.hasClass('active')) return; // Already the active tab.
-
-        listEl.find('li').removeClass('active');
-        outputEl.find('.output').removeClass('active');
-
-        tab.addClass('active');
-
-        var setId = tab.prop('id').replace('tab_', '');
-        var outputId = '#output_'+setId;
-        var outputDiv = outputEl.find(outputId);
-        if (outputDiv.length == 0)
-        { // We haven't run the test yet.
-          var testSet = testSuite.getSet(setId);
-          testSet.run(outputEl);
-          outputDiv = outputEl.find(outputId);
-          if (outputDiv.length == 0)
-          { // Still something wrong.
-            throw new Error("Could not find output div for test: "+setId);
-          }
-        }
-
-        outputDiv.addClass('active');
+        var id = $(this).prop('id').replace('tab_','');
+        urlHash.update({test: id});
       });
 
       this.renderTests(listEl);
+
+      $(window).trigger('hashchange'); // Show current test if set.
+    }
+
+    resetPage ()
+    {
+      this.listEl.find('li').removeClass('active');
+      this.outputEl.find('.output').removeClass('active');
+    }
+
+    /**
+     * Show a test page, will run the test if it hasn't been run yet.
+     */
+    showTest (setId)
+    {
+      var tab = this.listEl.find('#tab_'+setId);
+      if (tab.length == 0) return; // No tab found.
+      if (tab.hasClass('active')) return; // Already the active tab.
+
+      this.resetPage();
+
+      tab.addClass('active');
+
+      var outputId = '#output_'+setId;
+      var outputDiv = this.outputEl.find(outputId);
+      if (outputDiv.length == 0)
+      { // We haven't run the test yet.
+        var testSet = this.getSet(setId);
+        testSet.run(this.outputEl);
+        outputDiv = this.outputEl.find(outputId);
+        if (outputDiv.length == 0)
+        { // Still something wrong.
+          throw new Error("Could not find output div for test: "+setId);
+        }
+      }
+
+      outputDiv.addClass('active');
     }
 
     /**

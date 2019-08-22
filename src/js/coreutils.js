@@ -1,7 +1,5 @@
 /**
  * Core utilities used by other Nano libraries.
- *
- * This is mandatory for most Nano libraries.
  */
 
 (function (root)

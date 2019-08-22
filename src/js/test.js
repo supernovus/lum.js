@@ -148,6 +148,11 @@
           out += ' out of '+this.planned;
         out += "\n";
       }
+      var ran = t-1;
+      if (this.planned > 0 && this.planned != ran)
+      {
+        out += '# Looks like you planned '+this.planned+' but ran '+ran+" tests\n";
+      }
       return out;
     }
 

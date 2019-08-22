@@ -1,19 +1,20 @@
-(function ($)
+(function ()
 {
   "use strict";
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    window.Nano = {};
   }
 
   if (Nano.format === undefined)
+  {
     Nano.format = {};
+  }
 
 // Based on a script from:
 // http://stackoverflow.com/questions/376373/pretty-printing-xml-with-javascript
-Nano.format.xml = function format_xml (xml) 
+Nano.format.xml = function (xml) 
 {
   var reg = /(>)(<)(\/*)/g;
   var wsexp = / *(.*) +\n/g;
@@ -75,29 +76,32 @@ Nano.format.xml = function format_xml (xml)
   return formatted;
 };
 
-  // A quick jQuery wrapper by me. Expects XML text to be in the field.
-  $.fn.formatXML = function ()
-  { 
-    return this.each(function ()
+  if (window.jQuery !== undefined)
+  {
+    // A quick jQuery wrapper by me. Expects XML text to be in the field.
+    jQuery.fn.formatXML = function ()
     { 
-      var mytype = this.nodeName.toLowerCase(); // The element name.
-      var $this = $(this); // A jQuery wrapper to the element.
-      var oldval = '';
-      if (mytype == "textarea")
-        oldval = $this.val();
-      else if (mytype == "pre")
-        oldval = $this.text();
-      else
-        return; // We don't support anything but <textarea/> and <pre/>.
+      return this.each(function ()
+      { 
+        var mytype = this.nodeName.toLowerCase(); // The element name.
+        var $this = jQuery(this); // A jQuery wrapper to the element.
+        var oldval = '';
+        if (mytype == "textarea")
+          oldval = $this.val();
+        else if (mytype == "pre")
+          oldval = $this.text();
+        else
+          return; // We don't support anything but <textarea/> and <pre/>.
+  
+        var newval = Nano.format.xml(oldval);
+  
+        if (mytype == "textarea")
+          $this.val(newval);
+        else
+          $this.text(newval);
+      });
+    }
+  }
 
-      var newval = format_xml(oldval);
-
-      if (mytype == "textarea")
-        $this.val(newval);
-      else
-        $this.text(newval);
-    });
-  };
-
-})(jQuery);
+})();
 

@@ -12,7 +12,7 @@
 
   testSet.setHandler(function (test)
   {
-    test.plan(0);
+    test.plan(2);
     var elem1 = $('#navbar li').first(); // Should be #tab_coreutils.
     var elem2 = document.getElementById('tab_css');  // Should be .active tab.
 

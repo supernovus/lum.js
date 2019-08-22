@@ -2,21 +2,22 @@
  * A function and jQuery wrapper for formatting JSON text in a friendly way.
  */
 
-(function ($)
+(function ()
 {
   "use strict";
 
   if (window.Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    window.Nano = {};
   }
 
   if (Nano.format === undefined)
+  {
     Nano.format = {};
+  }
 
   // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
-  Nano.format.json = function format_json (val)
+  Nano.format.json = function (val)
   { 
     var retval = '';
     var str = val;
@@ -62,28 +63,31 @@
   }
 
   // A quick jQuery wrapper by me. Expects JSON text to be in the field.
-  $.fn.formatJSON = function ()
+  if (window.jQuery !== undefined)
   {
-    return this.each(function ()
+    jQuery.fn.formatJSON = function ()
     {
-      var mytype = this.nodeName.toLowerCase(); // The element name.
-      var $this = $(this); // A jQuery wrapper to the element.
-      var oldval = '';
-      if (mytype == "textarea")
-        oldval = $this.val();
-      else if (mytype == "pre")
-        oldval = $this.text();
-      else
-        return; // We currently only support <textarea/> and <pre/>.
+      return this.each(function ()
+      {
+        var mytype = this.nodeName.toLowerCase(); // The element name.
+        var $this = jQuery(this); // A jQuery wrapper to the element.
+        var oldval = '';
+        if (mytype == "textarea")
+          oldval = $this.val();
+        else if (mytype == "pre")
+          oldval = $this.text();
+        else
+          return; // We currently only support <textarea/> and <pre/>.
+  
+        var newval = Nano.format.json(oldval);
+  
+        if (mytype == "textarea")
+          $this.val(newval);
+        else
+          $this.text(newval);
+      });
+    }
+  }
 
-      var newval = Nano.format.json(oldval);
-
-      if (mytype == "textarea")
-        $this.val(newval);
-      else
-        $this.text(newval);
-    });
-  };
-
-})(jQuery);
+})();
 

@@ -9,7 +9,7 @@
 
   if (window.Nano === undefined)
   {
-    throw new Error("fatal error: Nano core not loaded");
+    window.Nano = {};
   }
 
 /**

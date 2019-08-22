@@ -144,6 +144,14 @@
   
       if (hash && hash != '#')
       { // We have a hash, let's split it up.
+
+        if (this._lastHash && this._lastOpts && this._lastHash === hash)
+        { // The hash hasn't changed since last time, return the opts.
+          return this._lastOpts;
+        }
+
+        // Remember this hash for next time.
+        this._lastHash = hash;
   
         let sep = this._getters.separate;
         let ass = this._getters.assign;
@@ -204,6 +212,9 @@
             hashOpts[assignment[0]] = assignment.slice(1);
           }
         }
+
+        // Save the opts for cached hashes.
+        this._lastOpts = hashOpts;
       }
   
       return hashOpts;
@@ -281,7 +292,7 @@
      * always serialize arrays into JSON format.
      *
      * You probably don't need to run this method manually, see the
-     * update() method for the more common front-end to this.
+     * replace() and update() methods for the primary ways to call this.
      */
     serialize (obj, setOpts={})
     {
@@ -403,21 +414,59 @@
     }
 
     /**
-     * Update the referenced Hash string.
+     * Replace the referenced Hash string with a new serialized one.
      *
-     * @param object obj       The object we are saving to the hash.
-     * @param object setOpts   Options to send to serialize (optional).
+     * @param object reps     The object we are serializing to the hash string.
+     * @param object setOpts  Options to pass to serialize (optional).
      *
      * @return undefined
      *
      * Serialize the object into a Hash string, then set the referenced
-     * Hash to the new string. This is probably the method you want to use
-     * instead of serialize().
+     * Hash to the new string. This is a way to completely rewrite the hash,
+     * and is one of the primary serialization methods.
      */
-    update (obj, setOpts={})
+    replace (reps, setOpts)
     {
-      var newstring = this.serialize(obj, setOpts);
+      var newstring = this.serialize(reps, setOpts);
+      this._lastHash = newstring;
+      this._lastOpts = reps;
       this._setHash(newstring);
+    }
+
+    /**
+     * Update the referenced Hash string.
+     *
+     * @param object updates   Changes to make to the hash.
+     * @param object setOpts   Options to pass to serialize (optional).
+     * @param object getOpts   Options to pass to getOpts (optional).
+     *
+     * @return undefined
+     *
+     * This is similar to replace() but it keeps existing properties already
+     * in the hash that haven't been modified.
+     *
+     * If you want to remove an option from the existing hash, set it's
+     * value to undefined in the updates object.
+     *
+     * This is the other primary serialization method, and will probably be
+     * used even more than replace() since it respects existing values.
+     */
+    update (updates, setOpts, getOpts)
+    {
+      var current = this.getOpts(getOpts);
+      for (var key in updates)
+      {
+        var val = updates[key];
+        if (val === undefined && key in current)
+        { // An undefined value was explicitly passed, remove the item.
+          delete current[key];
+        }
+        else
+        {
+          current[key] = val;
+        }
+      }
+      this.replace(current, setOpts);
     }
 
     /**
@@ -589,19 +638,56 @@
       return (this._json === JSON_OBJ || this.json === JSON_ALL);
     }
 
+    /**
+     * A static class method to create a new Hash and call getOpts() on it.
+     *
+     * @param object getOpts   Options to pass to getOpts (optional).
+     * @param object hashOpts  Options to pass to constructor (optional).
+     *
+     * @return object   The parsed hash options.
+     */
     static getOpts (getOpts, hashOpts)
     {
       return new Nano.Hash(hashOpts).getOpts(getOpts);
     }
 
+    /**
+     * A static class method to create a new Hash and call getOpt() on it.
+     *
+     * @param string name      The option name we want to get.
+     * @param object getOpts   Options to pass to getOpt (optional).
+     * @param object hashOpts  Options to pass to constructor (optional).
+     *
+     * @return mixed   The value returned from getOpt.
+     */
     static getOpt (name, getOpts, hashOpts)
     {
       return new Nano.Hash(hashOpts).getOpt(name, getOpts);
     }
 
-    static update (obj, setOpts, hashOpts)
+    /**
+     * A static class method to create a new Hash and call replace() on it.
+     *
+     * @param object reps      The reps to pass to replace.
+     * @param object setOpts   Options to pass to replace (optional).
+     * @param object hashOpts  Options to pass to contructor (optional).
+     */
+    static replace (reps, setOpts, hashOpts)
     {
-      return new Nano.Hash(hashOpts).update(obj, setOpts);
+      return new Nano.Hash(hashOpts).replace(reps, setOpts);
+    }
+
+    /**
+     * A static class method to create a new Hash and call update() on it.
+     *
+     * @param object updates    The updates to pass to update.
+     * @param object setOpts    Set options to pass to update (optional).
+     * @param object getOpts    Get options to pass to update (optional).
+     * @param object hashOpts   Options to pass to constructor (optional).
+     */
+    static update (updates, setOpts, getOpts, hashOpts)
+    {
+      return new Nano.Hash(hashOpts).update(updates, setOpts, getOpts);
     }
 
   }

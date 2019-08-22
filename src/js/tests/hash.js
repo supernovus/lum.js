@@ -12,7 +12,7 @@
 
   testSet.setHandler(function (test)
   {
-    test.plan(30);
+    test.plan(33);
 
     // We're not using the real browser location.hash as that would
     // add a whole bunch of pages to the history. Instead we're using
@@ -76,39 +76,46 @@
     currentHash = '#first=true;second=false;third=yes;fourth=no';
     test.isJSON(ghs(), {first:true, second: false, third: true, fourth: false}, 'getOpts with true/false values');
 
-    // Now we'll test the update() method.
+    // Now we'll test the replace() method.
 
-    hash.update({name: 'Bob', hello: 'world', page: 1});
-    test.is(currentHash, '#name=Bob;hello=world;page=1', 'update serialized simple object');
+    hash.replace({name: 'Bob', hello: 'world', page: 1});
+    test.is(currentHash, '#name=Bob;hello=world;page=1', 'replace serialized simple object');
 
     let arrOpts = {sections:['one','two',3]};
     let simpleArr = '#sections=one=two=3';
     let jsonArr = '#sections=["one","two",3]';
-    hash.update(arrOpts);
-    test.is(currentHash, simpleArr, 'update serialized simple array');
+    hash.replace(arrOpts);
+    test.is(currentHash, simpleArr, 'replace serialized simple array');
     hash.useJson('array');
-    hash.update(arrOpts);
-    test.is(currentHash, simpleArr, 'update serialized simple array with autoArray true');
-    hash.update(arrOpts, {autoArray: false});
-    test.is(currentHash, jsonArr, 'update serialized JSON array with autoArray false');
+    hash.replace(arrOpts);
+    test.is(currentHash, simpleArr, 'replace serialized simple array with autoArray true');
+    hash.replace(arrOpts, {autoArray: false});
+    test.is(currentHash, jsonArr, 'replace serialized JSON array with autoArray false');
     arrOpts = {sections:['one','two',{hello:'world'}]};
     simpleArr = '#sections=one=two';
     jsonArr = '#sections=["one","two",{"hello":"world"}]';
-    hash.update(arrOpts);
-    test.is(currentHash, jsonArr, 'update serialized complex JSON array');
+    hash.replace(arrOpts);
+    test.is(currentHash, jsonArr, 'replace serialized complex JSON array');
     hash.useJson(false);
-    hash.update(arrOpts);
-    test.is(currentHash, simpleArr, 'update serialized complex array without JSON, skipping non-serializable bits');
+    hash.replace(arrOpts);
+    test.is(currentHash, simpleArr, 'replace serialized complex array without JSON, skipping non-serializable bits');
     test.dies(function ()
     {
-      hash.update({foo: {}});
+      hash.replace({foo: {}});
     },
     'attempt to serialize object directly throws error');
     test.dies(function ()
     {
-      hash.update({foo: function () {return false}});
+      hash.replace({foo: function () {return false}});
     },
     'attempt to serialize function throws error');
+
+    // Test the update method.
+    simpleArr = '#sections=one=two;hello=world';
+    hash.update({hello: 'world'});
+    test.is(currentHash, simpleArr, 'update added a value to the hash');
+    hash.update({sections: undefined});
+    test.is(currentHash, '#hello=world', 'update removed a value from the hash');
 
     // Next we'll test custom getter and setter values.
 
@@ -139,9 +146,9 @@
       false: 'F',
     }
     hash.setSetters(custSetters);
-    hash.update(expected);
+    hash.replace(expected);
     expected = '#first~true::second~false::third~T::fourth~F::fifth~[1,2,3]';
-    test.is(currentHash, expected, 'update with custom serialization separators');
+    test.is(currentHash, expected, 'replace with custom serialization separators');
 
     // Finally, test the static class methods.
    
@@ -154,7 +161,11 @@
 
     staticOpts = {name: 'Bob', jobs: ['developer','admin']};
     expected = '#name=Bob;jobs=developer=admin';
-    Nano.Hash.update(staticOpts, {}, hashOpts);
+    Nano.Hash.replace(staticOpts, {}, hashOpts);
+    test.is(currentHash, expected, 'static Nano.Hash.replace() call works');
+
+    Nano.Hash.update({name: 'Robert'},{},{},hashOpts);
+    expected = '#name=Robert;jobs=developer=admin';
     test.is(currentHash, expected, 'static Nano.Hash.update() call works');
 
   });
