@@ -1,0 +1,6 @@
+{
+  "template": "nanogrid.html",
+  "title": "Nano Grid (ES6) Demo",
+  "scriptdir": "scripts/nano/",
+  "polyfill": "<!-- No polyfill needed in ES6 mode -->"
+}

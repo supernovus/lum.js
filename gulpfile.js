@@ -152,7 +152,7 @@ gulp.task('build-tests', function ()
     template = template.replace(/\{\{(.*?)\}\}/g, function (fullstr, varname)
     {
       varname = varname.trim();
-      return varname in config ? config[varname] : '';
+      return varname in config ? config[varname] : fullstr;
     });
 
     return template;
@@ -161,7 +161,8 @@ gulp.task('build-tests', function ()
   return gulp.src(srctests+'*.json')
     .pipe(transform('utf8', parseTemplate))
     .pipe(rename({extname: '.html'}))
-    .pipe(gulp.dest(desttests));
+    .pipe(gulp.dest(desttests))
+    .pipe(connect.reload());
 });
 
 var build_tasks =
@@ -194,10 +195,16 @@ gulp.task('watch-css', function ()
   return gulp.watch(srccss, gulp.series('build-css'));
 });
 
+gulp.task('watch-tests', function ()
+{
+  return gulp.watch(srctests+'*', gulp.series('build-tests'));
+});
+
 var watch_tasks =
 [
   'watch-js',
   'watch-css',
+  'watch-tests',
 ];
 
 gulp.task('watch', gulp.parallel(watch_tasks));

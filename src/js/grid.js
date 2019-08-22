@@ -13,22 +13,19 @@
    */
   class Grid
   {
-    constructor (options={})
+    constructor (options={}, defs={})
     {
       this._copySettings = [];
 
       // Default settings, can be overridden by the options.
-      var settings =
-      {
-        minRows: 1,
-        maxRows: 0,
-        minCols: 1,
-        maxCols: 0,
-        fillMax: false,
-        conflictResolution: null,
-        resolutionOrder: null,
-      };
-      this.applySettings(settings, options);
+      defs.minRows = 1;
+      defs.maxRows = 0;
+      defs.minCols = 1;
+      defs.maxCols = 0;
+      defs.fillMax = false;
+      defs.conflictResolution = null;
+      defs.resolutionOrder = null;
+      this.applySettings(defs, options);
   
       // Apply 'observable' trait if available.
       if (Nano.observable !== undefined)
@@ -755,24 +752,18 @@
    */
   class DisplayGrid extends Grid
   {
-    constructor (options)
+    constructor (options={}, defs={})
     {
-      options = options || {};
-
       // Apply our settings.
-      var settings =
-      {
-        displayWidth:  0,     // Width of the display area.
-        displayHeight: 0,     // Height of the display area.
-        cellWidth:     0,     // Width of a single 'cell'.
-        cellHeight:    0,     // Height of a single 'cell'.
-        resizeMaxRows: false, // If displayHeight changes, update maxRows.
-        resizeMaxCols: false, // If displayWidth changes, update maxCols.
-      };
-      this.applySettings(settings, options);
+      defs.displayWidth  = 0;      // Width of the display area.
+      defs.displayHeight = 0;      // Height of the display area.
+      defs.cellWidth     = 0;      // Width of a single 'cell'.
+      defs.cellHeight    = 0;      // Height of a single 'cell'.
+      defs.resizeMaxRows = false;  // If displayHeight changes. update maxRows.
+      defs.resizeMaxCols = false;  // If displayWidth changes, update maxCols.
 
       // Call our parent constructor.
-      super(options);
+      super(options, defs);
 
       this._copySettings.push('displayElement');
 
@@ -1006,21 +997,14 @@
    */
   class UIGrid extends DisplayGrid
   {
-    constructor (options)
+    constructor (options={}, defs={})
     {
-      options = options || {};
-
-      // Apply our settings.
-      var settings =
-      {
-        resizeDisplayHeight: false, // If true, resize the workspace height.
-        resizeDisplayWidth:  false, // If true, resize the workspace width.
-        resizeUseCallback:   false, // If true, use a watch callback to resize.
-      };
-      this.applySettings(settings, options);
+      defs.resizeDisplayHeight = false, // If true, resize the workspace height.
+      defs.resizeDisplayWidth  = false, // If true, resize the workspace width.
+      defs.resizeUseCallback   = false, // If true, use a callback to resize.
 
       // Call our parent constructor.
-      super(options);
+      super(options, defs);
     }
 
     getDisplayItem (ditem)

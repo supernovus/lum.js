@@ -1,0 +1,131 @@
+/**
+ * Custom stylesheet for the nanogrid_*.html test files.
+ */
+
+body
+{
+  font-family: sans-serif;
+}
+
+table,tr,th,td
+{
+  border: 1px solid black;
+}
+
+table
+{
+  border-collapse: collapse;
+  margin-left: 0.5em;
+  margin-bottom: 0.5em;
+  font-family: monospace;
+}
+
+#gridinfo
+{
+  display: flex;
+}
+
+#gridlayout
+{
+  text-align: center;
+}
+
+th,td
+{
+  padding: 0.25em;
+}
+
+#display
+{
+  margin-left: 5%;
+  margin-right: 5%;
+  margin-bottom: 1em;
+}
+
+#workspace
+{
+  display: block;
+  position: relative;
+  min-height: 16em;
+  background: lightgoldenrodyellow;
+}
+
+.grid-item
+{
+  vertical-align: middle;
+  display: block;
+  position: absolute;
+  min-width: 240px;
+  min-height: 120px;
+}
+
+.grid-item div
+{
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: solid 1px black;
+}
+
+.grid-item div grip
+{
+  display: inline;
+  cursor: se-resize;
+  position: absolute;
+  bottom: 5;
+  right: 5;
+}
+
+.grid-item div addr
+{
+  padding: 2px;
+  display: block;
+  cursor: move;
+  background: #404060;
+  color: white;
+}
+
+.grid-item.placeholder
+{
+  background: #60e060;
+}
+
+#placeholder_storage
+{
+  display: none;
+}
+
+#itemlist
+{
+  margin-top: 1em;
+  display: flex;
+  height: 6em;
+  background: lightcyan;
+}
+
+.list-item
+{
+  display: block;
+  width: 90px;
+  height: 90px;
+  border: solid 1px black;
+  margin: 0.25em;
+}
+
+/* And here we have the test classes */
+
+.grid-item.test1 div, .list-item#test1
+{
+  background: #e0e0e0;
+}
+
+.grid-item.test2 div, .list-item#test2
+{
+  background: #e0e060;
+}
+
+.grid-item.test3 div, .list-item#test3
+{
+  background: #e06060;
+}
+
