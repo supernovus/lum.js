@@ -17,28 +17,36 @@
 
   let testSuite = Nano.Tests.getInstance();
 
+  const R = '@';       // The @ symbol is replaced by the scriptdir in deps.
+  const T = '@tests/'; // The folder our scripts are stored in.
+
+  let ext = '.js'; // Default file extension for our scripts.
+
   // For most Nano libraries, this will work.
-  function test (lib, name, deps=[], ext='.js')
+  function test (lib, name, deps=[])
   {
-    deps.push('@'+lib+ext);
-    deps.push('@tests/'+lib+ext);
+    deps.push(R+lib+ext);
+    deps.push(T+lib+ext);
     return testSuite.addSet(lib, name, deps);
   }
 
   // For jQuery plugins, this is probably your best bet.
   function testjq (lib, name, deps=[])
   {
-    return test(lib, name, deps, '.jq.js');
+    let ext = '.jq.js'; // We use a different file extension.
+    deps.push(R+lib+ext);
+    deps.push(T+lib+ext);
+    return testSuite.addSet(lib+'_jq', name, deps);
   }
 
   // For plugins/extensions to our own libraries, this is the way to go.
   // This requires the parent TestSet to be passed as the first parameter.
-  function testext (mainlib, plugin, name, deps=[], ext='js')
+  function testext (mainlib, plugin, name, deps=[])
   {
     let pluginId = mainlib.id+'_'+plugin;
     deps.push(mainlib);
-    deps.push('@'+mainlib.id+'/'+plugin+ext);
-    deps.push('@tests/'+pluginId+ext);
+    deps.push(R+mainlib.id+'/'+plugin+ext);
+    deps.push(T+pluginId+ext);
     return testSuite.addSet(pluginId, name, deps);
   }
 
@@ -72,7 +80,7 @@
   test('format_json', 'Format JSON');
   test('format_xml', 'Format XML');
   //test('grid', 'Grid');
-  //let jsonjq = testjq('json', 'jQuery JSON');
+  let jsonjq = testjq('json', 'jQuery JSON');
   //let pager = test('pager', 'Pager');
   //let riot_tmpl = testSuite.addSet('riot_tmpl', 'Riot 2 Templates', ['@riot.tmpl.js', '@tests/riot_tmpl.js']);
   //let riot_render = testSuite.addSet('riot_render', 'Riot 1 Templates', ['@riot.render.js', '@tests/riot_render.js']);

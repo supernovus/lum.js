@@ -8,7 +8,7 @@
   }
 
   let testSuite = Nano.Tests.getInstance();
-  let testSet = testSuite.getSet('exists');
+  let testSet = testSuite.getSet('exists_jq');
 
   testSet.setHandler(function (test)
   {

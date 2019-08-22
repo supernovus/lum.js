@@ -8,7 +8,7 @@
   }
 
   let testSuite = Nano.Tests.getInstance();
-  let testSet = testSuite.getSet('disabled');
+  let testSet = testSuite.getSet('disabled_jq');
 
   testSet.setHandler(function (test)
   {
