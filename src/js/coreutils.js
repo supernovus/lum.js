@@ -101,6 +101,57 @@
   }
 
   /**
+   * A way to handle Mixins/Traits.
+   *
+   * This is basically a magic wrapper around copyInto() which we use
+   * instead of Object.assign() as we don't want to overwrite properties
+   * by default. See copyInto() for the valid parameters.
+   *
+   * This does a bit of magic before passing it's parameters to copyInto().
+   * As it's designed to extend the class prototype and only the prototype,
+   * it will see if anything passed to it is a function/class and if so, it
+   * will automatically use the prototype of the function/class. If you want
+   * to copy static class properties, use copyInto() directly instead of this.
+   */
+  Nano.addTraits = function (target, ...inSources)
+  {
+    var outSources = [];
+
+    function unwrap (what)
+    {
+      if (typeof what === 'function' && typeof what.prototype === 'object')
+      {
+        return what.prototype;
+      }
+      else if (typeof what === 'object')
+      {
+        return what;
+      }
+      else
+      {
+        throw new Error("Invalid function/object passed to addTraits()");
+      }
+    }
+
+    target = unwrap(target); // Ensure the target is an object.
+
+    for (var s in inSources)
+    {
+      var source = inSources[s];
+      if (typeof source === 'boolean')
+      { // Booleans are a special case used by copyInto()
+        outSources.push(source);
+      }
+      else
+      { // Anything else needs to be unwrapped.
+        outSources.push(unwrap(source));
+      }
+    }
+
+    return Nano.copyInto(target, outSources);
+  }
+
+  /**
    * Copy properties between objects. Can be used for mixins/traits.
    *
    * @param  {object|function} target   The target we are copying into.
@@ -117,8 +168,7 @@
   Nano.copyInto = function (target, ...sources)
   {
     var overwrite = false;
-    //var sources = Array.prototype.slice.call(arguments, 1);
-//    console.log("Nano.copy()", target, sources);
+//    console.log("Nano.copyInto()", target, sources);
     for (var s in sources)
     {
       var source = sources[s];
@@ -133,7 +183,12 @@
 //        console.log("copying properties", source);
         Nano.copyProperties(source, target, {default: true, overwrite: overwrite});
       }
+      else
+      {
+        throw new Error("Invalid function/object passed to copyInto()");
+      }
     }
+    return target;
   }
 
   /**
@@ -225,54 +280,86 @@
 
   /**
    * A wrapper around Object.defineProperty() that assigns a value to
-   * the property. It can be a static value, or a function.
+   * the property.
+   *
+   * @param object object    The object we are adding a property to.
+   * @param string name      The property name.
+   * @param mixed  val       The value we are assigning to the property.
+   * @param mixed  opts      See below for valid values.
+   *
+   * The 'opts' if specified can be the boolean true, in which case the
+   * property will be configurable later, or can be an object with:
+   *
+   *  'configurable'   Should this property be configurable (default: false).
+   *  'enumerable'     Should this property be enumerable (default: false).
+   *  'writable'       Should this property be writable (default: false).
+   *
    */
-  Nano.addProperty = function (object, pname, pfunc, opts)
+  Nano.addProperty = function (object, name, val, opts)
   {
-    if (opts === undefined || opts === null)
+    if (opts === true)
+      opts = {configurable: true};
+    else if (typeof opts !== 'object' || opts === null)
       opts = {};
+
     var props =
     {
-      value:         pfunc,
+      value:         val,
       enumerable:    ('enumerable'   in opts ? opts.enumerable   : false),
       configurable:  ('configurable' in opts ? opts.configurable : false),
       writable:      ('writable'     in opts ? opts.writable     : false),
     }; 
-    Object.defineProperty(object, pname, props);
+    Object.defineProperty(object, name, props);
   }
 
   /**
-   * A wrapper around Object.defineProperty() that assigns a getter and
-   * setter to the property. The getter and setting must be functions.
+   * A wrapper around Object.defineProperty() that assigns an accessor to
+   * the property.
+   *
+   * @param object   object    The object we are adding an accessor to.
+   * @param string   name      The property name for the accessor.
+   * @param function getter    The getter function for the accessor.
+   * @param function setter    The setter function for the accessor.
+   * @param mixed    opts      See below for valid values.
+   *
+   * The 'opts' if specified can be the boolean true, in which case the
+   * property will be configurable later, or can be an object with:
+   *
+   *  'configurable'   Should this property be configurable (default: false).
+   *  'enumerable'     Should this property be enumerable (default: false).
+   *
    */
-  Nano.addAccessor = function (object, pname, gfunc, sfunc, opts)
+  Nano.addAccessor = function (object, name, getter, setter, opts)
   {
-    if (opts === undefined || opts === null)
+    if (opts === true)
+      opts = {configurable: true};
+    else if (typeof opts !== 'object' || opts === null)
       opts = {};
+
     var props =
     {
-      get:          gfunc,
-      set:          sfunc,
+      get:          getter,
+      set:          setter,
       enumerable:   ('enumerable'   in opts ? opts.enumerable   : false),
       configurable: ('configurable' in opts ? opts.configurable : false),
     };
-    Object.defineProperty(object, pname, props);
+    Object.defineProperty(object, name, props);
   }
 
   /**
    * Add 'addProperty' and 'addAccessor' helpers to the object directly.
    * Useful if you're going to be adding a lot of properties/accessors.
    */
-  Nano.addMetaHelpers = function (object)
+  Nano.addMetaHelpers = function (object, configurable)
   {
     Nano.addProperty(object, 'addProperty', function (pn,pf,opts)
     {
       Nano.addProperty(this, pn, pf, opts);
-    });
+    }, configurable);
     Nano.addProperty(object, 'addAccessor', function (pn, gf, sf, opts)
     {
       Nano.addAccessor(this, pn, gf, sf, opts);
-    });
+    }, configurable);
   }
 
   /**

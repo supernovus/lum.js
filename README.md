@@ -81,10 +81,24 @@ It's a quick way to run a web server directly from Node.js.
 
 Other options like 'local-web-server' exist as well, use what you like.
 
+## Building the API Documentation
+
+NOTE: I'm still in the process of updating the comments to the jsDoc3 format.
+
+To build the documentation simply run:
+
+```
+  gulp build-docs
+```
+
+It'll put them into the docs/api/ folder. You can use the same web server
+as the tests to view them.
+
 ## Cleanup
 
 * Run `gulp clean` to remove compiled libraries.
 * Run `gulp clean-tests` to remove the built tests.
+* Run `gulp clean-docs` to remove the build API docs.
 * Run `gulp clean-deps` to remove downloaded libraries.
 * Run `gulp clean-npm` to remove things downloaded by npm.
 * Run `gulp distclean` to remove everything.
@@ -99,8 +113,8 @@ There are several branches of Nano.js:
 * v1 is the original scripts, and hasn't been updated in years.
 * v2 was the first attempt at a ES2015 version, but was abandoned.
 * v1.5 was the longest lasting ES5 version with multiple build systems.
-* v1.6 is the current ES5+ stable release, using Gulp 4 as it's build system.
-* v3 (this) is the current ES2015+ development release.
+* v1.6 is the last ES5+ release, using Gulp 4 as it's build system.
+* v3 (this) is the current ES2015+ release.
 
 This release is once again moving to using ES2015+ as it's primary release
 target, with a backwards compatible ES5 build being offered as a solution for

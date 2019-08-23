@@ -153,5 +153,14 @@
     {
       "json": "https://raw.githubusercontent.com/faisalman/ua-parser-js/master/bower.json"
     }
+  },
+  "feature.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/viljamis/feature.js/master/feature.min.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/viljamis/feature.js/master/package.json"
+    }
   }
 }

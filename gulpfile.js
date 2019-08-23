@@ -14,6 +14,7 @@ var fcache = require('gulp-file-cache');
 var connect = require('gulp-connect');
 var transform = require('gulp-transform');
 var rename = require('gulp-rename');
+var jsdoc  = require('gulp-jsdoc3');
 var fs = require('fs');
 
 var es6cfile = '.gulp-cache-es6';
@@ -58,7 +59,13 @@ gulp.task('clean-css', function ()
 
 gulp.task('clean-tests', function ()
 {
-  return del('tests');
+  return del(desttests);
+});
+
+
+gulp.task('clean-docs', function ()
+{
+  return del('docs/api');
 });
 
 gulp.task('clean-npm', function ()
@@ -85,7 +92,7 @@ gulp.task('clean-deps', function ()
 });
 
 gulp.task('distclean', gulp.series(function() {
-  gulp.parallel('clean', 'clean-deps', 'clean-tests')
+  gulp.parallel('clean', 'clean-deps', 'clean-tests', 'clean-docs')
 }, 'clean-npm'));
 
 gulp.task('build-es6', function ()
@@ -165,6 +172,15 @@ gulp.task('build-tests', function ()
     .pipe(connect.reload());
 });
 
+var server;
+
+gulp.task('build-docs', function (done)
+{ // Using gulp-jsdoc3 to build API documentation.
+  var config = require('./conf/jsdoc.json');
+  gulp.src(['README.md', srcjs], {read: false})
+  .pipe(jsdoc(config, done));
+});
+
 var build_tasks =
 [
   'build-js',
@@ -177,7 +193,7 @@ gulp.task('rebuild', gulp.series('clean', 'build'));
 
 gulp.task('webserver', function ()
 {
-  connect.server(
+  server = connect.server(
   {
     livereload: true,
     port: 8000,
@@ -193,6 +209,11 @@ gulp.task('watch-js', function ()
 gulp.task('watch-css', function ()
 {
   return gulp.watch(srccss, gulp.series('build-css'));
+});
+
+gulp.task('watch-docs', function ()
+{
+  return gulp.watch(srcjs, gulp.series('build-docs'));
 });
 
 gulp.task('watch-tests', function ()
@@ -216,6 +237,14 @@ var watch_ws_tasks =
 ];
 
 gulp.task('watch-ws', gulp.parallel(watch_ws_tasks));
+
+var watch_docs_ws_tasks =
+[
+  'webserver',
+  'watch-docs',
+];
+
+gulp.task('watch-docs-ws', gulp.parallel(watch_docs_ws_tasks));
 
 gulp.task('default', gulp.series('build-js'));
 

@@ -1,0 +1,22 @@
+table
+{
+  border-collapse: collapse;
+  tr,th,td
+  {
+    border: solid 1px silver;
+    padding: 0.25em;
+  }
+  thead
+  {
+    background: silver;
+    th
+    {
+      border: solid 1px gray;
+      text-align: left;
+    }
+  }
+}
+a
+{
+  color: blue;
+}

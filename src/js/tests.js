@@ -21,13 +21,15 @@
     /**
      * Create a new instance.
      *
-     * @param object options   A set of named options.
+     * This shouldn't be called manually.
+     * See {@link Nano.Tests.createInstance} instead.
      *
-     *  appRoot:     Set the appRoot to this path.
-     *  scriptRoot:  Set the scriptRoot to this path.
-     *  htmlRoot:    Set the htmlRoot to this path.
+     * @param {Object} options - A set of named options.
+     * @param {string} options.appRoot - Set the appRoot to this path.
+     * @param {string} options.scriptRoot - Set the scriptRoot to this path.
+     * @param {string} options.htmlRoot - Set the htmlRoot to this path.
      *
-     * Not generally called manually. See createInstance() static method.
+     * @constructor
      */
     constructor (options)
     {
@@ -40,14 +42,15 @@
     /**
      * Initialize the Tests.
      *
-     * @param jQuery listEl     The element to use for a list of tests.
-     * @param jQuery outputEl   The element to use for test output.
-     *
      * This should be ran after adding all available test sets.
      *
      * It will call renderTests() automatically, and register an event
      * handler for clicking on the test names in the list, which will 
      * show the test output (it will ensure the tests are ran first.)
+     *
+     * @param {jQuery} listEl    - The element to use for a list of tests.
+     * @param {jQuery} outputEl  - The element to use for test output.
+     *
      */
     initialize (listEl, outputEl)
     {
@@ -93,6 +96,9 @@
 
     /**
      * Show a test page, will run the test if it hasn't been run yet.
+     *
+     * @param {string} setId  The id of the TestSet to run.
+     * 
      */
     showTest (setId)
     {
@@ -123,13 +129,12 @@
     /**
      * Add a Test Set.
      *
-     * @param string id      The id of the test set, must be unique.
-     * @param string name    A friendly name for the test set.
-     * @param array scripts  An array of scripts to be loaded (in given order.)
+     * @param {string} id      The id of the test set, must be unique.
+     * @param {string} name    A friendly name for the test set.
+     * @param {string[]} scripts  An array of scripts to be loaded.
      *
-     * @return TestSet       The TestSet instance.
+     * @return {TestSet} The TestSet instance.
      *
-     * See the loadScripts() method for details on the 'scripts' parameter.
      */
     addSet (id, name, scripts)
     {
@@ -141,9 +146,10 @@
     /**
      * Get a Test Set.
      *
-     * @param string id   The id of the set we want to get.
+     * @param {string} id   The id of the set we want to get.
      *
-     * @return TestSet    The TestSet instance.
+     * @return {TestSet} The TestSet instance.
+     * 
      */
     getSet (id)
     {
@@ -153,17 +159,18 @@
     /**
      * Load a Javascript resource.
      *
-     * @param string url          The URL for the script to load.
-     * @param function callback   A callback (optional).
+     * @param {string} url          The URL for the script to load.
      *
-     * If the callback parameter is specified, the call with be asynchronous,
-     * otherwise it will be synchronous.
-     *
-     * The URL string can use the following replacement strings:
+     * The URL string may contain the following replacements:
      *
      *  '@@'  The appRoot (if set.)
      *  '@'   The scriptRoot (if set.)
+     *  
+     * @param {function} [callback]   A callback.
      *
+     * If the callback parameter is specified, the call with be asynchronous,
+     * otherwise it will be synchronous.
+     *  
      */
     loadScript (url, callback)
     {
@@ -228,8 +235,10 @@
      *
      * The URL string can use the following replacement strings:
      *
-     *  '@@'  The appRoot (if set.)
-     *  '@'   The htmlRoot (if set.)
+     *  | Replacement | Description             |
+     *  | :---------- | :---------------------- |
+     *  | '@@'        |  The appRoot (if set.)  |
+     *  | '@'         |  The htmlRoot (if set.) |
      *
      */
     loadHTML (url, callback)
@@ -257,11 +266,11 @@
     /**
      * Render the lists.
      *
-     * @param jQuery listEl    The list element (optional).
+     * You probably don't need to call this manually.
      *
-     * You probably don't need to call this, and if you do, you probably
-     * don't need to specify the listEl manually (it should have been set
-     * by the initialize() method.)
+     * @param {jQuery} [listEl]    The list element.
+     *
+     * If not specified, it will use the listEl property instead.
      */
     renderTests (listEl)
     {
@@ -284,7 +293,7 @@
      *
      * Will throw an Error if createInstance() has not been called.
      *
-     * @return Tests   The current instance of the Tests.
+     * @return {Nano.Tests}   The current instance of the Tests.
      */
     static getInstance ()
     {
@@ -300,8 +309,9 @@
      *
      * Will throw an error if you try to call it more than once.
      *
-     * @param object options   Options to pass to the constructor.
-     * @return Tests           The created instance.
+     * @param {Object} options   Options to pass to the constructor.
+     *
+     * @return {Nano.Tests}           The created instance.
      */
     static createInstance (options)
     {
@@ -321,18 +331,23 @@
    * Each has a unique id, a friendly name, and a list of scripts to load.
    * It also has an internal testInstance property which is an instance of
    * the Nano.Test class used to perform the actual tests.
+   *
+   * This is a private class and cannot be created from outside Nano.Tests.
    */
   class TestSet
   {
     /**
      * Create a TestSet instance.
      *
-     * @param string id         The id of the test set.
-     * @param string name       The friendly name for display.
-     * @param Tests tests       The parent Tests instance.
-     * @param array scripts     The scripts to load for this test set.
+     * This is never directly called in end user code.
+     * See the {@link Nano.Tests#addSet} method instead.
      *
-     * See the loadScripts() method for details on the 'scripts' parameter.
+     * @param {string} id         The id of the test set.
+     * @param {string} name       The friendly name for display.
+     * @param {Nano.Tests} tests  The parent Tests instance.
+     * @param {string[]} scripts     The scripts to load for this test set.
+     *
+     * See {@link Nano.Tests#loadScripts} method for details on the 'scripts' parameter.
      */
     constructor (id, name, tests, scripts)
     {

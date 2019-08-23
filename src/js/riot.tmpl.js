@@ -4,7 +4,7 @@
   'use strict'
   /*eslint-env amd */
 
-  /**
+  /*
    * riot.util.brackets
    *
    * - `brackets    ` - Returns a string or regex based on its parameter
@@ -206,14 +206,13 @@
 
   })()
 
-  /**
+  /*
    * @module tmpl
    *
    * tmpl          - Root function, returns the template value, render with data
    * tmpl.hasExpr  - Test the existence of a expression inside a string
    * tmpl.loopKeys - Get the keys for an 'each' loop (used by `_each`)
    */
-
   var tmpl = (function () {
 
     var _cache = {}

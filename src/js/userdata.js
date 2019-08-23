@@ -24,7 +24,7 @@
   /**
    * Get a bunch of user information from the browser.
    *
-   * @param object opts   A bunch of options, see below.
+   * @param {object} opts  A bunch of options, see below.
    *
    * {
    *    geolocation:  object  Geolocation API parameters (optional.)
@@ -42,7 +42,9 @@
    * parameter. You can use it to save the data. Only one of the callbacks will
    * be called depending on settings and Geolocation approval.
    *
-   * @return object  An info object with a bunch of useful stuff included.
+   * @returns {object}  An info object with a bunch of useful stuff included.
+   *
+   * @example
    *
    * {
    *   app:

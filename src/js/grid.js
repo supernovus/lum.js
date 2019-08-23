@@ -1140,56 +1140,6 @@
      *
      * @return object  The resizeObj object.
      *
-     * Example usage:
-     *
-     *   // Assuming a view controller object called 'gui' with certain methods.
-     *
-     *   var gridObj = gui.getGridObject(); // Get your grid object.
-     *   var resizeObj = null;
-     *
-     *   $('.grid-item .resize-grip').on('mousedown', function (e)
-     *   {
-     *     // Find the item element that is being resized.
-     *     var element = $(this).closest('.grid-item');
-     *
-     *     // Find the Grid item for the element.
-     *     var id = element.prop(id).replace('grid-item-','');
-     *     var item = Nano.oQuery.get(id, gridObj.items);
-     *
-     *     var opts =
-     *     {
-     *       useEvents: true,
-     *       onFinish: function (item, finfo)
-     *       {
-     *         gridObj.buildDisplay(); // Rebuild the display items.
-     *         gui.redrawDisplay();    // Your method to redraw the display.
-     *         resizeObj = null;       // Clear the resizeObj.
-     *       }
-     *     };
-     *
-     *     // Create a resizeObj instance.
-     *     resizeObj = gridObj.startResize(e, element, item, opts);
-     *   });
-     *
-     *   // If 'useEvents' is false, then you'll need to add event handlers
-     *   // yourself, an example is below:
-     *
-     *   $('body').on('mousemove', function (e)
-     *   {
-     *     if (resizeObj)
-     *     {
-     *       resizeObj.update(e);
-     *     }
-     *   });
-     *
-     *   $('body').on('mouseup', function (e)
-     *   {
-     *     if (resizeObj)
-     *     {
-     *       resizeObj.finish();     // Finish the move.
-     *     }
-     *   });
-     *
      */
     startResize (event, element, item, options)
     {
@@ -1320,6 +1270,57 @@
       return options;
 
     } // startResize()
+    /*
+     * Example usage:
+     *
+     *   // Assuming a view controller object called 'gui' with certain methods.
+     *
+     *   var gridObj = gui.getGridObject(); // Get your grid object.
+     *   var resizeObj = null;
+     *
+     *   $('.grid-item .resize-grip').on('mousedown', function (e)
+     *   {
+     *     // Find the item element that is being resized.
+     *     var element = $(this).closest('.grid-item');
+     *
+     *     // Find the Grid item for the element.
+     *     var id = element.prop(id).replace('grid-item-','');
+     *     var item = Nano.oQuery.get(id, gridObj.items);
+     *
+     *     var opts =
+     *     {
+     *       useEvents: true,
+     *       onFinish: function (item, finfo)
+     *       {
+     *         gridObj.buildDisplay(); // Rebuild the display items.
+     *         gui.redrawDisplay();    // Your method to redraw the display.
+     *         resizeObj = null;       // Clear the resizeObj.
+     *       }
+     *     };
+     *
+     *     // Create a resizeObj instance.
+     *     resizeObj = gridObj.startResize(e, element, item, opts);
+     *   });
+     *
+     *   // If 'useEvents' is false, then you'll need to add event handlers
+     *   // yourself, an example is below:
+     *
+     *   $('body').on('mousemove', function (e)
+     *   {
+     *     if (resizeObj)
+     *     {
+     *       resizeObj.update(e);
+     *     }
+     *   });
+     *
+     *   $('body').on('mouseup', function (e)
+     *   {
+     *     if (resizeObj)
+     *     {
+     *       resizeObj.finish();     // Finish the move.
+     *     }
+     *   });
+     */
 
   } // class UIGrid
 
