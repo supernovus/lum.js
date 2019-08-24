@@ -10,6 +10,8 @@
    * Nano Grid library.
    *
    * Inspired by GridList.js, but designed with my needs.
+   *
+   * @class Nano.Grid
    */
   class Grid
   {
@@ -745,10 +747,11 @@
   rc.moveConflicting.addFirst = true;
   
   /**
-   * DisplayGrid
-   *
    * An extension of the Grid library with extra features for dealing with
    * DOM elements and events, for rendering a grid on a web page.
+   *
+   * @class Nano.Grid.Display
+   * @extends Nano.Grid
    */
   class DisplayGrid extends Grid
   {
@@ -994,6 +997,9 @@
    *
    * An extension of the DisplayGrid library that uses jQuery UI to perform
    * item placement, and other UI related tasks.
+   *
+   * @class Nano.Grid.UI
+   * @extends Nano.Grid.Display
    */
   class UIGrid extends DisplayGrid
   {

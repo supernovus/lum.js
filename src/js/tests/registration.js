@@ -62,6 +62,7 @@
   // ready to write tests. 
 
   let core = test('coreutils',  'Core Utils');
+  testext(core, 'extend', 'Nano.extend');
   let hash = test('hash', 'URL Hash');
   test('arrayutils', 'Array Utils');
   //testjq('changetype', 'jQuery Change Type');

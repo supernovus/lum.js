@@ -12,7 +12,7 @@
 
   testSet.setHandler(function (test)
   {
-    test.plan(44);
+    test.plan(40);
 
     { // Nano.copyProperties()
       let c1 = {name: 'Bob', job: {type:'IT',position:'developer'}};
@@ -36,33 +36,6 @@
       test.is(c1.age, 40, 'copyInto did not overwrite existing');
       test.is(c1.name, 'Robert', 'copyInto overwrote when asked');
       test.is(c1.notes.length, 2, 'copyInto copied array');
-    }
-
-    { // Nano.extend()
-      let c1 = function (name)
-      {
-        this.name = name;
-      }
-      c1.prototype.hi = function (person)
-      {
-        return this.name + ' says hi to ' + person.name;
-      }
-      c1.prototype.bye = function (person)
-      {
-        return this.name + ' says bye to ' + person.name;
-      }
-      let c2 = Nano.extend(c1);
-      c2.prototype.bye = function (person)
-      {
-        return this.name + ' says farewell to ' + person.name;
-      }
-      let i1 = new c1('Bob');
-      let i2 = new c2('Lisa');
-      test.is(i1.hi(i2), 'Bob says hi to Lisa', 'extend test 1');
-      test.is(i2.hi(i1), 'Lisa says hi to Bob', 'extend test 2');
-      test.is(i1.bye(i2), 'Bob says bye to Lisa', 'extend test 3');
-      test.is(i2.bye(i1), 'Lisa says farewell to Bob', 'extend test 4');
-      // TODO: more tests
     }
 
     { // Nano.addProperty()

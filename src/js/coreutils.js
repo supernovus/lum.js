@@ -1,4 +1,4 @@
-/**
+/*
  * Core utilities used by other Nano libraries.
  */
 
@@ -7,105 +7,19 @@
   "use strict";
 
   /** 
-   * Set up the Nano namespace.
+   * The global Nano namespace, where core utils live.
+   *
+   * @namespace Nano
    */
   if (root.Nano === undefined)
     root.Nano = {};
-
-  /**
-   * Extend a new class using a parent base class.
-   *
-   * @param {function} base  The base class we are extending from.
-   * @param {function} sub  The sub class we are creating.
-   * @param {boolean|object} copyDef  See below.
-   *
-   * @return {function} The new class after extending has been completed.
-   *
-   * If the subclass parameter is undefined or null, we'll create a default
-   * function that simply calls the base class constructor with all arguments
-   * passed as is. This allows for easy construction of child classes:
-   *
-   *   var childclass = Nano.extend(parentclass);
-   *
-   * or if you want to copy public properties from the base class that aren't
-   * in the prototype, then:
-   *
-   *   var childclass = Nano.extend(parentclass, null, true);
-   *
-   * If you need to specify your own child class constructor,
-   * make sure it calls any necessary parent constructors.
-   *
-   * If copyDef is the boolean true value, it becomes {copyProperties: true}.
-   * If copyDef is an object, it may have the following properties:
-   *
-   *  copyProperties: A propOpts value to be passed to Nano.copyProperties();
-   *  copyInto: An array of sources to send to Nano.copyInto();
-   *
-   * The copyProperties call if used will look like:
-   *  Nano.copyProperties(base, sub, copyDef.copyProperties);
-   *
-   * The copyProperties and copyInto copyDef properties can be used together.
-   *
-   * This can probably be deprecated as ES2015 classes don't need it.
-   */
-  Nano.extend = function (base, sub, copyDef)
-  {
-//    console.error("Nano.extend()", base, sub, copyall);
-    if (typeof base !== 'function')
-    {
-      console.error("Nano.extend(base): base passed was not function", arguments);
-      return;
-    }
-
-    if (sub === undefined || sub === null)
-    {
-      sub = function ()
-      {
-        var args = Array.prototype.slice.call(arguments);
-        base.apply(this, args);
-      }
-//      console.log("Generated empty child", sub);
-    }
-    else if (typeof sub !== 'function')
-    {
-      console.error("Nano.extend(base, sub): sub passed was not function", arguments);
-      return;
-    }
-
-    sub.prototype = Object.create(base.prototype);
-
-    // Shortcut for copying all base class properties.
-    if (copyDef === true)
-    {
-      copyDef = {copyProperties: true};
-    }
-
-    // Copy class properties from the base class.
-    if (copyDef && copyDef.copyProperties)
-    {
-      Nano.copyProperties(base, sub, copyDef.copyProperties);
-    }
-
-    // Copy properties in from mixin/trait objects.
-    if (copyDef && copyDef.copyInto)
-    {
-      var copyInto = [sub];
-      for (var c = 0; c < copyDef.copyInto.length; c++)
-      {
-        copyInto.push(copyDef.copyInto[c]);
-      }
-      Nano.copyInto.apply(Nano, copyInto);
-    }
-
-    return sub;
-  }
 
   /**
    * A way to handle Mixins/Traits.
    *
    * This is basically a magic wrapper around copyInto() which we use
    * instead of Object.assign() as we don't want to overwrite properties
-   * by default. See copyInto() for the valid parameters.
+   * by default. See {@link Nano.copyInto} for the valid parameters.
    *
    * This does a bit of magic before passing it's parameters to copyInto().
    * As it's designed to extend the class prototype and only the prototype,
@@ -154,16 +68,18 @@
   /**
    * Copy properties between objects. Can be used for mixins/traits.
    *
+   * This calls
+   *  Nano.copyProperties(source, target, {default: true, overwrite: overwrite})
+   * for each of the sources specified (with the current overwrite value.)
+   *
    * @param  {object|function} target   The target we are copying into.
-   * @params {...(object|function|boolean)} sources The sources we copy from.
+   * @param {...(object|function|boolean)} sources The sources we copy from.
+   *
    * If a source is a boolean, it changes the 'overwrite' behavior for any
    * objects/functions following it. If 'overwrite' is true, existing
    * properties with the same name already in the target will be overwritten.
    * If 'overwrite' is false (the default) then they will not be overwritten.
    *
-   * This calls
-   *  Nano.copyProperties(source, target, {default: true, overwrite: overwrite})
-   * for each of the sources specified (with the current overwrite value.)
    */
   Nano.copyInto = function (target, ...sources)
   {

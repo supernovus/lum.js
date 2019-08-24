@@ -450,7 +450,13 @@
 
   Nano.ModelAPI.makeAPI = function (replicate)
   {
-    return Nano.extend(this, null, replicate);
+    console.debug("makeAPI is deprecated");
+    var subclass = class extends this {};
+    if (replicate)
+    {
+      Nano.copyProperties(this, subclass, true);
+    }
+    return subclass;
   }
 
 })(

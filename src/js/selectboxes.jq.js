@@ -15,10 +15,11 @@
  *  - Adding quick ability removeOption() to clear select box.
  *
  */
+
+(function($) 
+{
  
-(function($) {
- 
-/**
+/*
  * Adds (single/multiple) options to a select box (or series of select boxes)
  *
  * @name     addOption
@@ -101,7 +102,7 @@ $.fn.addOption = function()
 	return this;
 };
 
-/**
+/*
  * Add options via ajax
  *
  * @name     ajaxAddOption
@@ -149,7 +150,7 @@ $.fn.ajaxAddOption = function(url, params, select, fn, args)
 	return this;
 };
 
-/**
+/*
  * Removes an option (by value or index) from a select box (or series of select boxes)
  *
  * @name     removeOption
@@ -254,7 +255,7 @@ $.fn.removeOption = function()
 	return this;
 };
 
-/**
+/*
  * Sort options (ascending or descending) in a select box (or series of select boxes)
  *
  * @name     sortOptions
@@ -318,7 +319,8 @@ $.fn.sortOptions = function(ascending)
 	).selectOptions(sel, true); // select values, clearing existing ones
 	return this;
 };
-/**
+
+/*
  * Selects an option by value
  *
  * @name     selectOptions
@@ -388,7 +390,7 @@ $.fn.selectOptions = function(value, clear)
 	return this;
 };
 
-/**
+/*
  * Copy options to another select
  *
  * @name     copyOptions
@@ -425,7 +427,7 @@ $.fn.copyOptions = function(to, which)
 	return this;
 };
 
-/**
+/*
  * Checks if a select box has an option with the supplied value
  *
  * @name     containsOption
@@ -481,7 +483,7 @@ $.fn.containsOption = function(value, fn)
 	return fT == "function" ? this : found;
 };
 
-/**
+/*
  * Returns values which have been selected
  *
  * @name     selectedValues
@@ -502,7 +504,7 @@ $.fn.selectedValues = function()
 	return v;
 };
 
-/**
+/*
  * Returns text which has been selected
  *
  * @name     selectedTexts
@@ -523,7 +525,7 @@ $.fn.selectedTexts = function()
 	return t;
 };
 
-/**
+/*
  * Returns options which have been selected
  *
  * @name     selectedOptions
