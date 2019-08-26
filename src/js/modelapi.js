@@ -33,59 +33,48 @@
     /**
      * Build a ModelAPI instance.
      */
-    constructor (conf)
+    constructor (conf={})
     {
-      if (conf === undefined)
-        conf = {};
-  
-      /**
-       * A reference to ourself. If observable() is found, we apply it.
-       */
-      var self;
       if (observable !== undefined)
       {
-        self = observable(this);
-        self.make_observable = observable;
+        observable(this);
+        this.make_observable = observable;
       }
-      else
-      {
-        self = this;
-      }
-  
+
       /**
        * The model property stores our model data and backend services.
        */
-      self.model = {};
+      this.model = {};
   
       /**
        * The conf property stores a copy of our initialization data.
        */
-      self.conf = conf;
+      this.conf = conf;
   
       /**
        * Should we show the 'tag' when using onDebug() calls?
        */
-      self.showDebugTag = false;
+      this.showDebugTag = false;
   
       /**
        * See if we have debugging in the hash.
        */
-      self.updateDebug(conf.debug);
+      this.updateDebug(conf.debug);
   
       /**
        * Stuff to do before loading our sources.
        */
-      self.pre_init(conf);
+      this.pre_init(conf);
       
       /**
        * Load our sources, and other such features.
        */
-      self.init(conf);
+      this.init(conf);
   
       /**
        * Stuff to do after loading our sources.
        */
-      self.post_init(conf);
+      this.post_init(conf);
   
     } // end ModelAPI
   

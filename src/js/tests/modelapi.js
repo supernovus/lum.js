@@ -12,7 +12,7 @@
 
   testSet.setHandler(function (test)
   {
-    test.plan(0);
+    test.plan(10);
 
     let Model1 = class extends Nano.ModelAPI
     {

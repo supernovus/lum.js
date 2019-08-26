@@ -82,7 +82,7 @@
   test('expression', 'Expression');
   test('format_json', 'Format JSON');
   test('format_xml', 'Format XML');
-  //let oq = test('oquery', 'oQuery');
+  test('oquery', 'oQuery');
   //test('grid', 'Grid', [core]);
   let jsonjq = testjq('json', 'jQuery JSON', [core]);
   //let pager = test('pager', 'Pager');
@@ -90,7 +90,7 @@
   //let riot_render = testSuite.addSet('riot_render', 'Riot 1 Templates', ['@riot.render.js', '@tests/riot_render.js']);
   //test('listing', 'Listing', [pager, riot_tmpl]);
   //test('modal', 'Modal Dialog', [jqui]);
-  //let observ = test('observable', 'Observable');
+  let observ = test('observable', 'Observable');
   //let prom = test('promise', 'Nano Promise');
   //let ws = test('webservice', 'Webservice', [core]);
   //testext(ws, 'compat', 'Webservice Compat');
