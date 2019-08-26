@@ -322,15 +322,10 @@
     return fileBox;
   }
 
-  Nano.ViewController.makeGUI = function (replicate)
+  Nano.ViewController.makeGUI = function ()
   { // In a static method, 'this' refers to the class not the instance.
     console.debug("makeGUI is deprecated");
-    var subclass = class extends this {};
-    if (replicate)
-    {
-      Nano.copyProperties(this, subclass, true);
-    }
-    return subclass;
+    return class extends this {};
   }
 
 })(

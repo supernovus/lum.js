@@ -6,7 +6,7 @@
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (window.Nano === undefined || Nano.hasNamespace === undefined)
   {
     console.log("fatal error: Nano core not loaded");
     return;
@@ -24,10 +24,12 @@
     return;
   }
 
+  let map = Nano.ModelAPI.prototype;
+
   /**
    * Set up the defaults for the web service model.
    */
-  Nano.ModelAPI.prototype.post_init.webserviceModel = function (conf)
+  map.post_init.webserviceModel = function (conf)
   {
     this.model.doc_cache = {};
     if (this.__ws === undefined)
@@ -55,7 +57,7 @@
   /**
    * Get our web service, optionally check that it can handle a specific method.
    */
-  Nano.ModelAPI.prototype.get_ws = function (can)
+  map.get_ws = function (can)
   {
     if (this.__ws.model !== undefined && this.model !== undefined && this.model[this.__ws.model] !== undefined)
     {
@@ -77,7 +79,7 @@
   /**
    * Return an error response as a promise.
    */
-  Nano.ModelAPI.prototype.no_ws = function (name)
+  map.no_ws = function (name)
   {
     var promise = new Nano.Promise(this.__ws.deferred);
     promise.deferDone({success: false, error: "no web service can handle method: "+name});
@@ -94,7 +96,7 @@
    *                  The promise is either a jqXHR, or a Nano.Promise
    (                  if the list was cached, and reload was false.
    */
-  Nano.ModelAPI.prototype.list = function (reload, listopts)
+  map.list = function (reload, listopts)
   {
     var self = this;
     if (reload || this.model.cached_list === undefined)
@@ -127,7 +129,7 @@
   /**
    * When using get() if we are getting from server, pass the promise here.
    */
-  Nano.ModelAPI.prototype._get_doc = function (ret, id, reload)
+  map._get_doc = function (ret, id, reload)
   {
     var self = this;
     ret.done(function(doc)
@@ -158,7 +160,7 @@
    *                  The promise is either a jqXHR, or a Nano.Promise
    *                  if the list was cached, and reload was false.
    */
-  Nano.ModelAPI.prototype.get = function (id, reload, noTriggers)
+  map.get = function (id, reload, noTriggers)
   {
     var self = this;
     if (reload || this.model.doc_cache[id] === undefined)
@@ -255,7 +257,7 @@
    *  .save()            Save any changes using the API.save() method.
    *
    */
-  Nano.ModelAPI.prototype.extendObject = function (doc)
+  map.extendObject = function (doc)
   {
     if (doc === undefined)
       doc = {};
@@ -344,7 +346,7 @@
    * Delete a document. Returns a jqXHR object.
    * Also will trigger a 'refresh' event if successful.
    */
-  Nano.ModelAPI.prototype.delete = function (id)
+  map.delete = function (id)
   {
     var meth = this.__ws.delete;
     var ws = this.get_ws(meth); 
@@ -379,7 +381,7 @@
    * Save a document. Returs a jqXHR object.
    * Also will trigger a 'refresh' event if successful.
    */
-  Nano.ModelAPI.prototype.save = function (doc)
+  map.save = function (doc)
   {
     var self = this;
     var ret, ws, meth;
