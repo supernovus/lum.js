@@ -98,7 +98,7 @@
   //testext(modelapi, 'ws_model', 'Model WS Plugin', [prom]);
   //test('notifications', 'Notifications', [core, spf]);
   //testjq('selectboxes', 'jQuery Select Boxes');
-  //test('tax', 'Tax Calculator');
+  test('tax', 'Tax Calculator');
   //test('userdata', 'User Data');
   //test('uuid', 'UUIDs');
   //test('validation', 'Validation'); 

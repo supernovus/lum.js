@@ -11,6 +11,9 @@
     window.Nano = {};
   }
 
+  /**
+   * @namespace Nano.UserData
+   */
   Nano.UserData = {};
 
   /**
@@ -24,28 +27,21 @@
   /**
    * Get a bunch of user information from the browser.
    *
-   * @param {object} opts  A bunch of options, see below.
-   *
-   * {
-   *    geolocation:  object  Geolocation API parameters (optional.)
-   *    {
-   *      onSuccess:  function  The Geolocation request succeeded.
-   *      onError:    function  The Geolocation request failed.
-   *      options:    object    Geolocation API options (optional.)
-   *      // see: https://dev.w3.org/geo/api/spec-source.html for API options.
-   *    }
-   *    fallbackCallback: function  If Geolocation disabled, call this instead.
-   *                                (optional.)
-   * }
-   *
    * All of the callback functions receive the info structure as their first
    * parameter. You can use it to save the data. Only one of the callbacks will
    * be called depending on settings and Geolocation approval.
    *
+   * @param {object} opts  Options for what to get from the browser.
+   * @param {object} [opts.geolocation] Geolocation options.
+   * @param {function} opts.geolocation.onSuccess Callback if request succeeded.
+   * @param {function} opts.geolocation.onError Callback if request failed.
+   * @param {object} opts.geolocation.options Options to pass to Geolocation API.
+   * See {@link https://dev.w3.org/geo/api/spec-source.html} for API options.
+   * @param {function} [opts.fallbackCallback] If Geolocation is disabled, call this instead.
+   *
    * @returns {object}  An info object with a bunch of useful stuff included.
    *
-   * @example
-   *
+   * ```
    * {
    *   app:
    *   {
@@ -91,6 +87,7 @@
    *   //       doesn't support the API, there will be no 'geolocation'
    *            property in the returned structure.
    * }
+   * ```
    *
    * You can save this data as JSON in a hidden form field on your login
    * page if you're using the Nano.php Accesslog feature. Just remember to add
