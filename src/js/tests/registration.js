@@ -18,7 +18,7 @@
   let testSuite = Nano.Tests.getInstance();
 
   // A quick function to make a data set.
-  testSuite.makePeople = function (withRecursion=false)
+  testSuite.makePeople = function (opts={})
   {
     let people = 
     [
@@ -40,7 +40,7 @@
       },
     ];
 
-    if (withRecursion)
+    if (opts.withRecursion)
     {
       people[0].kids = [people[2],people[3]];
       people[1].kids = [people[3]];
@@ -50,6 +50,28 @@
       people[1].parents = [];
       people[2].parents = [people[0]];
       people[3].parents = [people[0],people[1]];
+    }
+    else if (opts.withReferences)
+    {
+      people[0].kids = [2,3];
+      people[1].kids = [3];
+      people[2].kids = [];
+      people[3].kids = [];
+      people[0].parents = [];
+      people[1].parents = [];
+      people[2].parents = [0];
+      people[3].parents = [0,1];
+    }
+    else if (opts.withNames)
+    {
+      people[0].kids = [people[2].name,people[3].name];
+      people[1].kids = [people[3].name];
+      people[2].kids = [];
+      people[3].kids = [];
+      people[0].parents = [];
+      people[1].parents = [];
+      people[2].parents = [people[0].name];
+      people[3].parents = [people[0].name,people[1].name];
     }
 
     return people;
@@ -84,7 +106,7 @@
   function testext (mainlib, plugin, name, deps=[])
   {
     let pluginId = mainlib.id+'_'+plugin;
-    deps.push(mainlib);
+    deps.unshift(mainlib);
     deps.push(L+mainlib.id+'/'+plugin+ext);
     deps.push(T+pluginId+ext);
     return testSuite.addSet(pluginId, name, deps);
@@ -122,7 +144,7 @@
   test('format_xml', 'Format XML');
   test('oquery', 'oQuery');
   //test('grid', 'Grid', [core]);
-  let jsonjq = testjq('json', 'jQuery JSON', [core]);
+  let jsonjq = testjq('json', 'jQuery JSON');
   //let pager = test('pager', 'Pager');
   //let riot_tmpl = testSuite.addSet('riot_tmpl', 'Riot 2 Templates', ['@riot.tmpl.js', '@tests/riot_tmpl.js']);
   //let riot_render = testSuite.addSet('riot_render', 'Riot 1 Templates', ['@riot.render.js', '@tests/riot_render.js']);
@@ -140,7 +162,7 @@
   //test('userdata', 'User Data');
   //test('uuid', 'UUIDs');
   //test('validation', 'Validation'); 
-  test('viewcontroller', 'View Controller', [prom, observ, modelapi]);
+  test('viewcontroller', 'View Controller', [observ, modelapi]);
   //testjq('xmlns', 'jQuery XML Namespaces');
 
   // Add more tests as we add/change libraries.

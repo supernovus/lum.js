@@ -67,6 +67,16 @@
       return log;
     }
 
+    fail (desc, directive)
+    {
+      return this.ok(false, desc, directive);
+    }
+
+    pass (desc, directive)
+    {
+      return this.ok(true, desc, directive);
+    }
+
     dies (testfunc, desc)
     {
       var ok = false;

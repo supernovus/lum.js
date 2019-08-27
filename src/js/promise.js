@@ -355,7 +355,6 @@
    */
   Nano.Promise.prototype.deferDone = function (obj, ts, xhr, timeout)
   {
-    console.warn("deferDone is deprecated, just use resolve()");
     var self = this;
     if (timeout === undefined)
       timeout = 5; // 5ms should be enough time to register .done events.
@@ -377,7 +376,6 @@
    */
   Nano.Promise.prototype.deferFail = function (error, ts, xhr, timeout)
   {
-    console.warn("deferFail is deprecated, just use reject()");
     var self = this;
     if (timeout === undefined)
       timeout = 5;
@@ -385,7 +383,7 @@
       xhr = self;
     self.failTimer = setTimeout(function () 
     {
-      self.reject(self, ts, error);
+      self.reject(xhr, ts, error);
     }, timeout);
   }
 

@@ -116,10 +116,10 @@
       { // We haven't run the test yet.
         var testSet = this.getSet(setId);
         var out = testSet.run(this.outputEl);
-        if (typeof out === 'object' && typeof out.done === 'function')
+        if (typeof out === 'object' && typeof out.always === 'function')
         { // A Deferred/Promise was returned.
           let self = this;
-          out.done(function ()
+          out.always(function ()
           {
             self.outputEl.find(outputId).addClass('active');
           });
@@ -423,11 +423,15 @@
       if (typeof this.testFunction === 'function')
       {
         let out = this.testFunction(this.testInstance);
-        if (typeof out === 'object' && typeof out.done === 'function')
+        if (typeof this.testPromise === 'object')
+        { // We have a test-wide promise, which overrides the output.
+          out = this.testPromise;
+        }
+        if (typeof out === 'object' && typeof out.always === 'function')
         { // A jQuery Deferred or Nano.Promise was returned.
           console.debug("Deferred return from test");
           let self = this;
-          out.done(function ()
+          out.always(function ()
           {
             self.output();
           });
@@ -455,6 +459,199 @@
         outputEl.append(testOutput);
       }
     }
-  }
+
+    makeDeferred (useNano, nanoPromiseOpts)
+    {
+      if (useNano)
+      { // We're using a Nano Promise.
+        if (Nano.Promise !== undefined)
+        {
+          return new Nano.Promise(nanoPromiseOpts);
+        }
+        else
+        {
+          throw new Error("Attempt to use Nano.Promise without loading promise.js");
+        }
+      }
+      else
+      { // We'll use jQuery.Deferred()
+        return $.Deferred();
+      }
+    }
+
+    useDeferred (opts={})
+    {
+      this.testPromise = this.makeDeferred(opts.useNano, opts.nanoOpts);
+      if (opts.useNested)
+      {
+        return this.makeNestedDeferred(this.testPromise, opts.nestedOpts);
+      }
+      return this.testPromise;
+    }
+
+    makeNestedDeferred (mainPromise, opts={})
+    {
+      return new NestedDeferred(this, mainPromise, opts);
+    }
+
+    failTests (tn, tc, err)
+    {
+      console.debug("failTests", tn, tc, err);
+      for (var t = tc; t < tn.length; t++)
+      {
+        this.testInstance.fail(tn[t], err);
+      }
+    }
+
+    tryTests (testNames, opts={})
+    {
+      let ctests = new ConditionalTests(this, testNames, opts);
+      return ctests;
+    }
+
+    makeTimeout (toVal, toFunc)
+    {
+      let toObj = 
+      {
+        timeout: setTimeout(toFunc, toVal), 
+        clear: function () 
+        { 
+          clearTimeout(this.timeout); 
+        } 
+      }
+      return toObj;
+    }
+
+  } // TestSet
+
+  class ConditionalTests
+  {
+    constructor (testSet, testNames, opts={})
+    {
+      this.testSet = testSet;
+      this.test = testSet.testInstance;
+      this.testNames = testNames;
+      this.testsRun = 0;
+      if (typeof opts.promise === 'object')
+      {
+        this.promise = opts.promise;
+      }
+      if (typeof opts.timeout === 'number')
+      {
+        this.setTimeout(opts.timeout);
+      }
+      if (typeof opts.tests === 'function')
+      {
+        this.run(opts.tests);
+      }
+    }
+
+    setTimeout (timeout)
+    {
+      var self = this;
+      this.timeout = this.testSet.makeTimeout(timeout, function ()
+      {
+        self.testSet.failTests(self.testNames, self.testsRun, 'timed out');
+        if (self.promise)
+        {
+          self.promise.reject('timed out');
+        }
+      });
+    }
+
+    run (func)
+    {
+      try  
+      { // We try to run all of the tests. They should use this.next() to get
+        // the test name.
+        func.call(this, this, this.test);
+        // If we reach here, no exceptions were thrown.
+        if (this.timeout !== undefined)
+        { // Clear any timeout we may have.
+          this.timeout.clear();
+        }
+        if (this.promise)
+        {
+          this.promise.resolve(this);
+        }
+      }
+      catch (e)
+      { // If we catch an exception, the rest of the tests fail.
+        console.debug("Exception caught in Conditional Tests", this, e);
+        this.testSet.failTests(this.testNames, this.testsRun, e.name+': '+e.message);
+        if (this.promise)
+        {
+          this.promise.reject(e);
+        }
+      }
+    }
+
+    next ()
+    {
+      return this.testNames[this.testsRun++];
+    }
+
+  } // class ConditionalTests
+
+  class NestedDeferred
+  {
+    constructor (testSet, mainPromise, opts={})
+    {
+      this.testSet = testSet;
+      this.mainPromise = mainPromise;
+      this.childPromises = [];
+      this.handleFailure = 'handleFailure' in opts ? opts.handleFailure : false;
+      this.opts = opts;
+    }
+
+    addPromise (promise)
+    {
+      if (typeof promise !== 'object')
+      {
+        promise = this.testSet.makeDeferred(this.opts.useNano, this.opts.nanoOpts);
+      }
+
+      var self = this;
+
+      function checkDone () { self.checkDone(); }
+
+      if (this.handleFailure)
+      { // When the promise is done, call checkDone().
+        promise.done(callback);
+
+        // If any promise fails, mark the main promise as failed.
+        promise.fail(function ()
+        { 
+          self.mainPromise.reject(self);
+        });
+      }
+      else
+      { // In this mode, we don't care about success or failure.
+        promise.always(checkDone);
+      }
+      this.childPromises.push(promise);
+      return promise;
+    }
+
+    checkDone ()
+    { // If all child promises are resolved, resolve our main promise.
+      for (let p = 0; p < this.childPromises.length; p++)
+      {
+        let promise = this.childPromises[p];
+        let state = promise.state();
+        if (state === 'pending')
+        {
+          return false;
+        }
+        if (this.handleFailure && state === 'rejected')
+        {
+          return false;
+        }
+      }
+      // If we reached here, all child promises are resolved.
+      this.mainPromise.resolve(self);
+      return true;
+    }
+  } // class NestedDeferred
 
 })(jQuery);
