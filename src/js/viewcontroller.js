@@ -10,17 +10,19 @@
     /**
      * A reference to ourself. If observable() is found, we apply it.
      */
-    var self;
     if (observable !== undefined)
-      self = observable(this);
+    {
+      console.debug("Using observable for ViewController");
+      observable(this);
+    }
     else
-      self = this;
+    {
+      console.debug("Using readyHandlers for ViewController");
+      this.readyHandlers = [];
+    }
 
-    if (observable === undefined)
-      self.readyHandlers = [];
-
-    self.defaultAttrNamespace = 'nano';
-    self.defaultTmplNamespace = 'tmpl';
+    this.defaultAttrNamespace = 'nano';
+    this.defaultTmplNamespace = 'tmpl';
   }
 
   Nano.ViewController.prototype.add = function (func)

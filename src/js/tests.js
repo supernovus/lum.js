@@ -115,15 +115,29 @@
       if (outputDiv.length == 0)
       { // We haven't run the test yet.
         var testSet = this.getSet(setId);
-        testSet.run(this.outputEl);
-        outputDiv = this.outputEl.find(outputId);
-        if (outputDiv.length == 0)
-        { // Still something wrong.
-          throw new Error("Could not find output div for test: "+setId);
+        var out = testSet.run(this.outputEl);
+        if (typeof out === 'object' && typeof out.done === 'function')
+        { // A Deferred/Promise was returned.
+          let self = this;
+          out.done(function ()
+          {
+            self.outputEl.find(outputId).addClass('active');
+          });
+        }
+        else
+        {
+          outputDiv = this.outputEl.find(outputId);
+          if (outputDiv.length == 0)
+          { // Still something wrong.
+            throw new Error("Could not find output div for test: "+setId);
+          }
         }
       }
 
-      outputDiv.addClass('active');
+      if (outputDiv.length > 0)
+      {
+        outputDiv.addClass('active');
+      }
     }
 
     /**
@@ -402,18 +416,27 @@
      */
     run (outputEl)
     {
-      outputEl = outputEl || this.parent.outputEl;
       if (this.testFunction === undefined)
       { // We need to load the test scripts first.
         this.loadScripts();
       }
       if (typeof this.testFunction === 'function')
       {
-        this.testFunction(this.testInstance);
-        if (outputEl)
-        {
-          var testOutput = $('<div class="output" id="output_'+this.id+'"><h2>'+this.name+'</h2><pre>'+this.testInstance.tap()+'</pre></div>');
-          outputEl.append(testOutput);
+        let out = this.testFunction(this.testInstance);
+        if (typeof out === 'object' && typeof out.done === 'function')
+        { // A jQuery Deferred or Nano.Promise was returned.
+          console.debug("Deferred return from test");
+          let self = this;
+          out.done(function ()
+          {
+            self.output();
+          });
+          return out;
+        }
+        else
+        { // Directly output the results now.
+          this.output();
+          return this.testInstance;
         }
       }
       else
@@ -421,6 +444,16 @@
         throw new Error("No test handler was set");
       }
       return this.testInstance;
+    }
+
+    output (outputEl)
+    {
+      outputEl = outputEl || this.parent.outputEl;
+      if (outputEl)
+      {
+        var testOutput = $('<div class="output" id="output_'+this.id+'"><h2>'+this.name+'</h2><pre>'+this.testInstance.tap()+'</pre></div>');
+        outputEl.append(testOutput);
+      }
     }
   }
 

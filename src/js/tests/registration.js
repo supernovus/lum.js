@@ -17,6 +17,44 @@
 
   let testSuite = Nano.Tests.getInstance();
 
+  // A quick function to make a data set.
+  testSuite.makePeople = function (withRecursion=false)
+  {
+    let people = 
+    [
+      {
+        name: 'Bob',
+        age: 40,
+      },
+      {
+        name: 'Lisa',
+        age: 25,
+      },
+      {
+        name: 'Kevin',
+        age: 18,
+      },
+      {
+        name: 'Sarah',
+        age: 13,
+      },
+    ];
+
+    if (withRecursion)
+    {
+      people[0].kids = [people[2],people[3]];
+      people[1].kids = [people[3]];
+      people[2].kids = [];
+      people[3].kids = [];
+      people[0].parents = [];
+      people[1].parents = [];
+      people[2].parents = [people[0]];
+      people[3].parents = [people[0],people[1]];
+    }
+
+    return people;
+  }
+
   const L = '@';          // Where our library scripts are found.
   const T = '@tests/';    // The folder the test scripts are stored in.
   const S = '@@scripts/'; // The 'scripts' folder root.
@@ -91,7 +129,7 @@
   //test('listing', 'Listing', [pager, riot_tmpl]);
   //test('modal', 'Modal Dialog', [jqui]);
   let observ = test('observable', 'Observable');
-  //let prom = test('promise', 'Nano Promise');
+  let prom = test('promise', 'Nano Promise');
   //let ws = test('webservice', 'Webservice', [core]);
   //testext(ws, 'compat', 'Webservice Compat');
   let modelapi = test('modelapi', 'Model API', [core,hash,existsjq,jsonjq]);
@@ -102,7 +140,7 @@
   //test('userdata', 'User Data');
   //test('uuid', 'UUIDs');
   //test('validation', 'Validation'); 
-  //test('viewcontroller', 'View Controller', [core]);
+  test('viewcontroller', 'View Controller', [prom, observ, modelapi]);
   //testjq('xmlns', 'jQuery XML Namespaces');
 
   // Add more tests as we add/change libraries.

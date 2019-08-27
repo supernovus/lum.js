@@ -10,11 +10,9 @@
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('modelapi');
 
-  testSet.setHandler(function (test)
+  testSet.createModelClass = function ()
   {
-    test.plan(10);
-
-    let Model1 = class extends Nano.ModelAPI
+    let ModelClass = class extends Nano.ModelAPI
     {
       getPersonByName (name)
       {
@@ -56,13 +54,16 @@
         }
         return matched;
       }
-    }
-    Model1.prototype.post_init.extendPeople = function (conf)
-    {
-      if (this.model.people === undefined) return; // No people.
-      for (let p in this.model.people)
+      extendPerson (person)
       {
-        var person = this.model.people[p];
+        if (typeof person.kids !== 'object')
+        {
+          person.kids = [];
+        }
+        if (typeof person.parents !== 'object')
+        {
+          person.parents = [];
+        }
         Nano.addProperty(person, 'model', this);
         Nano.addAccessor(person, 'birthYear', function ()
         {
@@ -76,31 +77,71 @@
           }
           this.age = 2019 - newYear;
         });
+        Nano.addProperty(person, 'addChild', function (child)
+        {
+          this.kids.push(child);
+          if (!child.parents.includes(this))
+          {
+            child.parents.push(this);
+          }
+        });
+        Nano.addProperty(person, 'addParent', function (parent)
+        {
+          this.parents.push(parent);
+          if (!parent.kids.includes(this))
+          {
+            parent.kids.push(this);
+          }
+        });
+        return person;
+      }
+      addPerson (name, age, opts)
+      {
+        let person = this.extendPerson(
+        {
+          name: name,
+          age: age,
+          kids: opts.kids,
+          parents: opts.parents,
+        });
+        this.model.people.push(person);
       }
     }
 
-    var peopleSrc =
-    [
+    ModelClass.prototype.post_init.extendPeople = function (conf)
+    {
+      if (this.model.people === undefined) return; // No people.
+      for (let p in this.model.people)
       {
-        name: 'Bob',
-        age: 40,
-      },
-      {
-        name: 'Lisa',
-        age: 25,
-      },
-      {
-        name: 'Kevin',
-        age: 18,
-      },
-      {
-        name: 'Sarah',
-        age: 13,
-      },
-    ];
+        var person = this.model.people[p];
+        this.extendPerson(person);
+      }
+    }
+
+    return ModelClass;
+  }
+
+  testSet.makePeopleElement = function (addToBody=false, registerMore=false)
+  {
+    var peopleSrc = testSuite.makePeople(registerMore);
+
     var peopleEl = $('<input type="hidden" id="modelapi_test_people" />');
     peopleEl.val(JSON.stringify(peopleSrc));
-    $('body').append(peopleEl);
+    if (addToBody)
+    {
+      $('body').append(peopleEl);
+    }
+    return peopleEl;
+  }
+
+  testSet.setHandler(function (test)
+  {
+    test.plan(10);
+
+    let Model1 = testSet.createModelClass();
+
+    // TODO: add kids/parents for further tests.
+    let peopleEl = testSet.makePeopleElement();
 
     let i1 = new Model1(
     {
@@ -109,7 +150,7 @@
         people:
         {
           type: 'json',
-          element: '#modelapi_test_people',
+          element: peopleEl,
         },
         // TODO: add a 'ws' model and test with JSONPlaceholder.
       }

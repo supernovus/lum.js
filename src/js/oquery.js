@@ -32,7 +32,7 @@
  */
 var oq = Nano.oQuery = function (query, objarr, opts)
 {
-//  console.log("we're in oQuery()");
+//  console.debug("we're in oQuery()");
 
   var matched = [];
 
@@ -49,7 +49,7 @@ var oq = Nano.oQuery = function (query, objarr, opts)
   }
   else if (qtype !== 'object')
   {
-    console.debug("Invalid query passed to oQuery()");
+    console.error("Invalid query passed to oQuery()");
     if (opts.single === true)
       return null;
     else
@@ -59,7 +59,7 @@ var oq = Nano.oQuery = function (query, objarr, opts)
   if (!Array.isArray(objarr))
   { // It's not an array of objects, it's probably a portion of a sub-query.
     // In this case, we will return the object if it matches all queries.
-    console.debug("objarr isn't an object array, nested query assumed", objarr, query);
+//    console.debug("objarr isn't an object array, nested query assumed", objarr, query);
     let match = true;
     for (let key in query)
     {
@@ -107,22 +107,22 @@ var oq = Nano.oQuery = function (query, objarr, opts)
 
   for (let i in objarr)
   {
-//    console.log("iterating item ", i);
+//    console.debug("iterating item ", i);
     let item = objarr[i];
     let match = true;
     for (let key in query)
     {
-//      console.log("checking value of ", key);
+//      console.debug("checking value of ", key);
       if (typeof query[key] === 'object')
       {
-        console.log("a subquery", query[key], item[key]);
+//        console.debug("a subquery", query[key], item[key]);
         if (typeof item[key] !== 'object')
         { // Couldn't find the nested item.
-//          console.log("the item didn't have a "+key+" property.");
+//          console.debug("the item didn't have a "+key+" property.");
           return null;
         }
         let subresults = oq(query[key], item[key], opts);
-        console.log("subresults: ", subresults);
+//        console.debug("subresults: ", subresults);
         if (opts.return === key)
         { // We're using a return filter.
           match = false;
@@ -165,10 +165,10 @@ var oq = Nano.oQuery = function (query, objarr, opts)
     }
     if (match) 
     {
-//      console.log("we found a match");
+//      console.debug("we found a match");
       if (opts.single === true)
       {
-//        console.log("returning the single item");
+//        console.debug("returning the single item");
         if (opts.index === true)
         {
           return i;
