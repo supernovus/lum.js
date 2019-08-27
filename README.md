@@ -113,7 +113,7 @@ There are several branches of Nano.js:
 * v1 is the original scripts, and hasn't been updated in years.
 * v2 was the first attempt at a ES2015 version, but was abandoned.
 * v1.5 was the longest lasting ES5 version with multiple build systems.
-* v1.6 is the last ES5+ release, using Gulp 4 as it's build system.
+* v1.6 was the last ES5 version, using Gulp 4 as it's build system.
 * v3 (this) is the current ES2015+ release.
 
 This release is once again moving to using ES2015+ as it's primary release
@@ -125,10 +125,6 @@ features. The source code will be compiled into two output paths:
 
 * scripts/nano/ - The ES2015+ release (compiled with terser).
 * scripts/nano-es5/ - The ES5 release (compiled with Babel 7 and uglify-js).
-
-When I have all of the libraries in src/js ported and have tested both the
-ES2015+ (in Chrome, Firefox, Edge, and Safari) and ES5 (in IE11), this will
-become the default branch of Nano.js.
 
 ## Author
 
