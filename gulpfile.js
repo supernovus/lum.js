@@ -62,15 +62,9 @@ gulp.task('clean-tests', function ()
   return del(desttests);
 });
 
-
 gulp.task('clean-docs', function ()
 {
   return del('docs/api');
-});
-
-gulp.task('clean-npm', function ()
-{
-  return del(['package-lock.json','node_modules']);
 });
 
 var clean_tasks =
@@ -80,6 +74,16 @@ var clean_tasks =
 ]
 
 gulp.task('clean', gulp.parallel(clean_tasks));
+
+var clean_all_tasks =
+[
+  'clean-js',
+  'clean-css',
+  'clean-tests',
+  'clean-docs',
+];
+
+gulp.task('clean-all', gulp.parallel(clean_all_tasks));
 
 gulp.task('clean-deps', function ()
 {
@@ -91,9 +95,12 @@ gulp.task('clean-deps', function ()
   return del(cleanitems);
 });
 
-gulp.task('distclean', gulp.series(function() {
-  gulp.parallel('clean', 'clean-deps', 'clean-tests', 'clean-docs')
-}, 'clean-npm'));
+gulp.task('clean-npm', function ()
+{
+  return del(['package-lock.json','node_modules']);
+});
+
+gulp.task('distclean', gulp.series('clean-all','clean-deps','clean-npm'));
 
 gulp.task('build-es6', function ()
 {
@@ -189,7 +196,19 @@ var build_tasks =
 
 gulp.task('build', gulp.parallel(build_tasks)); 
 
+var build_all_tasks =
+[
+  'build-js',
+  'build-css',
+  'build-tests',
+  'build-docs',
+];
+
+gulp.task('build-all', gulp.parallel(build_all_tasks));
+
 gulp.task('rebuild', gulp.series('clean', 'build'));
+
+gulp.task('rebuild-all', gulp.series('clean-all', 'build-all'));
 
 gulp.task('webserver', function ()
 {
