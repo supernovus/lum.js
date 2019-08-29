@@ -15,6 +15,8 @@
   }
 
   /**
+   * @class Nano.Promise
+   *
    * Build the Promise object.
    *
    * @param (object|boolean) options Options for the Promise object.
@@ -25,7 +27,6 @@
    *
    *   jquery: (boolean)  If true, run this._extendJQuery(options);
    *                      If false, run this._extendInternal(options);
-   *
    */
   Nano.Promise = function (options)
   {

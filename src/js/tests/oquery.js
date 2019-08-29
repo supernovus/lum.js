@@ -16,7 +16,7 @@
 
     let oq = Nano.oQuery;
 
-    let people = testSuite.makePeople(true);
+    let people = testSuite.makePeople({withRecursion: true});
 
     let dataset =
     [
