@@ -56,11 +56,6 @@ Try one of the following:
   ./bin/deps.js --help upgrade
 ```
 
-## Use in your own projects
-
-* Copy or symbolically link the 'node_modules' directory.
-* Copy the 'gulpfile.js' into your own project and customize as required.
-
 ## Building the tests
 
 To build the tests (simple HTML files) simply run:

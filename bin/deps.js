@@ -12,7 +12,6 @@ const VERBOSE_OPTION =
   default: false,
 }
 
-var exec = require('child_process').exec;
 var UglifyJS = require('uglify-js');
 var http = require('http-request');
 var fs = require('fs');

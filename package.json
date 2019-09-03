@@ -1,6 +1,6 @@
 {
   "name": "nano.js",
-  "version": "1.5.20190517",
+  "version": "3.0.0+2019",
   "license": "Artistic-2.0",
   "description": "A set of client-side libraries.",
   "homepage": "https://github.com/supernovus/nano.js",
@@ -16,7 +16,6 @@
     "gulp": "^4.0",
     "gulp-babel": "*",
     "gulp-clean-css": "*",
-    "gulp-concat": "*",
     "gulp-connect": "^5.7.0",
     "gulp-file-cache": "*",
     "gulp-jsdoc3": "^2.0.0",
