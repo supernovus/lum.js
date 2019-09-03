@@ -1,7 +1,7 @@
 {
   "name": "nano.js",
   "version": "3.0.0+2019",
-  "license": "Artistic-2.0",
+  "license": "MIT",
   "description": "A set of client-side libraries.",
   "homepage": "https://github.com/supernovus/nano.js",
   "repository": {

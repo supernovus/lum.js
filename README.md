@@ -121,11 +121,31 @@ features. The source code will be compiled into two output paths:
 * scripts/nano/ - The ES2015+ release (compiled with terser).
 * scripts/nano-es5/ - The ES5 release (compiled with Babel 7 and uglify-js).
 
-## Author
+## Authors
 
-Timothy Totten <2010@totten.ca>
+Some libraries were borrowed from other sources:
+
+| Library            | Author(s)                           |
+| ------------------ | ----------------------------------- |
+| xmlns.jq.js        | Ryan Kelly                          |
+| uuid.js            | Robert Kieffer                      |
+| selectboxes.jq.js  | Sam Collett, Tim Totten             |
+| riot.\*.js         | Mutt Inc. + contributors            |
+| observable.js      | Mutt Inc. + contributors            |
+| format_xml.js      | Multiple contributors               |
+| format_json.js     | Ketan Jetty, Tim Totten             |
+
+Anything not in that list was written by Tim Totten.
 
 ## License
 
-[Artistic License 2.0](http://www.perlfoundation.org/artistic_license_2_0)
+Some of the libraries written by third parties are licensed separately:
+
+| Library     | License                                             |
+| ----------- | --------------------------------------------------- |
+| xmlns.jq.js | Dual licensed under the MIT and GPL licenses.       |
+| uuid.js     | Dual licensed under the MIT and GPL licenses.       |
+| selectboxes.jq.js | Dual licensed under the MIT and GPL licenses. |
+
+Anything not in the list are licensed under the [MIT license](https://spdx.org/licenses/MIT.html).
 

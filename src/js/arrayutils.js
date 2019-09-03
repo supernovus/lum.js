@@ -1,7 +1,6 @@
 /**
- * Cross platform, fast versions of indexOf and contains.
+ * Utils for working with Arrays.
  */
-
 (function ()
 {
   "use strict";
