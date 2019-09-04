@@ -6,7 +6,7 @@
  *
  * Requires:
  *
- *  #common
+ *  #common (coreutils, json.jq, exists,jq)
  *  vsprintf
  *
  * Note: this object should be initialized after the document.ready
@@ -58,7 +58,7 @@
       }
       else if ($('#status_messages').length > 0)
       { // Compatibility with older 'status_messages' storage.
-        this.strings = $('#status_messages').JSON;
+        this.strings = $('#status_messages').JSON();
         if ($('#notifiation_messages').length > 0)
         {
           this.notifications = $('#notification_messages').JSON();
@@ -436,7 +436,7 @@
       var selector = this.itemTemplate;
       var actselector = this.itemActionTemplate;
       var msg = this.renderItem(selector, message, actselector);
-      if (this.shown[message.key])
+      if (this.shown[message.key] && !message.opts.noGroup)
         msg.addClass('hidden');
       this.listElement.append(msg);
     }
@@ -562,8 +562,8 @@
         iconSpan.text(count);
       else
         iconSpan.text('-');
-      iconSpan.removeClass('none message warning error');
-      var classes = ['error','warning','message'];
+      iconSpan.removeClass('none message warning error notice');
+      var classes = ['error','warning','message','notice'];
       var foundClass = false;
       for (var c in classes)
       {
@@ -641,6 +641,7 @@
     default: {class: 'message', prefix: 'msg.'},
     error:   {class: 'message', prefix: 'err.'},
     warning: {class: 'warning', prefix: 'warn.'},
+    notice:  {class: 'notice',  noGroup: true},
   };
 
   Not.Timeouts =
@@ -687,7 +688,7 @@
     let togglemsgs = elem.find('.togglemsgs');
     if (togglemsgs.length > 0)
     {
-      if (notification.keyCount() >= 2)
+      if (notification.keyCount() >= 2 && !notification.opts.noGroup)
       {
         let morekeys = notification.keyCount() - 1;
         let sopts = {reps:[morekeys], default: "%s more ..."};
