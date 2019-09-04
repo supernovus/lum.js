@@ -12,8 +12,12 @@
  * Note: this object should be initialized after the document.ready
  *       event has been triggered to ensure the DOM is complete.
  *
+ * TODO: make tag grouping/hiding optional.
+ * TODO: make toggle more work with dynamically added messages.
  * TODO: more flexible rendering options.
  * TODO: more class names as options.
+ * TODO: support HTML 5 Notifications as an option for displaying alerts.
+ *
  */
 
 (function ($)
@@ -67,6 +71,9 @@
       this.alerts    = {};
   
       this.expandedItems = {};
+
+      this.actionHandlers = 'actionHandlers' in options
+        ? options.actionHandlers : {};
   
       if (this.notifications !== undefined)
       {
@@ -76,17 +83,23 @@
           this.extendNotification(notification);
         }
       }
+
+      let engines = this.constructor.Engines;
   
       this.renderItem = 'renderItem' in options 
-        ? options.renderItem : Not.Engines.element;
+        ? options.renderItem : engines.element;
   
       this.renderAlert = 'renderAlert' in options 
-        ? options.renderAlert : Not.Engines.element
+        ? options.renderAlert : engines.element
   
       this.itemTemplate = 'itemTemplate' in options
         ? options.itemTempate : '#notification_item .notification';
       this.alertTemplate = 'alertTemplate' in options 
         ? options.alertTemplate : '#notification_alert .notification';
+      this.itemActionTemplate = 'itemActionTemplate' in options
+        ? options.itemActionTemplate : '#notification_action .action';
+      this.alertActionTemplate = 'alertActionTemplate' in options
+        ? options.alertActionTemplate : '#notification_action .action';
   
       this.paneSelector = 'paneSelector' in options ?
         options.paneSelector : '#notification_centre';
@@ -115,7 +128,7 @@
       if (doInit)
         this.initialize();
       if (doDraw)
-        this.redrawList();
+        this.redrawList(true);
     }
   
     initialize ()
@@ -167,7 +180,8 @@
   
         if (msgtext === undefined)
         { // Emergency fallback if no message key was found.
-          msgtext = JSON.stringify(this);
+          msgtext = name;
+          console.debug("Notification could not find text", this);
         }
   
         return msgtext;
@@ -186,8 +200,40 @@
         return 1;
       });
   
-      Nano.addProperty(notification, 'remove', function ()
+      Nano.addProperty(notification, 'remove', function (opts={})
       {
+        if (opts === true)
+        { // Remove from parent, and redraw the list.
+          opts = {fromParent: true, updateIcon: false, redrawList: true};
+        }
+        else if (opts === false)
+        { // All options are false.
+          opts = {fromParent: false, updateIcon: false, redrawList: false};
+        }
+        else if (typeof opts !== 'object' || opts === null)
+        { // That's not valid.
+          throw new Error("Invalid 'opts' passed to notification.remove()");
+        }
+
+        // Set defaults if they aren't in the opts.
+        if (opts.fromParent === undefined)
+          opts.fromParent = true;
+        if (opts.updateIcon === undefined)
+          opts.updateIcon = true;
+        if (opts.redrawList === undefined)
+          opts.redrawList = false;
+        if (opts.resendAlerts === undefined)
+          opts.resendAlerts = false;
+
+        if (opts.fromParent)
+        {
+          let pos = this.parent.notifications.indexOf(this);
+          if (pos !== -1)
+          { // We found it, remove it.
+            this.parent.notifications.splice(pos, 1);
+          }
+        }
+
         if (this.key)
         {
           if (this.key in this.parent.keyCount && this.parent.keyCount[this.key] > 0)
@@ -205,6 +251,15 @@
           { // Remove one from the status count.
             this.parent.hasStatus[this.class]--;
           }
+        }
+
+        if (opts.redrawList)
+        {
+          this.parent.redrawList(opts.resendAlerts);
+        }
+        else if (opts.updateIcon)
+        {
+          this.parent.updateIcon();
         }
       });
   
@@ -279,14 +334,15 @@
         opts = {};
       
       var typeOpts;
-      if ('type' in opts && opts.type in Not.Types)
+      let types = this.constructor.Types;
+      if ('type' in opts && opts.type in types)
       {
-        var typeOpts = Not.Types[opts.type];
+        var typeOpts = types[opts.type];
         delete opts.type;
       }
       else
       {
-        typeOpts = Not.Types.default;
+        typeOpts = types.default;
       }
       if (typeOpts !== undefined)
       {
@@ -354,7 +410,7 @@
           if (notice.opts.tag === tag)
           {
             removed.push(notice);
-            notice.remove();
+            notice.remove(false);
           }
           else
           {
@@ -378,7 +434,8 @@
     showMessage (message)
     {
       var selector = this.itemTemplate;
-      var msg = this.renderItem(selector, message);
+      var actselector = this.itemActionTemplate;
+      var msg = this.renderItem(selector, message, actselector);
       if (this.shown[message.key])
         msg.addClass('hidden');
       this.listElement.append(msg);
@@ -390,17 +447,19 @@
       {
         var self = this;
         var selector = this.alertTemplate;
-        var msg = this.renderAlert(selector, message);
+        var actselector = this.alertActionTemplate;
+        var msg = this.renderAlert(selector, message, actselector);
         msg.hide();
         this.alertsElement.append(msg);
         msg.fadeIn(400);
         var timeout;
+        let timeouts = this.constructor.Timeouts;
         if (message.opts.timeout)
           timeout = message.opts.timeout;
-        else if (message.class in Not.Timeouts)
-          timeout = Not.Timeouts[message.class];
+        else if (message.class in timeouts)
+          timeout = timeouts[message.class];
         else
-          timeout = Not.Timeouts.default;
+          timeout = timeouts.default;
   
         var timer;
   
@@ -439,7 +498,7 @@
       }
     }
   
-    redrawList ()
+    redrawList (showAlerts=false)
     {
       // Clear existing notifications.
       this.listElement.find(this.notificationSelector).remove();
@@ -448,7 +507,10 @@
       {
         var notice = this.notifications[n];
         this.showMessage(notice);
-        this.showAlert(notice);
+        if (showAlerts)
+        {
+          this.showAlert(notice);
+        }
         this.shown[notice.key] = true;
       }
       this.updateIcon();
@@ -590,24 +652,48 @@
   }
 
   Not.Engines = {};
-  Not.Engines.element = function (selector, notification)
+  Not.Engines.element = function (elselector, notification, actselector)
   {
-    var elem = $(selector).clone();
+    let elem = $(elselector).clone();
     elem.attr(this.msgKeyAttr, notification.key);
     elem.addClass(notification.class);
     if (notification.opts.tag)
       elem.addClass(notification.opts.tag);
     elem.find('.message').text(notification.text);
-    var togglemsgs = elem.find('.togglemsgs');
+    let actList = elem.find('.actions');
+    if (actList.length > 0 && notification.opts && notification.opts.actions)
+    {
+      let handlers = this.actionHandlers;
+      for (let a in notification.opts.actions)
+      {
+        let action = notification.opts.actions[a];
+        let actElem = $(actselector).clone();
+        actElem.addClass(action);
+        let sopts = {default: action};
+        let actName = this.getString(['action.'+action, action], sopts);
+        actElem.text(actName);
+        if (action in handlers)
+        {
+          let handler = handlers[action];
+          let self = this;
+          actElem.on('click', function (e)
+          {
+            handler.call(self, notification, elem, this, e);
+          });
+        }
+        actList.append(actElem);
+      }
+    }
+    let togglemsgs = elem.find('.togglemsgs');
     if (togglemsgs.length > 0)
     {
       if (notification.keyCount() >= 2)
       {
-        var morekeys = notification.keyCount() - 1;
-        var sopts = {reps:[morekeys], default: "%s more ..."};
-        var moretext = this.getString('more_status', sopts);
+        let morekeys = notification.keyCount() - 1;
+        let sopts = {reps:[morekeys], default: "%s more ..."};
+        let moretext = this.getString('more_status', sopts);
         sopts.default = "%s less ...";
-        var lesstext = this.getString('less_status', sopts);
+        let lesstext = this.getString('less_status', sopts);
         togglemsgs.find('.moremsgs').text(moretext);
         togglemsgs.find('.lessmsgs').text(lesstext);
       }
