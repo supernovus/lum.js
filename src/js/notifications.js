@@ -71,8 +71,19 @@
   
       this.expandedItems = {};
 
-      this.actionHandlers = 'actionHandlers' in options
-        ? options.actionHandlers : {};
+      let defHandlers = this.constructor.DefaultHandlers;
+      this.actionHandlers = {};
+      for (let d in defHandlers)
+      {
+        this.actionHandlers[d] = defHandlers[d];
+      }
+      if ('actionHandlers' in options)
+      {
+        for (let d in options.actionHandlers)
+        {
+          this.actionHandlers[d] = options.actionHandlers[d];
+        }
+      }
   
       if (this.notifications !== undefined)
       {
@@ -522,41 +533,46 @@
       this.updateIcon();
     }
   
-    msg (name, opts, reps)
+    send (name, opts={})
     {
-      if (opts === undefined)
-        opts = {};
-      else if (typeof opts === 'string')
-        opts = {tag: opts};
-  
-      if (reps !== undefined)
-        opts.reps = reps;
-  
       var message = this.addMessage(name, opts);
       this.showMessage(message);
       this.showAlert(message);
       this.shown[message.key] = true;
       this.updateIcon();
     }
-  
-    warn (name, opts, reps)
+
+    _getopts (opts, reps, type)
     {
       if (opts === undefined)
         opts = {};
       else if (typeof opts === 'string')
         opts = {tag: opts};
-      opts.type = 'warning';
-      this.msg(name, opts, reps);
+      if (reps !== undefined)
+        opts.reps = reps;
+      if (type !== undefined)
+        opts.type = type;
+      return opts;
+    }
+
+    msg (name, opts, reps)
+    {
+      this.send(name, this._getopts(opts, reps, 'message'));
+    }
+  
+    warn (name, opts, reps)
+    {
+      this.send(name, this._getopts(opts, reps, 'warning'));
     }
   
     err (name, opts, reps)
     {
-      if (opts === undefined)
-        opts = {};
-      else if (typeof opts === 'string')
-        opts = {tag: opts};
-      opts.type = 'error';
-      this.msg(name, opts, reps);
+      this.send(name, this._getopts(opts, reps, 'error'));
+    }
+
+    notify (name, opts, reps)
+    {
+      this.send(name, this._getopts(opts, reps, 'notice'));
     }
   
     updateIcon ()
@@ -644,10 +660,11 @@
 
   Not.Types =
   {
-    default: {class: 'message', prefix: 'msg.'},
+    default: {class: 'default'},
+    message: {class: 'message', prefix: 'msg.'},
     error:   {class: 'error', prefix: 'err.'},
     warning: {class: 'warning', prefix: 'warn.'},
-    notice:  {class: 'notice',  noGroup: true},
+    notice:  {class: 'notice',  noGroup: true, actions:['dismiss']},
   };
 
   Not.Timeouts =
@@ -657,6 +674,14 @@
     warning: 3000,
     error:   6000,
   }
+
+  Not.DefaultHandlers =
+  {
+    dismiss: function (notObj)
+    {
+      notObj.remove(true);
+    }
+  };
 
   Not.Engines = {};
   Not.Engines.element = function (elselector, notification, actselector)
