@@ -12,7 +12,6 @@
  * Note: this object should be initialized after the document.ready
  *       event has been triggered to ensure the DOM is complete.
  *
- * TODO: make tag grouping/hiding optional.
  * TODO: make toggle more work with dynamically added messages.
  * TODO: more flexible rendering options.
  * TODO: more class names as options.
@@ -170,6 +169,11 @@
       {
         var name = this.name;
         var opts = this.opts;
+
+        if (typeof this.opts.message === 'string')
+        { // Pre-rendered text was included.
+          return this.opts.message;
+        }
   
         var prefix = 'prefix' in opts ? opts.prefix : '';
         var suffix = 'suffix' in opts ? opts.suffix : '';
@@ -282,7 +286,7 @@
       return notification;
     } // extendNotification
   
-    getString (names, opts)
+    getString (names, opts={})
     {
       if (typeof names === 'string')
         names = [names];
@@ -335,15 +339,17 @@
       
       var typeOpts;
       let types = this.constructor.Types;
+//      console.debug("types", types);
       if ('type' in opts && opts.type in types)
       {
-        var typeOpts = types[opts.type];
+        typeOpts = types[opts.type];
         delete opts.type;
       }
       else
       {
         typeOpts = types.default;
       }
+//      console.debug("typeOpts", typeOpts);
       if (typeOpts !== undefined)
       {
         for (var o in typeOpts)
@@ -639,7 +645,7 @@
   Not.Types =
   {
     default: {class: 'message', prefix: 'msg.'},
-    error:   {class: 'message', prefix: 'err.'},
+    error:   {class: 'error', prefix: 'err.'},
     warning: {class: 'warning', prefix: 'warn.'},
     notice:  {class: 'notice',  noGroup: true},
   };
