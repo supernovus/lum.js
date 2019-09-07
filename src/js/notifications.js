@@ -1,4 +1,4 @@
-/**
+/*
  * Notifications
  *
  * Works with Nano.php's new Notifications library.
@@ -14,7 +14,6 @@
  *
  * TODO: make toggle more work with dynamically added messages.
  * TODO: more flexible rendering options.
- * TODO: more class names as options.
  * TODO: support HTML 5 Notifications as an option for displaying alerts.
  *
  */
@@ -28,7 +27,12 @@
     throw new Error("Nano core not loaded");
   }
 
-  var Not = Nano.Notifications = class
+  /**
+   * A Notification system. 
+   *
+   * Can display messages of different classes to the user in various ways.
+   */
+  Nano.Notifications = class
   {
     constructor (options={})
     {
@@ -79,9 +83,55 @@
       }
       if ('actionHandlers' in options)
       {
-        for (let d in options.actionHandlers)
+        for (let hname in options.actionHandlers)
         {
-          this.actionHandlers[d] = options.actionHandlers[d];
+          this.addHandler(hname, options.actionHandlers[hname]);
+        }
+      }
+
+      let defTypes = this.constructor.DefaultTypes;
+      this.types = {};
+      for (let d in defTypes)
+      {
+        this.types[d] = defTypes[d];
+      }
+
+      let defTimeouts = this.constructor.DefaultTimeouts;
+      this.timeouts = {};
+      for (let d in defTimeouts)
+      {
+        this.timeouts[d] = defTimeouts[d];
+      }
+
+      let defPrios = this.constructor.DefaultPriority;
+      this.iconPriority = {};
+      for (let d in defPrios)
+      {
+        this.iconPriority[d] = defPrios[d];
+      }
+
+      if ('timeouts' in options)
+      {
+        for (let t in options.timeouts)
+        {
+          this.timeouts[t] = options.timeouts[t];
+        }
+      }
+
+      if ('iconPriority' in options)
+      {
+        for (let p in options.iconPriority)
+        {
+          this.iconPriority[p] = options.priority[p];
+        }
+      }
+
+      if ('types' in options)
+      {
+        for (let typeName in options.types)
+        {
+          let typeOpts = options.types[typeName];
+          this.addType(typeName, typeOpts);
         }
       }
   
@@ -94,13 +144,13 @@
         }
       }
 
-      let engines = this.constructor.Engines;
+      let defEngine = this.constructor.DefaultEngine;
   
       this.renderItem = 'renderItem' in options 
-        ? options.renderItem : engines.element;
+        ? options.renderItem : defEngine;
   
       this.renderAlert = 'renderAlert' in options 
-        ? options.renderAlert : engines.element
+        ? options.renderAlert : defEngine;
   
       this.itemTemplate = 'itemTemplate' in options
         ? options.itemTempate : '#notification_item .notification';
@@ -349,7 +399,7 @@
         opts = {};
       
       var typeOpts;
-      let types = this.constructor.Types;
+      let types = this.types;
 //      console.debug("types", types);
       if ('type' in opts && opts.type in types)
       {
@@ -470,7 +520,7 @@
         this.alertsElement.append(msg);
         msg.fadeIn(400);
         var timeout;
-        let timeouts = this.constructor.Timeouts;
+        let timeouts = this.timeouts;
         if (message.opts.timeout)
           timeout = message.opts.timeout;
         else if (message.class in timeouts)
@@ -490,7 +540,8 @@
             msg.remove();
           });
         }
-  
+ 
+        console.debug("Showing alert", message, timeout);
         timer = setTimeout(callback, timeout);
   
         this.alerts[timer] = callback;
@@ -574,6 +625,21 @@
     {
       this.send(name, this._getopts(opts, reps, 'notice'));
     }
+
+    iconClasses ()
+    {
+      let classes = [];
+      let prios = this.iconPriority;
+      for (let className in prios)
+      {
+        classes.push(className);
+      }
+      classes.sort((a,b) =>
+      {
+        return prios[b] - prios[a];
+      });
+      return classes;
+    }
   
     updateIcon ()
     {
@@ -584,8 +650,11 @@
         iconSpan.text(count);
       else
         iconSpan.text('-');
-      iconSpan.removeClass('none message warning error notice');
-      var classes = ['error','warning','message','notice'];
+
+      let classes = this.iconClasses();
+      let classList = 'none '+classes.join(' ');
+
+      iconSpan.removeClass(classList);
       var foundClass = false;
       for (var c in classes)
       {
@@ -656,26 +725,119 @@
       this.paneElement.toggleClass(this.dockClass, toggle);
     }
 
+    /**
+     * Add an action handler.
+     *
+     * @param {string} actionName  The name of the action.
+     * @param {function} handlerFunc  The function to handle the action.
+     *
+     * The exact nature of the handler depends on the engine being used.
+     * In the default engine, the following signature is used:
+     *
+     * handler(notificationObject, notificationElement, actionElement, event);
+     *
+     * The context ('this') will be set to the Notifications instance itself.
+     */
+    addHandler (actionName, handlerFunc)
+    {
+      if (typeof actionName !== 'string')
+      {
+        throw new Error("actionName must be a string");
+      }
+      if (typeof handlerFunc !== 'function')
+      {
+        throw new Error("handlerFunc must be a function");
+      }
+
+      this.actionHandlers[actionName] = handlerFunc;
+    }
+
+    /**
+     * Add a notification type.
+     *
+     * @param {string} typeName  The name of the type you are adding.
+     * 
+     * The special type name 'default' is used as a fallback if a notification
+     * with an unknown or unspecified type is passed.
+     *
+     * @param {object} typeOpts  Options that will be inferred by the type.
+     *
+     * The typeOpts should at least contain a 'class' property, and can
+     * contain any property of a Notification object. If the 'class' property
+     * is not set, it will be set to the typeName.
+     *
+     * If the typeOpts contains a 'timeout' property, this will be set as
+     * the timeout value for the type. It won't be included as one of the
+     * properties in the notification object itself.
+     *
+     * If the typeOpts contains an 'iconPriority' property, this will be set
+     * as the priorty value for the type. It won't be included as one of the
+     * properties in the notifications object itself.
+     */
+    addType (typeName, typeOpts={})
+    {
+      if (typeof typeName !== 'string')
+      {
+        throw new Error("typeName must be a string");
+      }
+      if (typeof typeOpts !== 'object')
+      {
+        throw new Error("typeOpts must be an object");
+      }
+
+      if (typeof typeOpts.class !== 'string')
+      {
+        typeOpts.class = typeName;
+      }
+
+      if ('timeout' in typeOpts)
+      {
+        this.timeouts[typeOpts.class] = typeOpts.timeout;
+        delete typeOpts.timeout;
+      }
+
+      if ('iconPriority' in typeOpts)
+      {
+        this.iconPriority[typeOpts.class] = typeOpts.iconPriority;
+        delete typeOpts.iconPriority;
+      }
+
+      this.types[typeName] = typeOpts;
+    }
+
   } // class Nano.Notifications
 
-  Not.Types =
+  Nano.Notifications.DefaultTypes =
   {
     default: {class: 'default'},
-    message: {class: 'message', prefix: 'msg.'},
-    error:   {class: 'error', prefix: 'err.'},
-    warning: {class: 'warning', prefix: 'warn.'},
-    notice:  {class: 'notice',  noGroup: true, actions:['dismiss']},
+    message: {class: 'message', prefix: 'msg.',  actions:['dismiss']},
+    error:   {class: 'error',   prefix: 'err.'},
+    warning: {class: 'warning', prefix: 'warn.', actions:['dismiss']},
+    notice:  {class: 'notice',  noGroup: true,   actions:['dismiss']},
+    system:  {class: 'system',  noGroup: true},
   };
 
-  Not.Timeouts =
+  Nano.Notifications.DefaultTimeouts =
   {
     default: 1500,
     message: 1500,
+    notice:  2250,
     warning: 3000,
+    system:  4500,
     error:   6000,
   }
 
-  Not.DefaultHandlers =
+  Nano.Notifications.DefaultPriority =
+  {
+    default: 100,
+    message: 200,
+    notice:  300,
+    system:  400,
+    warning: 500,
+    error:   600,
+  };
+
+  Nano.Notifications.DefaultHandlers =
   {
     dismiss: function (notObj)
     {
@@ -683,15 +845,22 @@
     }
   };
 
-  Not.Engines = {};
-  Not.Engines.element = function (elselector, notification, actselector)
+  Nano.Notifications.DefaultEngine = function (elselector, notification, actselector)
   {
     let elem = $(elselector).clone();
     elem.attr(this.msgKeyAttr, notification.key);
     elem.addClass(notification.class);
+    let useHTML = 'isHTML' in notification.opts ? notification.opts.isHTML : false;
     if (notification.opts.tag)
       elem.addClass(notification.opts.tag);
-    elem.find('.message').text(notification.text);
+    if (useHTML)
+    {
+      elem.find('.message').html(notification.text);
+    }
+    else
+    {
+      elem.find('.message').text(notification.text);
+    }
     let actList = elem.find('.actions');
     if (actList.length > 0 && notification.opts && notification.opts.actions)
     {
