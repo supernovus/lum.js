@@ -14,58 +14,40 @@
    *
    * You can create an instance of this for any library that uses URL
    * hashes, and it supports a wide variety of URL hash functionality.
+   *
+   * @property {boolean} shortOpt  Allow short option fallback?
+   * @property {boolean} autoArray Use smart array format detection?
    */
   Nano.Hash = class
   {
     /**
      * Create a URLHash instance.
      *
-     * @param object options   Named options to override default functionality.
+     * @param {object} opts  Named options to override default functionality.
+     * @param {boolean} [opts.shortOpt=false]  Allow short option fallback.
+     * @param {boolean|string} [opts.json=false] Allow JSON in hash?
      *
-     *   'shortOpt'  Allow short option fallback.
-     *               See getOpt() for a description of what this does.
-     *               Default: false
+     *  If this is true we allow both JSON arrays and JSON objects.
+     *  If 'array' we allow only arrays. If 'object' we allow only objects.
      *
-     *   'json'      Allow JSON strings to be used (see below for values).
+     * @param {boolean} [opts.autoArray=true] Use smart array format detection.
+     *  Only applicable if 'json' is not false.
      *
-     *   'autoArray' Use smart array format detection when serializing.
-     *               Only applicable if 'json' is not false.
-     *               Default: true
+     * @param {object} [opts.getters] Options for parsing Hash values.
+     * @param {string|RegExp} [opts.getters.separate=';'] Split value for options.
+     * @param {string|RegExp} [opts.getters.assign='='] Split value for assignments.
+     * @param {string|RegExp} [opts.getters.true=/^(true|yes)%/i] Match value for true.
+     * @param {string|RegExp} [opts.getters.false=/^(false|no)%/i] Match value for false.
      *
-     *   'getters'   An object that can contain the following sub-options:
+     * @param {object} [opts.setters] Options for serializing Hash values.
+     * @param {string} [opts.setters.separate=';'] String for options.
+     * @param {string} [opts.setters.assign='='] String for assignments.
+     * @param {string} [opts.setters.true='true'] String for true.
+     * @param {string} [opts.setters.false='false'] String for false.
      *
-     *     'separate'  Split value for options (default: ';').
-     *     'assign'    Split value for assignments (default: '=').
-     *     'true'      Match value for true (default: /^(true|yes)$/i).
-     *     'false'     Match value for false (default: /^(false|no)$/i).
+     * @param {function} [opts.getHash] A function to return the hash string. By default we return location.hash (the browser URL hash.)
+     * @param {function} [opts.setHash] A function to set the hash string to a new value. By default we set location.hash.
      *
-     *   'setters'   An object that can contain the following sub-options:
-     *
-     *     'separate'  String for options (default: ';').
-     *     'assign'    String for assignments (default: '=').
-     *     'true'      String for true (default: 'true').
-     *     'false'     String for false (default: 'false').
-     *
-     *   'getHash'   A function to return the hash string to use.
-     *               By default we return location.hash (the browser URL hash.)
-     *
-     *   'setHash'   A function to set the hash string to a new value.
-     *               By default we set location.hash (the browser URL hash.)
-     *
-     * Match and Split values may be either strings or RegExps.
-     *
-     * The 'true' and 'false' sub-options can be set to false
-     * to disable the parsing or serialization of those values.
-     *
-     * The 'json' option can be one of the following values.
-     *
-     *   false         Don't parse or serialize JSON at all (default).
-     *   true          Match/serialize both arrays and objects.
-     *   'array'       Match/serialize only arrays.
-     *   'object'      Match/serialize only objects.
-     *
-     * See below for methods to change the options passed to the constructor
-     * on an already initialized instance.
      */
     constructor (opts={})
     {
@@ -130,17 +112,18 @@
     /**
      * Parse a URL Hash string into a query string like object.
      *
-     * @param object getOpts    Options specific to this method (optional).
-     *
-     *   'defaults'  A pre-populated object with defaults for the hash options.
-     *
      * If an option does not have an assignment, it's value will be set to null.
+     *
+     * @param {object} [getOpts] Options
+     * @param {object} [getOpts.defaults] Default values for the hash options.
+     * @param {string} [getOpts.hash] Use this instead of the default hash.
+     *
      */
     getOpts (getOpts={})
     {
       var hashOpts = (typeof getOpts.defaults === 'object' && getOpts.defaults !== null) ? Nano.clone(getOpts.defaults) : {};
   
-      var hash = this._getHash();
+      var hash = 'hash' in getOpts ? getOpts.hash : this._getHash();
   
       if (hash && hash != '#')
       { // We have a hash, let's split it up.
@@ -223,19 +206,20 @@
     /**
      * Get a single Hash option.
      *
-     * @param string name      The name of the option you want to find.
-     * @param object getOpts   Options specific to this method (optional).
+     * @param {string} name  The name of the option you want to find.
+     * @param {object} [getOpts]   Options
      *
-     *   'default'     The default value if nothing else matches.
-     *   'shortOpt'    Override the 'shortOpt' property for this call.
+     * Note that the getOpts are passed to getOpts() as well, so any
+     * options applicable to that method may also be specified.
+     *
+     * @param {mixed} [getOpts.default] The default value if nothing else matches.
+     * @param {boolean} [getOpts.shortOpt] Override the 'shortOpt' option for this call.
      *
      * If 'shortOpt' is true (either globally, or just for this call), then
      * if the named hash option isn't found, but only a single hash option was 
      * defined, we assume the hash wasn't using named options at all, 
      * and the single option was the value itself.
      *
-     * Note that the getOpts are passed to getOpts() as well, so any
-     * options applicable to that method may also be specified.
      */
     getOpt (name, getOpts={})
     {
@@ -266,13 +250,6 @@
     /**
      * Serialize an object into a URL Hash string.
      *
-     * @param object obj       The object we are serializing.
-     * @param object setOpts   Options specific to this method (optional).
-     *
-     *   'autoArray'   Override the 'autoArray' property for this call.
-     *
-     * @return string   The URL Hash string.
-     *
      * If an array value is found, how it's handled depends on the current
      * 'json'/useJson() property value. If we aren't serializing JSON, then
      * it will expect the array to contain only strings and/or values that
@@ -293,6 +270,12 @@
      *
      * You probably don't need to run this method manually, see the
      * replace() and update() methods for the primary ways to call this.
+     *
+     * @param {object} obj       The object we are serializing.
+     * @param {object} [setOpts]   Options specific to this method.
+     * @param {boolean} [setOpts.autoArray] Override the 'autoArray' property for this call.
+     *
+     * @return string   The URL Hash string.
      */
     serialize (obj, setOpts={})
     {
@@ -416,14 +399,13 @@
     /**
      * Replace the referenced Hash string with a new serialized one.
      *
-     * @param object reps     The object we are serializing to the hash string.
-     * @param object setOpts  Options to pass to serialize (optional).
-     *
-     * @return undefined
-     *
      * Serialize the object into a Hash string, then set the referenced
      * Hash to the new string. This is a way to completely rewrite the hash,
      * and is one of the primary serialization methods.
+     *
+     * @param {object} reps     The object we are serializing to the hash string.
+     * @param {object} [setOpts]  Options to pass to serialize.
+     *
      */
     replace (reps, setOpts)
     {
@@ -436,12 +418,6 @@
     /**
      * Update the referenced Hash string.
      *
-     * @param object updates   Changes to make to the hash.
-     * @param object setOpts   Options to pass to serialize (optional).
-     * @param object getOpts   Options to pass to getOpts (optional).
-     *
-     * @return undefined
-     *
      * This is similar to replace() but it keeps existing properties already
      * in the hash that haven't been modified.
      *
@@ -450,6 +426,11 @@
      *
      * This is the other primary serialization method, and will probably be
      * used even more than replace() since it respects existing values.
+     *
+     * @param {object} updates   Changes to make to the hash.
+     * @param {object} [setOpts]   Options to pass to serialize.
+     * @param {object} [getOpts]   Options to pass to getOpts.
+     *
      */
     update (updates, setOpts, getOpts)
     {
@@ -472,7 +453,7 @@
     /**
      * Set a bunch of 'getters' properties at once.
      *
-     * @param object obj   The properties you want to see.
+     * @param {object} obj   The properties you want to see.
      *
      * See constructor for valid 'getters' properties.
      */
@@ -495,7 +476,7 @@
     /**
      * Set a bunch of 'setters' properties at once.
      *
-     * @param object obj   The properties you want to see.
+     * @param {object} obj   The properties you want to see.
      *
      * See constructor for valid 'setters' properties.
      */
@@ -518,8 +499,8 @@
     /**
      * Set a 'getters' property.
      *
-     * @param string name   The property you want to set.
-     * @param mixed value   The value you want to set.
+     * @param {string} name   The property you want to set.
+     * @param {mixed} value   The value you want to set.
      *
      * See constructor for valid 'getters' properties and accepted values.
      */
@@ -558,8 +539,8 @@
     /**
      * Set a 'setters' property.
      *
-     * @param string name   The property you want to set.
-     * @param mixed value   The value you want to set.
+     * @param {string} name   The property you want to set.
+     * @param {mixed} value   The value you want to set.
      *
      * See constructor for valid 'setters' properties and accepted values.
      */
@@ -596,6 +577,8 @@
     /**
      * Do we want to parse/serialize JSON values?
      *
+     * @param {boolean|string} value  the 'json' value.
+     *
      * See the constructor for valid 'json' values.
      */
     useJson (value)
@@ -624,6 +607,8 @@
 
     /**
      * Can we serialize Arrays to JSON?
+     *
+     * @return boolean
      */
     serializeJsonArray ()
     {
@@ -632,6 +617,8 @@
 
     /**
      * Can we serialize Objects to JSON?
+     *
+     * @return boolean
      */
     serializeJsonObject ()
     {
@@ -641,10 +628,10 @@
     /**
      * A static class method to create a new Hash and call getOpts() on it.
      *
-     * @param object getOpts   Options to pass to getOpts (optional).
-     * @param object hashOpts  Options to pass to constructor (optional).
+     * @param {object} [getOpts]   Options to pass to getOpts.
+     * @param {object} [hashOpts]  Options to pass to constructor.
      *
-     * @return object   The parsed hash options.
+     * @return {object} The parsed hash options.
      */
     static getOpts (getOpts, hashOpts)
     {
@@ -654,9 +641,9 @@
     /**
      * A static class method to create a new Hash and call getOpt() on it.
      *
-     * @param string name      The option name we want to get.
-     * @param object getOpts   Options to pass to getOpt (optional).
-     * @param object hashOpts  Options to pass to constructor (optional).
+     * @param {string} name      The option name we want to get.
+     * @param {object} [getOpts]   Options to pass to getOpt.
+     * @param {object} [hashOpts]  Options to pass to constructor.
      *
      * @return mixed   The value returned from getOpt.
      */
@@ -668,9 +655,9 @@
     /**
      * A static class method to create a new Hash and call replace() on it.
      *
-     * @param object reps      The reps to pass to replace.
-     * @param object setOpts   Options to pass to replace (optional).
-     * @param object hashOpts  Options to pass to contructor (optional).
+     * @param {object} reps      The reps to pass to replace.
+     * @param {object} [setOpts]   Options to pass to replace.
+     * @param {object} [hashOpts]  Options to pass to contructor.
      */
     static replace (reps, setOpts, hashOpts)
     {
@@ -680,10 +667,10 @@
     /**
      * A static class method to create a new Hash and call update() on it.
      *
-     * @param object updates    The updates to pass to update.
-     * @param object setOpts    Set options to pass to update (optional).
-     * @param object getOpts    Get options to pass to update (optional).
-     * @param object hashOpts   Options to pass to constructor (optional).
+     * @param {object} updates    The updates to pass to update.
+     * @param {object} [setOpts]    Set options to pass to update.
+     * @param {object} [getOpts]    Get options to pass to update.
+     * @param {object} [hashOpts]   Options to pass to constructor.
      */
     static update (updates, setOpts, getOpts, hashOpts)
     {
