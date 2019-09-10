@@ -613,10 +613,10 @@ Nano.Listing = class
   refresh ()
   {
     var ourdata = this.getData();
-    if (this.asyncData && typeof ourdata.done === 'function')
+    if (this.asyncData && typeof ourdata.then === 'function')
     {
       var self = this;
-      ourdata.done(function(data)
+      ourdata.then(function(data)
       {
         if (typeof self.filterData === 'function')
         {
@@ -644,10 +644,10 @@ Nano.Listing = class
   filter_data (rawdata)
   {
     var filterdata = this.filterData(rawdata);
-    if (this.asyncData && typeof filterdata.done === 'function')
+    if (this.asyncData && typeof filterdata.then === 'function')
     {
       var self = this;
-      filterdata.done(function(data)
+      filterdata.then(function(data)
       {
         self.refresh_data(data);
       });
