@@ -541,7 +541,7 @@
           });
         }
  
-        console.debug("Showing alert", message, timeout);
+//        console.debug("Showing alert", message, timeout);
         timer = setTimeout(callback, timeout);
   
         this.alerts[timer] = callback;
