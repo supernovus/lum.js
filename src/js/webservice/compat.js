@@ -12,19 +12,18 @@
  * using any internal structures, they've all pretty much changed. It was never
  * recommended using internal structures to begin with, so refactor your code!
  */
-(function ()
+(function (Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Nano core library not loaded");
+    throw new Error("Missing Luminaryn core");
   }
 
-  if (!Nano.hasNamespace('Nano.WebService'))
-  {
-    throw new Error("Missing Nano.WebService library");
-  }
+  Nano.needLibs('webservice');
+
+  Nano.markLib('webservice.compat');
 
   console.log("Using WebService compat library. Look for DEPRECATED messages.");
 
@@ -168,4 +167,4 @@
     }
   }
 
-})();
+})(window.Luminaryn);

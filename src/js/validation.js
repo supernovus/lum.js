@@ -1,13 +1,13 @@
-(function($)
+(function(Nano, $)
 {
-// Now in script namespace.
-
 "use strict";
 
-if (window.Nano === undefined)
+if (Nano === undefined)
 {
-  window.Nano = {};
+  throw new Error("Missing Luminaryn core");
 }
+
+Nano.markLib('validation');
 
 const VALID_NS = "validation";
 
@@ -318,4 +318,4 @@ Nano.Validation = class
 Nano.Validation.TestTypes = BUILT_INS;
 
 // End of script namespace.
-})(jQuery);
+})(window.Luminaryn, window.jQuery);

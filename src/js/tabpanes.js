@@ -1,9 +1,13 @@
-(function($)
+(function(Nano, $)
 {
-  if (window.Nano === undefined || Nano.Hash === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Nano.Hash is required for Nano.TabPanes");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('hash');
+
+  Nano.markLib('tabpanes');
 
   /**
    * A GUI library to make tabbed panes.
@@ -240,4 +244,4 @@
 
   } // class Nano.TabPanes
 
-})(jQuery);
+})(window.Luminaryn, window.jQuery);

@@ -1,4 +1,4 @@
-/**
+/*
  * Nano Webservice Framework v4.
  *
  * A modular client library for working with web services.
@@ -12,14 +12,18 @@
  *
  */
 
-(function ()
+(function (Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Nano core library not loaded");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('helpers');
+
+  Nano.markLib('webservice');
 
   /**
    * Build a WebService instance.
@@ -992,4 +996,4 @@
    */
   wsp._optionDefaults.transportClass = Nano.WebService.jQueryTransport;
 
-})();
+})(window.Luminaryn);

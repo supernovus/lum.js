@@ -6,23 +6,14 @@
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.hasNamespace === undefined)
+  if (Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    throw new Error("Missing Luminaryn core");
   }
 
-  if (!Nano.hasNamespace('Nano.ModelAPI'))
-  {
-    console.log("fatal error: Nano.ModelAPI not loaded");
-    return;
-  }
+  Nano.needLibs('modelapi','promise');
 
-  if (!Nano.hasNamespace('Nano.Promise'))
-  {
-    console.log("fatal error: Nano.Promise not loaded");
-    return;
-  }
+  Nano.markLib('modelapi.ws_model');
 
   let map = Nano.ModelAPI.prototype;
 

@@ -1,11 +1,13 @@
-(function()
+(function(Nano)
 {
   "use strict";
-  if (window.Nano === undefined)
+
+  if (Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('tax');
 
   /**
    * A class to calculate tax values.
@@ -141,4 +143,4 @@
 
   } // class Nano.Tax
 
-})();
+})(window.Luminaryn);

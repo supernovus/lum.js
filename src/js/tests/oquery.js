@@ -1,11 +1,13 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.Tests === undefined || Nano.oQuery === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('tests','oquery');
 
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('oquery');
@@ -93,4 +95,4 @@
 
   });
 
-})();
+})(window.Luminaryn);

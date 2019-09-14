@@ -1,11 +1,13 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('test');
 
   /**
    * A simple testing library with TAP support.
@@ -220,4 +222,4 @@
 
   } // class Log
 
-})();
+})(window.Luminaryn);

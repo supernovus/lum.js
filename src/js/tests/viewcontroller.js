@@ -1,11 +1,13 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.Tests === undefined || Nano.ViewController === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('tests','viewcontroller');
 
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('viewcontroller');
@@ -99,4 +101,4 @@
     viewc.start(Model, modelConf);
   });
 
-})();
+})(window.Luminaryn);

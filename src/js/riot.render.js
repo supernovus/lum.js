@@ -1,5 +1,5 @@
 
-;(function()
+;(function(Nano)
 {
   "use strict";
 
@@ -30,12 +30,12 @@ var render = function(tmpl, data, escape_fn) {
 
 if (window.riot !== undefined)
   riot.render = render;
-if (window.Nano !== undefined)
+if (Nano !== undefined)
 {
   if (Nano.render === undefined)
     Nano.render = {};
   Nano.render.riot1 = render;
 }
 
-})();
+})(window.Luminaryn);
 

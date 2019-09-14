@@ -1,9 +1,15 @@
-(function($, observable)
+(function(Nano, $, observable)
 {
-  if (window.Nano === undefined)
+  "use strict";
+
+  if (Nano === undefined)
   {
-    throw new Error("Nano core not loaded");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('helpers');
+
+  Nano.markLib('viewcontroller');
 
   /**
    * A class to represent a View Controller in a GUI.
@@ -338,9 +344,10 @@
   } // class Nano.ViewController
 
 })(
-  jQuery,                        // jQuery is always required. 
+  window.Luminaryn,
+  window.jQuery,                 // jQuery is always required. 
   window.riot 
   ? window.riot.observable       // If 'riot' exists, use it.
-  : window.Nano.observable       // Nano may contain the observable trait.
+  : window.Luminaryn.observable  // Nano may contain the observable trait.
 );
 

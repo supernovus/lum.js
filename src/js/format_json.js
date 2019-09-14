@@ -2,22 +2,20 @@
  * A function and jQuery wrapper for formatting JSON text in a friendly way.
  */
 
-(function ()
+(function (Nano, jQuery)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
 
-  if (Nano.format === undefined)
-  {
-    Nano.format = {};
-  }
+  Nano.markLib('format_json');
+  let format = Nano.registerNamespace('Nano.format');
 
   // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
-  Nano.format.json = function (val)
+  format.json = function (val)
   { 
     var retval = '';
     var str = val;
@@ -63,7 +61,7 @@
   }
 
   // A quick jQuery wrapper by me. Expects JSON text to be in the field.
-  if (window.jQuery !== undefined)
+  if (jQuery !== undefined)
   {
     jQuery.fn.formatJSON = function ()
     {
@@ -79,7 +77,7 @@
         else
           return; // We currently only support <textarea/> and <pre/>.
   
-        var newval = Nano.format.json(oldval);
+        var newval = format.json(oldval);
   
         if (mytype == "textarea")
           $this.val(newval);
@@ -89,5 +87,5 @@
     }
   }
 
-})();
+})(window.Luminaryn);
 

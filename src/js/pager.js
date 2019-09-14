@@ -8,14 +8,16 @@
  * TODO: Add support for alternative rendering engines.
  */
 
-(function($)
+(function(Nano, $)
 { 
   "use strict";
 
-if (window.Nano === undefined)
-{
-  window.Nano = {};
-}
+  if (Nano === undefined)
+  {
+    throw new Error("Missing Luminaryn core");
+  }
+
+  Nano.markLib('pager');
 
 /**
  * A class to render a Pager element.
@@ -367,5 +369,5 @@ Nano.Pager = class
 } // class Nano.Pager
 
 // End of module.
-})(jQuery);
+})(window.Luminaryn, window.jQuery);
 

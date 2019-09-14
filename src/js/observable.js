@@ -2,15 +2,16 @@
  * A copy of the Observable library from riot.js without the rest of
  * the riot.js framework. I want to keep it small and simple.
  */
-(function()
+(function(Nano)
 {
-
 "use strict";
 
-if (window.Nano === undefined)
+if (Nano === undefined)
 {
-  window.Nano = {};
+  throw new Error("Missing Luminaryn core");
 }
+
+Nano.markLib('observable');
 
 Nano.observable = function(el) {
 
@@ -124,4 +125,4 @@ Nano.observable = function(el) {
 
 }
 
-})();
+})(window.Luminaryn);

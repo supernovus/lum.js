@@ -5,14 +5,16 @@
  * for cases where existing apps/libraries expect done(), fail(), etc.
  */
 
-(function()
+(function(Nano, jQuery)
 { 
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Nano core not loaded");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('promise');
 
   /**
    * @class Nano.Promise
@@ -36,7 +38,7 @@
     }
     else if (typeof options !== 'object' || options === null)
     { // Ensure options is an object, and auto-select jQuery if it's loaded.
-      options = {jquery: (window.jQuery !== undefined)};
+      options = {jquery: (jQuery !== undefined)};
     }
 
     if (options.jquery)
@@ -56,7 +58,7 @@
    */
   Nano.Promise.prototype._extendJQuery = function (options)
   {
-    if (window.jQuery === undefined)
+    if (jQuery === undefined)
     {
       throw new Error("Cannot use 'jquery' without jQuery loaded.");
     }
@@ -388,5 +390,5 @@
     }, timeout);
   }
 
-})(); 
+})(window.Luminaryn, window.jQuery); 
 

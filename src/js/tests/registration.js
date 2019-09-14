@@ -1,6 +1,15 @@
-(function()
+(function(Nano)
 {
-  /**
+  "use strict";
+
+  if (Nano === undefined)
+  {
+    throw new Error("Missing Luminaryn core");
+  }
+
+  Nano.needLibs('tests');
+
+  /*
    * In this file, we register all of our current test sets.
    *
    * They aren't loaded immediately, but instead will be loaded on demand.
@@ -9,11 +18,6 @@
    * have initialized the Nano.Tests instance. The default test templates will
    * do this automatically.
    */
-
-  if (window.Nano === undefined || Nano.Tests === undefined)
-  {
-    throw new Error("Must load and initialize Nano.Tests before registration");
-  }
 
   let testSuite = Nano.Tests.getInstance();
 
@@ -121,8 +125,9 @@
   // tests for them right away. I can leave things commented out until I'm
   // ready to write tests. 
 
-  let core = test('coreutils',  'Core Utils');
-  testext(core, 'extend', 'Nano.extend');
+  let core = test('core',  'Core');
+  let helpers = test('helpers', 'Helpers');
+  testext(helpers, 'extend', '.extend');
   let hash = test('hash', 'URL Hash');
   test('arrayutils', 'Array Utils');
   //testjq('changetype', 'jQuery Change Type');
@@ -167,4 +172,4 @@
 
   // Add more tests as we add/change libraries.
 
-})();
+})(window.Luminaryn);

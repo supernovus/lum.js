@@ -1,15 +1,17 @@
 /**
  * Get a bunch of user data.
  */
-(function()
+(function(Nano)
 {
   /* jshint asi: true */
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('userdata');
 
   /**
    * @namespace Nano.UserData
@@ -162,4 +164,4 @@
     return info;
   }
 
-})();
+})(window.Luminaryn);

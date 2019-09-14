@@ -1,11 +1,14 @@
-(function($)
+(function(Nano, $)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.Tests === undefined || $.fn.exists === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('tests');
+  Nano.needJq('exists');
 
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('exists_jq');
@@ -19,4 +22,4 @@
 
   });
 
-})(jQuery);
+})(window.Luminaryn, window.jQuery);

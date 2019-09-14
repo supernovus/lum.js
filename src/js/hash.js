@@ -1,9 +1,13 @@
-(function()
+(function(Nano)
 {
-  if (window.Nano === undefined)
+  "use strict";
+
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('hash');
 
   const JSON_ALL = /^(\[.*?\]|\{.*?\})$/;
   const JSON_ARR = /^\[.*?\]$/;
@@ -678,4 +682,4 @@
     }
 
   }
-})();
+})(window.Luminaryn);

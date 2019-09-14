@@ -1,9 +1,16 @@
-(function($)
+(function(Nano, $)
 {
   /**
    * This is not a standard test file used by the test suite.
    * Instead it's the view controller for the nanogrid_*.html test files.
    */
+
+  if (Nano === undefined)
+  {
+    throw new Error("Missing Luminaryn core");
+  }
+
+  Nano.needLibs('helpers','grid','grid.ui');
 
   var ws, git;
   var render = Nano.render.riot2;
@@ -455,4 +462,4 @@
     dt.renderWorkspace();
   });
 
-})(jQuery);
+})(window.Luminaryn, window.jQuery);

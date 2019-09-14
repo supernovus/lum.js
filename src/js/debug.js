@@ -6,15 +6,16 @@
  * Requires: jquery, JSON, json.jq, exists.jq and format_json.
  */
 
-(function ($)
+(function ($, Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    console.log("fatal error: Nano core not loaded");
-    return;
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('debug');
 
   Nano.debug = {debug:false};
 
@@ -93,5 +94,5 @@
     $(elname).on('click', handler);
   }
 
-})(jQuery);
+})(window.jQuery, window.Luminaryn);
 

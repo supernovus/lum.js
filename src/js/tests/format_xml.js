@@ -1,11 +1,13 @@
-(function($)
+(function(Nano, $)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.Tests === undefined || Nano.format === undefined || Nano.format.xml === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('tests','format_xml');
 
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('format_xml');
@@ -43,4 +45,4 @@
 
   });
 
-})(jQuery);
+})(window.Luminaryn, window.jQuery);

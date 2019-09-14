@@ -1,14 +1,16 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.addProperty === undefined || Nano.Tests === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
 
+  Nano.needLibs('helpers','tests');
+
   let testSuite = Nano.Tests.getInstance();
-  let testSet = testSuite.getSet('coreutils_extend');
+  let testSet = testSuite.getSet('helpers_extend');
 
   testSet.setHandler(function (test)
   {
@@ -41,4 +43,4 @@
 
   });
 
-})();
+})(window.Luminaryn);

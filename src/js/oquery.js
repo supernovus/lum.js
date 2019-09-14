@@ -3,14 +3,16 @@
  * matching certain property values.
  */
 
-(function ()
+(function (Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('oquery');
 
 /**
  * Search through an array of objects.
@@ -219,5 +221,5 @@ oq.indexes = function (query, objarray)
   return oq(query, objarray, {index: true});
 }
 
-})();
+})(window.Luminaryn);
 

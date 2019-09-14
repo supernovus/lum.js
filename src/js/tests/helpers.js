@@ -1,18 +1,20 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.addProperty === undefined || Nano.Tests === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
 
+  Nano.needLibs('tests','helpers');
+
   let testSuite = Nano.Tests.getInstance();
-  let testSet = testSuite.getSet('coreutils');
+  let testSet = testSuite.getSet('helpers');
 
   testSet.setHandler(function (test)
   {
-    test.plan(40);
+    test.plan(35);
 
     { // Nano.copyProperties()
       let c1 = {name: 'Bob', job: {type:'IT',position:'developer'}};
@@ -103,18 +105,6 @@
       test.ok((c5.spouse === c2.spouse), 'Cloned internal object reference is the same as original');
     }
 
-    { // Nano.registerNamespace()
-      Nano.registerNamespace('Nano.Tests.ThisIsA.Test');
-      test.is((typeof Nano.Tests.ThisIsA), 'object', 'registerNamespace added to existing namespace');
-      test.is((typeof Nano.Tests.ThisIsA.Test), 'object', 'registerNamespace added nested tree');
-    }
-
-    { // Nano hasNamespace()
-      test.is(Nano.hasNamespace('Nano.Tests'), true, 'hasNamespace recognized globally available namespace');
-      test.is(Nano.hasNamespace('Nano.Tests.ThisIsA.Test'), true, 'hasNamespace recognized namespace added in registerNamespace test');
-      test.is(Nano.hasNamespace('Some.Completely.Bogus.Namespace'), false, 'hasNamespace returns false for non-existent global namespace');
-    }
-
     { // Nano.getDef()
       let opt1 = 'foo';
       let opt2 = null;
@@ -159,4 +149,4 @@
 
   });
 
-})();
+})(window.Luminaryn);

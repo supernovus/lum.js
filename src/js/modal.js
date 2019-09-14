@@ -2,13 +2,16 @@
  * Modal dialog boxes, and UI masks made easy.
  */
 
-(function ($)
+(function ($, Nano)
 {
+  "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('modal');
 
   /**
    * Quick class to represent a Mask to cover the UI when a Modal is open.
@@ -331,5 +334,5 @@
     }
   }
 
-})(jQuery);
+})(window.jQuery, window.Luminaryn);
 

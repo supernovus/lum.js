@@ -18,14 +18,17 @@
  *
  */
 
-(function ($)
+(function (Nano, $)
 {
   "use strict";
   
-  if (window.Nano === undefined || Nano.addProperty === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Nano core not loaded");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('helpers');
+  Nano.markLib('notifications');
 
   /**
    * A Notification system. 
@@ -906,4 +909,4 @@
     return elem;
   }
 
-})(jQuery);
+})(window.Luminaryn, window.jQuery);

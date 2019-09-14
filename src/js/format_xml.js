@@ -1,20 +1,18 @@
-(function ()
+(function (Nano, jQuery)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
 
-  if (Nano.format === undefined)
-  {
-    Nano.format = {};
-  }
+  Nano.markLib('format_xml');
+  let format = Nano.registerNamespace('Nano.format');
 
 // Based on a script from:
 // http://stackoverflow.com/questions/376373/pretty-printing-xml-with-javascript
-Nano.format.xml = function (xml) 
+format.xml = function (xml) 
 {
   var reg = /(>)(<)(\/*)/g;
   var wsexp = / *(.*) +\n/g;
@@ -76,7 +74,7 @@ Nano.format.xml = function (xml)
   return formatted;
 };
 
-  if (window.jQuery !== undefined)
+  if (jQuery !== undefined)
   {
     // A quick jQuery wrapper by me. Expects XML text to be in the field.
     jQuery.fn.formatXML = function ()
@@ -93,7 +91,7 @@ Nano.format.xml = function (xml)
         else
           return; // We don't support anything but <textarea/> and <pre/>.
   
-        var newval = Nano.format.xml(oldval);
+        var newval = format.xml(oldval);
   
         if (mytype == "textarea")
           $this.val(newval);
@@ -103,5 +101,5 @@ Nano.format.xml = function (xml)
     }
   }
 
-})();
+})(window.Luminaryn, window.jQuery);
 

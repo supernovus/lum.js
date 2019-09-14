@@ -5,14 +5,26 @@
  * Currently using Ace as it's backend component.
  */
 
-(function($, ace, CryptoJS)
+(function($, ace, CryptoJS, Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  if (ace === undefined )
+  {
+    throw new Error("Missing ace library");
+  }
+
+  if (CryptoJS === undefined)
+  {
+    throw new Error("Missing CryptoJS library");
+  }
+
+  Nano.markLib('editor');
 
   const BASE64 = 'base64';
 
@@ -176,4 +188,4 @@
     static get BASE64() { return BASE64; }
   }
 
-})(jQuery, ace, CryptoJS);
+})(window.jQuery, window.ace, window.CryptoJS, window.Luminaryn);

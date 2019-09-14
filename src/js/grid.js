@@ -1,10 +1,13 @@
-(function()
+(function(Nano, $)
 {
   "use strict";
-  if (window.Nano === undefined)
+
+  if (Nano === undefined)
   {
-    throw new Error("Nano core not loaded");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('grid');
 
   /**
    * Nano Grid library.
@@ -983,14 +986,13 @@
   Nano.Grid.Display = DisplayGrid;
 
   // Everything past here requires jQuery UI to be loaded.
-  if (window.jQuery === undefined || window.jQuery.ui === undefined)
+  if ($ === undefined || $.ui === undefined)
   {
     console.log("No jQuery UI, skipping Grid.UI class registration.");
     return;
   }
 
-  // A local jQuery reference just in case globals aren't being set.
-  var $ = window.jQuery;
+  Nano.markLib('grid.ui');
 
   /**
    * UIGrid
@@ -1333,4 +1335,4 @@
   // Assign the UIGrid class to Nano.Grid.UI
   Nano.Grid.UI = UIGrid;
 
-})();
+})(window.Luminaryn, window.jQuery);

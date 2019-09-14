@@ -1,8 +1,23 @@
-# Nano.js v3
+# Luminaryn Browser Libraries (Nano.js) v4
 
 ## Summary
 
 A bunch of common Javascript stuff for my projects that makes life easier.
+
+This was called Nano.js for the first 3 major releases, but was renamed after I 
+found a bunch of other libraries with the same (or similar) names.
+
+There's probably several references to 'nano' or 'Nano' scattered about,
+but the default global name that all libraries will be exported into is now 
+'Luminaryn'. If it's not in use, a global alias called 'Nano' will still be
+exported by default for at least some semblance of backwards compatibility.
+
+A new core.js MUST be loaded before any of the other libraries.
+It's a tiny core which defines the window.Luminaryn object, as well as a few
+helper functions that can be used by any other libraries.
+
+The rest of the object helpers have been moved into helpers.js, which is
+required by a few of the more complex libraries.
 
 ## Requirements
 
@@ -14,7 +29,7 @@ This is tested on a Linux operating system, but should work anywhere Node.js doe
 
 ## Build System
 
-Nano.js v3 uses Gulp 4 as it's build system.
+This uses Gulp 4 as it's build system.
 
 ## Setup
 
@@ -109,7 +124,8 @@ There are several branches of Nano.js:
 * v2 was the first attempt at a ES2015 version, but was abandoned.
 * v1.5 was the longest lasting ES5 version with multiple build systems.
 * v1.6 was the last ES5 version, using Gulp 4 as it's build system.
-* v3 (this) is the current ES2015+ release.
+* v3 was the first stable ES2015+ release.
+* v4 is the current release with the new name.
 
 This release is once again moving to using ES2015+ as it's primary release
 target, with a backwards compatible ES5 build being offered as a solution for
@@ -120,6 +136,9 @@ features. The source code will be compiled into two output paths:
 
 * scripts/nano/ - The ES2015+ release (compiled with terser).
 * scripts/nano-es5/ - The ES5 release (compiled with Babel 7 and uglify-js).
+
+The 'nano' in the path is a holdover from the original name of this library set.
+In the future I may change it, and just use a symlink to the old path.
 
 ## Authors
 

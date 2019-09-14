@@ -2,14 +2,16 @@
  * A quick Nano library for making Context menus.
  * Replaces the older menu.jq.js, this will override that if used.
  */
-(function($)
+(function($, Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('contextmenu');
 
   var $registered = false; // Private storage for $register() static method.
 
@@ -258,4 +260,4 @@
 
   } // class Nano.ContextMenu
 
-})(jQuery);
+})(window.jQuery, window.Luminaryn);

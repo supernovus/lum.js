@@ -3,12 +3,14 @@
  *
  * Fully compatible with Nano.php's implementation.
  */
-(function()
+(function(Nano)
 {
-  if (window.Nano === undefined)
+  if (Nano === undefined)
   {
-    window.Nano = {};
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.markLib('expression');
 
   var ns = Nano.Expression = {};
 
@@ -550,4 +552,4 @@
 
   }
 
-})();
+})(window.Luminaryn);

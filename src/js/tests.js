@@ -1,11 +1,16 @@
-(function($)
+(function(Nano, $)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.Test === undefined || Nano.Hash === undefined || $ === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('test','hash');
+  Nano.needJq();
+
+  Nano.markLib('tests');
 
   var testsInstance; // Private storage for the "global" Tests instance.
 
@@ -654,4 +659,4 @@
     }
   } // class NestedDeferred
 
-})(jQuery);
+})(window.Luminaryn, window.jQuery);

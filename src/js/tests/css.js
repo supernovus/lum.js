@@ -1,11 +1,13 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.CSS === undefined || Nano.Tests === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('tests','css');
 
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('css');
@@ -24,4 +26,4 @@
     test.is(rules2.length, 2, 'findRules returned proper length for DOM element');
   });
 
-})();
+})(window.Luminaryn);

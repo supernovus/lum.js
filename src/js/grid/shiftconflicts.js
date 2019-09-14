@@ -1,6 +1,15 @@
-(function()
+(function(Nano)
 {
   "use strict";
+
+  if (Nano === undefined)
+  {
+    throw new Error("Missing Luminaryn core");
+  }
+
+  Nano.needLibs('grid');
+
+  Nano.markLib('grid.shiftconflicts');
 
   /**
    * NOTE: this is currently broken, and needs rewriting.
@@ -8,17 +17,6 @@
    */
 
   var rc = Nano.Grid.prototype.resolveConflicts;
-
-  if (window.Nano === undefined)
-  {
-    console.error("fatal error: Nano core not loaded");
-    return;
-  }
-  if (!Nano.hasNamespace('Nano.Grid'))
-  {
-    console.error("fatal error: Nano.Grid library not loaded");
-    return;
-  }
 
   rc.shiftDown = function (item, conflicts, opts)
   {
@@ -138,4 +136,4 @@
   }
   rc.shiftAll.addFirst = true;
 
-})();
+})(window.Luminaryn);

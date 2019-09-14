@@ -1,11 +1,15 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.copyProperties === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Nano core not loaded");
+    throw new Error("Missing Luminaryn core");
   }
+  
+  Nano.needLibs('helpers');
+
+  Nano.markLib('extend');
 
   /**
    * Extend a new class using a parent base class.
@@ -101,4 +105,4 @@
     return sub;
   }
 
-})();
+})(window.Luminaryn);

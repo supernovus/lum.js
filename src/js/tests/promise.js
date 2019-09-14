@@ -1,11 +1,13 @@
-(function()
+(function(Nano)
 {
   "use strict";
 
-  if (window.Nano === undefined || Nano.Tests === undefined || Nano.Promise === undefined)
+  if (Nano === undefined)
   {
-    throw new Error("Missing required libraries");
+    throw new Error("Missing Luminaryn core");
   }
+
+  Nano.needLibs('tests','promise');
 
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('promise');
@@ -45,4 +47,4 @@
     return promise1;
   });
 
-})();
+})(window.Luminaryn);

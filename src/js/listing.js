@@ -1,12 +1,16 @@
-(function($)
+(function($, Nano)
 {
   "use strict";
 /* jshint asi: true, laxbreak: true */
 
-if (window.Nano === undefined || Nano.Pager === undefined || Nano.getNested === undefined)
-{
-  throw new Error("Missing pager and/or coreutils");
-}
+  if (Nano === undefined)
+  {
+    throw new Error("Missing Luminaryn core");
+  }
+
+  Nano.needLibs('helpers','pager');
+
+  Nano.markLib('listing');
 
 /**
  * A Listing component with advanced features such as sorting and searching.
@@ -966,5 +970,5 @@ Nano.Listing = class
 } // class Nano.Listing
 
 // End of module.
-})(jQuery);
+})(window.jQuery, window.Luminaryn);
 

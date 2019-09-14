@@ -1,5 +1,5 @@
 /* riot-tmpl v2.3.21, @license MIT, (c) 2015 Muut Inc. + contributors */
-/* Modified to export to Nano namespace if available. */
+/* Modified to export to Luminaryn namespace if available. */
 ;(function (window) {     // eslint-disable-line no-extra-semi
   'use strict'
   /*eslint-env amd */
@@ -429,12 +429,12 @@
       }
     })
   } else if (window) {
-    if (window.Nano !== undefined)
+    if (window.Luminaryn !== undefined)
     {
-      if (window.Nano.render === undefined)
-        window.Nano.render = {};
-      window.Nano.render.riot2 = tmpl;
-      window.Nano.render.riot2.brackets = brackets;
+      if (window.Luminaryn.render === undefined)
+        window.Luminaryn.render = {};
+      window.Luminaryn.render.riot2 = tmpl;
+      window.Luminaryn.render.riot2.brackets = brackets;
     }
     else
     {
