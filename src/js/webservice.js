@@ -18,7 +18,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('helpers');
@@ -996,4 +996,4 @@
    */
   wsp._optionDefaults.transportClass = Nano.WebService.jQueryTransport;
 
-})(window.Luminaryn);
+})(window.Lum);

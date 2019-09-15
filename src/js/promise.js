@@ -11,7 +11,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('promise');
@@ -390,5 +390,5 @@
     }, timeout);
   }
 
-})(window.Luminaryn, window.jQuery); 
+})(window.Lum, window.jQuery); 
 

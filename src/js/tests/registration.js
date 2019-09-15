@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('tests');
@@ -172,4 +172,4 @@
 
   // Add more tests as we add/change libraries.
 
-})(window.Luminaryn);
+})(window.Lum);

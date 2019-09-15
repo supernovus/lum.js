@@ -1,19 +1,19 @@
-# Luminaryn Browser Libraries (Nano.js) v4
+# Lum.js (Nano.js) v4
 
 ## Summary
 
-A bunch of common Javascript stuff for my projects that makes life easier.
+A bunch of client-side Javascript stuff for my projects that makes life easier.
 
 This was called Nano.js for the first 3 major releases, but was renamed after I 
 found a bunch of other libraries with the same (or similar) names.
 
 There's probably several references to 'nano' or 'Nano' scattered about,
 but the default global name that all libraries will be exported into is now 
-'Luminaryn'. If it's not in use, a global alias called 'Nano' will still be
+'Lum'. If it's not in use, a global alias called 'Nano' will still be
 exported by default for at least some semblance of backwards compatibility.
 
 A new core.js MUST be loaded before any of the other libraries.
-It's a tiny core which defines the window.Luminaryn object, as well as a few
+It's a tiny core which defines the window.Lum object, as well as a few
 helper functions that can be used by any other libraries.
 
 The rest of the object helpers have been moved into helpers.js, which is

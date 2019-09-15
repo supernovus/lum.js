@@ -11,7 +11,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   if (ace === undefined )
@@ -188,4 +188,4 @@
     static get BASE64() { return BASE64; }
   }
 
-})(window.jQuery, window.ace, window.CryptoJS, window.Luminaryn);
+})(window.jQuery, window.ace, window.CryptoJS, window.Lum);

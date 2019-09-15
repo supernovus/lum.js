@@ -7,7 +7,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('arrayutils');
@@ -82,5 +82,5 @@
     }
   }
 
-})(window.Luminaryn);
+})(window.Lum);
 

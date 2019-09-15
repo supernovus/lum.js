@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('format_xml');
@@ -101,5 +101,5 @@ format.xml = function (xml)
     }
   }
 
-})(window.Luminaryn, window.jQuery);
+})(window.Lum, window.jQuery);
 

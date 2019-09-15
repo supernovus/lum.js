@@ -8,7 +8,7 @@
 
 if (Nano === undefined)
 {
-  throw new Error("Missing Luminaryn core");
+  throw new Error("Missing Lum core");
 }
 
 Nano.markLib('observable');
@@ -125,4 +125,4 @@ Nano.observable = function(el) {
 
 }
 
-})(window.Luminaryn);
+})(window.Lum);

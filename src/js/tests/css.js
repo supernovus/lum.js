@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('tests','css');
@@ -26,4 +26,4 @@
     test.is(rules2.length, 2, 'findRules returned proper length for DOM element');
   });
 
-})(window.Luminaryn);
+})(window.Lum);

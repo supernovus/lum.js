@@ -8,7 +8,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('format_json');
@@ -87,5 +87,5 @@
     }
   }
 
-})(window.Luminaryn);
+})(window.Lum, window.jQuery);
 

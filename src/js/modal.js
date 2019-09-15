@@ -8,7 +8,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('modal');
@@ -334,5 +334,5 @@
     }
   }
 
-})(window.jQuery, window.Luminaryn);
+})(window.jQuery, window.Lum);
 

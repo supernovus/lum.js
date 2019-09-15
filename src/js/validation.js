@@ -4,7 +4,7 @@
 
 if (Nano === undefined)
 {
-  throw new Error("Missing Luminaryn core");
+  throw new Error("Missing Lum core");
 }
 
 Nano.markLib('validation');
@@ -318,4 +318,4 @@ Nano.Validation = class
 Nano.Validation.TestTypes = BUILT_INS;
 
 // End of script namespace.
-})(window.Luminaryn, window.jQuery);
+})(window.Lum, window.jQuery);

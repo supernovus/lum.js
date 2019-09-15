@@ -8,7 +8,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('contextmenu');
@@ -260,4 +260,4 @@
 
   } // class Nano.ContextMenu
 
-})(window.jQuery, window.Luminaryn);
+})(window.jQuery, window.Lum);

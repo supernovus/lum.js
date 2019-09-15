@@ -14,7 +14,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('pager');
@@ -369,5 +369,5 @@ Nano.Pager = class
 } // class Nano.Pager
 
 // End of module.
-})(window.Luminaryn, window.jQuery);
+})(window.Lum, window.jQuery);
 

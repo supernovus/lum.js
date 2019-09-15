@@ -1,17 +1,23 @@
 /*
- * Core utilities used by other Luminaryn libraries.
+ * Core utilities used by other Lum libraries.
  */
 
 (function (root)
 {
   "use strict";
 
+  if (root.Lum !== undefined)
+  {
+    console.warn("Lum already loaded.");
+    return;
+  }
+
   /** 
-   * The global Luminaryn namespace.
+   * The global Lum namespace.
    *
-   * @namespace Luminaryn
+   * @namespace Lum
    */
-  root.Luminaryn = {_loaded={}};
+  root.Lum = {_loaded:{}};
 
   /**
    * Register a global Namespace.
@@ -39,7 +45,7 @@
    *
    * @return {object}  The last element of the namespace added.
    */
-  Luminaryn.registerNamespace = function (namespaces, assign, overwrite=false)
+  Lum.registerNamespace = function (namespaces, assign, overwrite=false)
   {
     if (typeof namespaces === 'string')
     {
@@ -48,21 +54,24 @@
     var cns = root;
     var nscount = namespaces.length;
     var lastns = nscount - 1;
+//    console.debug("registerNamespace", namespaces, assign, overwrite, nscount, lastns);
     for (var n = 0; n < nscount; n++)
     {
       var ns = namespaces[n];
+//      console.debug("Looking for namespace", n, ns, cns, cns[ns]);
       if (cns[ns] === undefined)
       {
-        if (lastns && assign !== undefined)
+        if (n == lastns && assign !== undefined)
         {
           cns[ns] = assign;
+//          console.debug("Assigned", ns, cns[ns], assign);
         }
         else
         {
           cns[ns] = {};
         }
       }
-      else if (overwrite && lastns && assign !== undefined)
+      else if (overwrite && n == lastns && assign !== undefined)
       {
         cns[ns] = assign;
       }
@@ -79,7 +88,7 @@
    *
    * @return {mixed} The namespace if it exists, or `undefined` if it doesn't.
    */
-  Luminaryn.getNamespace = function (namespaces, logerror=false)
+  Lum.getNamespace = function (namespaces, logerror=false)
   {
     if (typeof namespaces === 'string')
     {
@@ -110,7 +119,7 @@
    *
    * @return {boolean} Does the namespace exist?
    */
-  Luminaryn.hasNamespace = function (namespaces, logerror=false)
+  Lum.hasNamespace = function (namespaces, logerror=false)
   {
     return (this.getNamespace(namespaces, logerror) !== undefined);
   }
@@ -122,7 +131,7 @@
    * @param {string|strings[]} target  The target namespace.
    * @param {boolean} [overwrite=false]
    */
-  Luminaryn.exportNamespace = function (source, target, overwrite=false)
+  Lum.exportNamespace = function (source, target, overwrite=false)
   {
     if (!overwrite && this.hasNamespace(target))
     {
@@ -140,7 +149,7 @@
   /**
    * Make a global alias to ourself.
    */
-  Luminaryn.exportAlias = function (target, overwrite=false)
+  Lum.exportAlias = function (target, overwrite=false)
   {
     this.registerNamespace(target, this, overwrite);
   }
@@ -150,7 +159,7 @@
    *
    * @param {string} lib  The name of the library we are marking as loaded.
    */
-  Luminaryn.markLib = function (lib)
+  Lum.markLib = function (lib)
   {
     this._loaded[lib] = true;
   }
@@ -160,7 +169,7 @@
    *
    * @param {string} lib  The name of the library we are looking for.
    */
-  Luminaryn.hasLib = function (lib)
+  Lum.hasLib = function (lib)
   {
     return this._loaded[lib];
   }
@@ -172,14 +181,14 @@
    *
    * Any arguments are the names of libraries we need.
    */
-  Luminaryn.needLibs = function ()
+  Lum.needLibs = function ()
   {
     for (let l = 0; l < arguments.length; l++)
     {
       let lib = arguments[l];
       if (!this._loaded[lib])
       {
-        throw new Error("Missing required library: ".lib);
+        throw new Error("Missing required library: "+lib);
       }
     }
   }
@@ -187,7 +196,7 @@
   /**
    * Check for needed jQuery plugins.
    */
-  Luminaryn.needJq = function ()
+  Lum.needJq = function ()
   {
     if (root.jQuery === undefined)
     {
@@ -199,13 +208,13 @@
       let lib = arguments[l];
       if ($.fn[lib] === undefined)
       {
-        throw new Error("Missing required jQuery plugin: ".lib);
+        throw new Error("Missing required jQuery plugin: "+lib);
       }
     }
   }
 
   // If 'window.Nano' does not already exist, create it.
-  Luminaryn.exportAlias('Nano');
+  Lum.exportAlias('Nano');
 
 })(window);
 

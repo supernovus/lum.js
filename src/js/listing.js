@@ -5,7 +5,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('helpers','pager');
@@ -970,5 +970,5 @@ Nano.Listing = class
 } // class Nano.Listing
 
 // End of module.
-})(window.jQuery, window.Luminaryn);
+})(window.jQuery, window.Lum);
 

@@ -9,7 +9,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('oquery');
@@ -221,5 +221,5 @@ oq.indexes = function (query, objarray)
   return oq(query, objarray, {index: true});
 }
 
-})(window.Luminaryn);
+})(window.Lum);
 

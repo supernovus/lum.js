@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('test','hash');
@@ -659,4 +659,4 @@
     }
   } // class NestedDeferred
 
-})(window.Luminaryn, window.jQuery);
+})(window.Lum, window.jQuery);

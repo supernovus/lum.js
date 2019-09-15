@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('tests','viewcontroller');
@@ -101,4 +101,4 @@
     viewc.start(Model, modelConf);
   });
 
-})(window.Luminaryn);
+})(window.Lum);

@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('grid');
@@ -136,4 +136,4 @@
   }
   rc.shiftAll.addFirst = true;
 
-})(window.Luminaryn);
+})(window.Lum);

@@ -37,5 +37,5 @@ if (Nano !== undefined)
   Nano.render.riot1 = render;
 }
 
-})(window.Luminaryn);
+})(window.Lum);
 

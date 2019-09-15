@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('tax');
@@ -143,4 +143,4 @@
 
   } // class Nano.Tax
 
-})(window.Luminaryn);
+})(window.Lum);

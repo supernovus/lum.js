@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.needLibs('helpers');
@@ -455,10 +455,10 @@
   }
 
 })(
-  window.Luminaryn,
+  window.Lum,
   window.jQuery,                 // jQuery is always required. 
   window.riot
   ? window.riot.observable       // If 'riot' exists, use it.
-  : window.Luminaryn.observable  // We may contain the observable trait.
+  : window.Lum.observable  // We may contain the observable trait.
 );
 

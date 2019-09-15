@@ -4,10 +4,10 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('helpers');
+  Nano.needLibs('tests');
 
   let testSuite = Nano.Tests.getInstance();
   let testSet = testSuite.getSet('core');
@@ -32,4 +32,4 @@
 
   });
 
-})(window.Luminaryn);
+})(window.Lum);

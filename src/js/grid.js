@@ -4,7 +4,7 @@
 
   if (Nano === undefined)
   {
-    throw new Error("Missing Luminaryn core");
+    throw new Error("Missing Lum core");
   }
 
   Nano.markLib('grid');
@@ -1335,4 +1335,4 @@
   // Assign the UIGrid class to Nano.Grid.UI
   Nano.Grid.UI = UIGrid;
 
-})(window.Luminaryn, window.jQuery);
+})(window.Lum, window.jQuery);
