@@ -116,6 +116,16 @@ as the tests to view them.
 Note if you use `gulp clean-npm` or `gulp distclean` you will need to
 re-run the `npm install` command before you can use gulp again.
 
+## Scripts location
+
+The source code will be compiled into two output paths:
+
+* scripts/nano/ - The ES2015+ release (compiled with terser).
+* scripts/nano-es5/ - The ES5 release (compiled with Babel 7 and uglify-js).
+
+The 'nano' in the path is a holdover from the original name of this library set.
+In the future I may change it, and just use a symlink to the old path.
+
 ## Branch Note
 
 There are several branches of Nano.js:
@@ -126,19 +136,6 @@ There are several branches of Nano.js:
 * v1.6 was the last ES5 version, using Gulp 4 as it's build system.
 * v3 was the first stable ES2015+ release.
 * v4 is the current release with the new name.
-
-This release is once again moving to using ES2015+ as it's primary release
-target, with a backwards compatible ES5 build being offered as a solution for
-older browsers.
-
-This time I'm not using ES Modules, but am using classes and other ES2015+
-features. The source code will be compiled into two output paths:
-
-* scripts/nano/ - The ES2015+ release (compiled with terser).
-* scripts/nano-es5/ - The ES5 release (compiled with Babel 7 and uglify-js).
-
-The 'nano' in the path is a holdover from the original name of this library set.
-In the future I may change it, and just use a symlink to the old path.
 
 ## Authors
 
