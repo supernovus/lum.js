@@ -65,7 +65,7 @@
       else if ($('#status_messages').length > 0)
       { // Compatibility with older 'status_messages' storage.
         this.strings = $('#status_messages').JSON();
-        if ($('#notifiation_messages').length > 0)
+        if ($('#notification_messages').length > 0)
         {
           this.notifications = $('#notification_messages').JSON();
         }
@@ -125,7 +125,7 @@
       {
         for (let p in options.iconPriority)
         {
-          this.iconPriority[p] = options.priority[p];
+          this.iconPriority[p] = options.iconPriority[p];
         }
       }
 
