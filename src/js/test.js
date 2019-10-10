@@ -146,7 +146,7 @@
         }
         else
         { // A comment.
-          out += '# ' + (typeof log === 'string' ? log : JSON.strinfify(log)) + "\n";
+          out += '# ' + (typeof log === 'string' ? log : JSON.stringify(log)) + "\n";
         }
       }
       if (this.skipped)
