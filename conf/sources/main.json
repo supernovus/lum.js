@@ -90,6 +90,16 @@
     "@parent": "moment.js",
     "url": "http://momentjs.com/downloads/moment-with-locales.min.js"
   },
+  "moment-timezone-small.js":
+  {
+    "@parent": "moment.js",
+    "url": "https://momentjs.com/downloads/moment-timezone-with-data-10-year-range.min.js"
+  },
+  "moment-timezone-full.js":
+  {
+    "@parent": "moment.js",
+    "url": "https://momentjs.com/downloads/moment-timezone-with-data.min.js"
+  },
   "sprintf.js":
   {
     "uglify": true,
