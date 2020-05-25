@@ -214,7 +214,7 @@
         { // Passed a promise. We'll 'then' it, and resolve again from it.
           args[0].then(null, function ()
           {
-            self.resolve.apply(self, arguments);
+            self.reject.apply(self, arguments);
           });
         }
         else
