@@ -178,6 +178,8 @@
       }
       this.menuElem.removeData('menu');
     }
+
+
   
     showMenu (ev, loc)
     {
@@ -203,14 +205,17 @@
   
       var self = this;
   
-      $('body').one('click', function ()
+      function onClickHandler ()
       {
         if (typeof onCancel === 'function')
         { // Run the callback.
           onCancel.call(self, ev);
         }
         el.hide();
-      });
+      }
+
+      this._onBodyClick = onClickHandler;
+      $('body').one('click', onClickHandler);
   
       var pt = this.paddingTop;
       var pl = this.paddingLeft;
@@ -256,6 +261,21 @@
       }
   
       return false;
+    }
+
+    close() 
+    {
+      if (typeof this._onBodyClick === 'function')
+      {
+        $('body').off('click', this._onBodyClick);
+        delete this._onBodyClick;
+      }
+      this.menuElem.hide();
+    }
+
+    hide()
+    {
+      this.close();
     }
 
   } // class Nano.ContextMenu

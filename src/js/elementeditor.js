@@ -19,6 +19,8 @@
   const T_MIN_VAL = T_STR;
   const T_MAX_VAL = T_PASS;
 
+  const DATA_NAME = "editor";
+
   const E_SAVE = "save";
   const E_CANCEL = "cancel";
   const E_CLOSE = "close";
@@ -33,12 +35,16 @@
     static get INT() { return T_INT; }
     static get FLOAT() { return T_FLOAT; }
     static get BOOL() { return T_BOOL; }
+    static get PASS() { return T_PASS; }
+
     static get SAVE() { return E_SAVE; }
     static get CANCEL() { return E_CANCEL; }
     static get CLOSE() { return E_CLOSE; }
     static get OPEN() { return E_OPEN; }
 
-    constructor (element, type, options={})
+    static get DATA_NAME() { return DATA_NAME; }
+
+    static getElement (element)
     {
       if (typeof element === 'string')
       { // A selector.
@@ -52,6 +58,32 @@
       { // Anything else, sorry, we can't do it.
         throw new Error("Editor element needs to be a selector, DOM Element, or jQuery result object.");
       }
+      return element;
+    }
+
+    /**
+     * See if an editor has been saved to the element already or not.
+     * Then optionally create one if it hasn't.
+     */
+    static getEditor (element, type, options={})
+    {
+      element = this.getElement(element);
+      let editor = element.data(DATA_NAME);
+      if (editor === undefined && type !== undefined)
+      { // Create a new editor, and unless otherwise specified,
+        // save it to the element data.
+        if (options.setData === undefined)
+        {
+          options.setData = true;
+        }
+        editor = new this(element, type, options);
+      }
+      return editor;
+    }
+
+    constructor (element, type, options={})
+    {
+      element = this.constructor.getElement(element);
 
       if (type === undefined)
       { // If we didn't specify a type, assume it's a string.
@@ -96,11 +128,39 @@
         this.setValidValues(options.validValues);
       }
 
+      if (options.validate)
+      {
+        this.setValidator(options.validate, options.validateRefocus);
+      }
+
+      this.autoFocus = ('autoFocus' in options)
+        ? options.autoFocus : true;
+
       this.closeOnBlur = ('closeOnBlur' in options) 
         ? options.closeOnBlur : true;
 
+      this.saveOnBlur = options.saveOnBlur; // Might be undefined, that's ok.
+
       this.useEditKeys  = ('useEditKeys' in options)  
         ? options.useEditKeys  : false;
+
+      this.noEscape = ('noEscape' in options)
+        ? options.noEscape : false;
+
+      this.yesEnter = ('yesEnter' in options)
+        ? options.yesEnter : true;
+
+      if (type === T_INT || type === T_FLOAT)
+      { // These may be set here, or left undefined.
+        this.min  = options.min;
+        this.max  = options.max;
+        this.step = options.step;
+      }
+
+      if (options.setData)
+      {
+        element.data(DATA_NAME, this);
+      }
     }
 
     _getTypedValue(string)
@@ -132,15 +192,24 @@
 
         let cob = ('closeOnBlur' in options) 
           ? options.closeOnBlur : this.closeOnBlur;
+
+        let sob = ('saveOnBlur' in options)
+          ? options.saveOnBlur : this.saveOnBlur;
         
         let uek = ('useEditKeys' in options)
           ? options.useEditKeys : this.useEditKeys;
+
+        let nox = ('noEscape' in options)
+          ? options.noEscape : this.noEscape;
+
+        let yes = ('yesEnter' in options)
+          ? options.yesEnter : this.yesEnter;
 
         if (cob)
         { // Close the editor on blur event.
           element.on('blur', function (e)
           { 
-            self.close(); // Detect if changes were made.
+            self.close(sob);
           });
         }
 
@@ -152,12 +221,12 @@
             {
               case "Enter":
                 e.preventDefault();
-                self.close(true);      // Save changes if Enter pressed.
+                self.close(yes);      // Save changes if Enter pressed.
                 break;
               case "Esc":
               case "Escape":
                 e.preventDefault();
-                self.close(false);     // Cancel changes if Escape pressed.
+                self.close(nox);      // Cancel changes if Escape pressed.
                 break;
             }
           });
@@ -179,6 +248,19 @@
       else
       {
         throw new Error("Invalid 'validValues' passed to Editor");
+      }
+    }
+
+    setValidator(validator, validateRefocus)
+    {
+      if (typeof validator === 'function')
+      {
+        this.validator = validator;
+        this.validateRefocus = validateRefocus;
+      }
+      else
+      {
+        throw new Error("Invalid 'validator' passed to Editor");
       }
     }
 
@@ -248,13 +330,27 @@
           {
             editBox.prop("min", options.min);
           }
+          else if (typeof this.min === 'number')
+          {
+            editBox.prop("min", this.min);
+          }
+
           if (typeof options.max === 'number')
           {
             editBox.prop("max", options.max);
           }
+          else if (typeof this.max === 'number')
+          {
+            editBox.prop("max", this.max);
+          }
+
           if (typeof options.step === 'number')
           {
             editBox.prop("step", options.step);
+          }
+          else if (typeof this.step === 'number')
+          {
+            editBox.prop("step", this.step);
           }
           else
           { // Set some default step values.
@@ -281,8 +377,23 @@
       this.trigger(E_OPEN, editBox);
       this._setEditElement(editBox, options);
       this.uiElement.empty().append(editBox);
-
+      if (this.autoFocus)
+      {
+        this.focus();
+      }
     } // open()
+
+    focus()
+    {
+      if (this.editElement instanceof $)
+      {
+        this.editElement.focus();
+      }
+      else
+      {
+        throw new Error("Cannot focus without opening the editor");
+      }
+    }
 
     close(save)
     {
@@ -293,6 +404,22 @@
       if (typeof save !== 'boolean')
       { // Determine save automatically.
         save = (newVal != curVal);
+      }
+
+      if (typeof this.validator === 'function')
+      { // A validator function exists, let's use it.
+        if (!this.validator(save, newVal, curVal))
+        { // Did not pass validation, cannot continue.
+          if (this.validateRefocus)
+          { // Refocus the edit box and stop the close() action.
+            this.focus();
+            return;
+          }
+          else
+          { // Continue the close action, but save is now false.
+            save = false;
+          }
+        }
       }
 
       if (save)
@@ -308,7 +435,9 @@
 
       this.trigger(E_CLOSE, setVal, save, curVal, newVal);
 
+      delete this.editElement;
       this.uiElement.empty().text(setVal);
+
     } // close()
 
   } // class Lum.ElementEditor
