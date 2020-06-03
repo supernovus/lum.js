@@ -60,21 +60,18 @@
       if ('customHTTP' in options)
       { // Add some custom HTTP methods to our list of detected strings.
         if (Array.isArray(options.customHTTP))
-        {
-          for (var m in options.customHTTP)
+        { // Flat list, no options by default.
+          for (let m in options.customHTTP)
           {
-            this._known_http_methods.push(options.customHTTP[m]);
+            this._addHTTP(options.customHTTP[m]);
           }
         }
         else if (typeof options.customHTTP === 'object')
-        {
-          for (var meth in options.customHTTP)
+        { // Any other object should have options specified.
+          for (let meth in options.customHTTP)
           {
-            if (this._known_http_methods.indexOf(meth) === -1)
-            {
-              this._known_http_methods.push(meth);
-            }
-            this._http_method_options[meth] = options.customHTTP[meth];
+            let methOpts = options.customHTTP[meth];
+            this._addHTTP(meth, methOpts);
           }
         }
         else
@@ -102,14 +99,21 @@
     }
   
     /**
-     * Add a custom HTTP method.
+     * Add a custom HTTP method, or override HTTP method options.
      */
     _addHTTP (name, options)
     {
-      this._known_http_methods.push(name);
+      let known = this._known_http_methods;
+      let httpOpts = this._http_method_options;
+
+      if (known.indexOf(name) === -1)
+      {
+        known.push(name);
+      }
+
       if (typeof options === 'object' && options !== null)
       {
-        this._http_method_options[name] = options;
+        httpOpts[name] = options;
       }
     }
   
@@ -357,9 +361,22 @@
 
   /**
    * Extra properties to set when using certain HTTP methods.
-   * See 'webservice/compat.js' for an example.
    */
-  wsp._http_method_options = {};
+  wsp._http_method_options = 
+  {
+    GET:
+    {
+      useQueryString: true,
+    },
+    DELETE:
+    {
+      useQueryString: true,
+    },
+    HEAD:
+    {
+      useQueryString: true,
+    },
+  };
 
   /**
    * Default options, used by _loadOptions() method.
@@ -495,6 +512,10 @@
       // If cloning, what preserve options should we send?
       this.preserveClone = (wo.preserveClone !== undefined)
         ? wo.preserveClone
+        : false;
+
+      this.useQueryString = (wo.useQueryString !== undefined)
+        ? wo.useQueryString
         : false;
   
       if (typeof wo.reqOptions === 'object')
@@ -691,7 +712,8 @@
       var opts = 
       [
         'cloneData', 'preserveClone', 'attachBefore', 'sendImmediately',
-        'parsePath', 'responseClass', 'wrapResponse', 'contentType', 'formData',
+        'parsePath', 'responseClass', 'wrapResponse', 'contentType', 
+        'formData',  'useQueryString',
       ];
       for (var i in opts)
       {
@@ -910,7 +932,6 @@
       }
       this.ws = ws;
       this.jq = jQuery;
-      this.nativeGet = true;
     }
   
     sendRequest (request)
@@ -934,14 +955,10 @@
         reqopts.dataType = request.dataType;
       }
   
-      var nativeGet = (request.nativeGet !== undefined)
-        ? request.nativeGet
-        : this.nativeGet;
-  
       // Set the URL.
       reqopts.url = request.getPath();
   
-      if (nativeGet && request.http === 'GET')
+      if (request.useQueryString)
       { // Using the data directly, which will turn it into a query string.
         reqopts.data = request.data;
       }
