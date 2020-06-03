@@ -79,6 +79,23 @@
           throw new Error("Invalid customHTTP property: "+JSON.stringify(options.customHTTP));
         }
       }
+
+      if ('useQueryString' in options 
+        && typeof options.useQueryString === 'object'
+        && options.useQueryString.length
+      )
+      {
+        let methOpts = this._http_method_options;
+        for (let i = 0; i < options.useQueryString.length; i++)
+        {
+          let methName = options.useQueryString[i];
+          if (!(methName in methOpts))
+          {
+            methOpts[methName] = {};
+          }
+          methOpts[methName].useQueryString = true;
+        }
+      }
   
       if (options.url === true)
       { // A bit of magic, if options.url is true, we use the current URL.
@@ -362,13 +379,9 @@
   /**
    * Extra properties to set when using certain HTTP methods.
    */
-  wsp._http_method_options = 
+  wsp._http_method_options =
   {
     GET:
-    {
-      useQueryString: true,
-    },
-    DELETE:
     {
       useQueryString: true,
     },
@@ -392,6 +405,7 @@
     namedAlias: false,    // If true, use named aliases instead of simple.
     debug: false,         // If true, enable debugging.
     urlStripQuery: true, // If true, strip query string from URL.
+
   }
 
   let join_path = Nano.WebService.join_path;
