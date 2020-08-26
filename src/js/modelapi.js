@@ -23,12 +23,16 @@
    *
    * Internal requirements:
    *
-   *  coreutils.js
+   *  core.js
    * 
    * Internal recommendations:
    *
    *  hash.js
    *  observable.js
+   *
+   * Requirements for JSON model sources:
+   *
+   *  helpers.js
    *  exists.jq.js
    *  json.jq.js
    *
@@ -50,6 +54,16 @@
        * The model property stores our model data and backend services.
        */
       this.model = {};
+
+      /**
+       * Extensions with names stored here.
+       */
+      this.ext = {};
+
+      /**
+       * Flat list of extensions stored here in the order they were added.
+       */
+      this._exts = [];
   
       /**
        * The conf property stores a copy of our initialization data.
@@ -65,7 +79,42 @@
        * See if we have debugging in the hash.
        */
       this.updateDebug(conf.debug);
-  
+ 
+      /**
+       * Before we do any further initialization, load extensions.
+       */
+      if (typeof this.constructor._extensions === 'object'
+        && this.constructor._extensions.length)
+      {
+        let extClasses = this.constructor._extensions;
+        for (let i = 0; i < extClasses.length; i++)
+        {
+          let extClass = extClasses[i];
+          if (typeof extClass === 'function')
+          {
+            let extInstance = new extClass(this);
+            this._exts.push(extInstance);
+            let name = null;
+            if (typeof extInstance.name === 'string')
+            { // There was a name provided as a property.
+              name = extInstance.name;
+            }
+            else if (typeof extInstance.getExtensionName === 'function')
+            { // There's a function to return the name.
+              name = extInstance.getExtensionName();
+            }
+            if (name !== null)
+            {
+              this.ext[name] = extInstance;
+            }
+            if (typeof extInstance.preInit === 'function')
+            { // Pre-initialization methods.
+              extInstance.preInit(conf);
+            }
+          }
+        }
+      }
+
       /**
        * Stuff to do before loading our sources.
        */
@@ -81,6 +130,22 @@
        */
       this.post_init(conf);
   
+      /**
+       * Finally, after ALL initialization, see if any loaded
+       * extensions have post initialization calls to make.
+       */
+      if (this._exts.length)
+      {
+        for (let i = 0; i < this._exts.length; i++)
+        {
+          let ext = this._exts[i];
+          if (typeof ext.postInit === 'function')
+          {
+            ext.postInit(conf);
+          }
+        }
+      }
+
     } // end ModelAPI
   
     /**
@@ -125,7 +190,7 @@
     {
       this._init('post_init', conf);
     }
-    
+
     /**
      * Update debugging flags based on URL hash.
      *
@@ -302,6 +367,27 @@
         }
       }
     }
+
+    /**
+     * Add an extension class.
+     *
+     * Extensions are added to the Model class itself, rather than
+     * the instance, and upon building the instance, each of the
+     * extension classes will be built as well.
+     */
+    static addExtension (extension)
+    {
+      if (extension instanceof Nano.ModelAPI.Extension)
+      {
+        if (this._extensions === undefined)
+          this._extensions = [];
+        this._extensions.push(extension);
+      }
+      else
+      {
+        throw new Error("addExtension() called with non Extension");
+      }
+    }
   
     /** 
      * Add a model source definition, then load the model.
@@ -362,10 +448,14 @@
      * We will add some magical methods to the object, including a save()
      * function that will save any changes back to the hidden element.
      *
-     * Requires the json.jq and exists.jq jQuery extensions.
+     * Requires the json.jq and exists.jq jQuery extensions, as well as
+     * the helpers library (which adds the addProperty() method, used here.)
      */
     _load_json_model (name, source)
     {
+      Nano.needLib('helpers');
+      Nano.needJq('JSON', 'exists');
+
       var elname;
       if ('element' in source)
         elname = source.element;
@@ -436,6 +526,158 @@
     }
 
   } // class Nano.ModelAPI
+
+  /**
+   * Extensions to the ModelAPI should extend this class.
+   */
+  Nano.ModelAPI.Extension = class
+  {
+    /**
+     * The extension is passed a copy of the Model instance during it's
+     * construction. This is done prior to the various "init" stages.
+     * You can create a method called setup() which will also be passed
+     * the Model instance. You should NOT depend on anything being
+     * initialized in the Model in your setup() method, as the extensions
+     * are loaded before any of the "init" groups are called.
+     *
+     * You can add a method called preInit() which will be passed a copy
+     * of the configuration object used to construct the Model. It's also
+     * called before any of the "init" groups, but after this constructor
+     * and any setup() calls have completed.
+     *
+     * Finally you can add a method called postInit() which will be passed
+     * a copy of the configuration object used to construct the Model.
+     * It's called after all of the "init" groups have completed.
+     */
+    constructor(apiInstance)
+    {
+      if (!(apiInstance instanceof Nano.ModelAPI))
+      {
+        throw new Error("Extension must be passed it's parent Model");
+      }
+
+      this.parent = apiInstance;
+
+      if (typeof this.setup === 'function')
+      {
+        this.setup(apiInstance);
+      }
+    }
+
+    /**
+     * Call this from your setup(), preInit(), or postInit() methods.
+     *
+     * It will add a method in the Model which simply calls a method
+     * in the extension using apply(), all arguments passed to the model
+     * method will be passed to the extension method.
+     *
+     * @param string srcName   The name of the method in the extension.
+     * @param string destName  The name of the method to add (optional).
+     *                         If null/false/omitted, we use srcName.
+     * @param bool modelIsThis If true, set 'this' to model.
+     *                         If null/false/omitted, 'this' is the extension.
+     * @param bool canReplace  If true, we can overwrite existing Model
+     *                         properties/methods. If falsey, we will throw
+     *                         and Error if a property/method already exists!
+     *                         This is really dangerous, only use it if you
+     *                         really know what you are doing!
+     */
+    addHandledMethod(srcName, destName, modelIsThis, canReplace)
+    {
+      destName = destName || srcName;
+
+      if (typeof this[srcName] === 'function')
+      {
+        if (canReplace || this.parent[destName] === undefined)
+        {
+          let ext = this;
+          let applyThis = modelIsThis ? this.parent : this;
+          this.parent[destName] = function ()
+          {
+            ext[srcName].apply(applyThis, arguments);
+          }
+        }
+        else
+        {
+          throw new Error(destName+" was already defined in the Model");
+        }
+      }
+      else
+      {
+        throw new Error(srcName+" method not found in the Extension");
+      }
+    }
+
+    /**
+     * A wrapper for addHandledMethod() that allows you to add a whole
+     * bunch of wrappers all at once!
+     *
+     * @param object methodsToAdd  Object describing the methods to add.
+     *
+     * If methodsToAdd is an Array object, it's assumed that every member
+     * of the array is a srcName parameter for addHandledMethod() and
+     * that default options will be used for them all.
+     *
+     * If methodsToAdd is any other kind of object, the keys will be used as 
+     * the srcName parameter for addHandledMethod(), and the values may take
+     * several different forms:
+     *
+     *  string:  If the value is a string, it's assumed to be the destName.
+     *  bool:    If the value is a boolean, it's assumed to be modelIsThis.
+     *  object:  If the value is an object then it specifies options.
+     *
+     *  Options supported all have the same name as the corresponding
+     *  parameter in the addHandledMethod() method.
+     *
+     *   destName:    string
+     *   modelIsThis: bool
+     *   canReplace:  bool
+     *
+     * There's a lot of flexibility in this method!
+     */
+    addHandledMethods(methodsToAdd)
+    {
+      if (typeof methodsToAdd === 'object')
+      {
+        if (Array.isArray(methodsToAdd))
+        { // An array of source names.
+          for (var m in methodsToAdd)
+          {
+            var methodName = methodsToAdd[m];
+            this.addHandledMethod(methodName);
+          }
+        }
+        else
+        { // An object with potential values.
+          for (var srcName in methodsToAdd)
+          {
+            var methSpec = methodsToAdd[srcName];
+            if (typeof methSpec === 'string')
+            {
+              this.addHandledMethod(srcName, methSpec);
+            }
+            else if (typeof methSpec === 'boolean')
+            {
+              this.addHandledMethod(srcName, null, methSpec);
+            }
+            else if (typeof methSpec === 'object')
+            {
+              this.addHandledMethod(
+                srcName,
+                methSpec.destName,
+                methSpec.modelIsThis,
+                methSpec.canReplace
+              );
+            }
+          }
+        }
+      }
+      else
+      {
+        console.error("Non-object sent to addHandledMethods()", methodsToAdd);
+      }
+    }
+  } // class Nano.ModelAPI.Extension
 
   /**
    * Load a bunch of models at once.

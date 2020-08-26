@@ -125,6 +125,23 @@
   }
 
   /**
+   * Check for needed namespaces.
+   *
+   * Any arguments are the names of namespaces we need.
+   */
+  Lum.needNamespaces = Lum.needNamespace = function ()
+  {
+    for (let n = 0; n < arguments.length; n++)
+    {
+      let ns = arguments[n];
+      if (!this.hasNamespace(ns))
+      {
+        throw new Error("Missing required namespace/library: "+JSON.stringify(ns));
+      }
+    }
+  }
+
+  /**
    * Export a global namespace to another global namespace.
    *
    * @param {string|strings[]} source  The namespace to export.
@@ -181,7 +198,7 @@
    *
    * Any arguments are the names of libraries we need.
    */
-  Lum.needLibs = function ()
+  Lum.needLibs = Lum.needLib = function ()
   {
     for (let l = 0; l < arguments.length; l++)
     {

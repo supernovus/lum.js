@@ -15,9 +15,10 @@
   const T_FLOAT  = 2;
   const T_BOOL   = 3;
   const T_PASS   = 4;
+  const T_TEXT   = 5;
 
   const T_MIN_VAL = T_STR;
-  const T_MAX_VAL = T_PASS;
+  const T_MAX_VAL = T_TEXT;
 
   const DATA_NAME = "editor";
 
@@ -36,6 +37,7 @@
     static get FLOAT() { return T_FLOAT; }
     static get BOOL() { return T_BOOL; }
     static get PASS() { return T_PASS; }
+    static get TEXT() { return T_TEXT; }
 
     static get SAVE() { return E_SAVE; }
     static get CANCEL() { return E_CANCEL; }
@@ -319,6 +321,10 @@
         {
           editBox.find('option[value="false"]').prop('selected', true);
         }
+      }
+      else if (this.type === T_TEXT)
+      { // Multi-line text uses a <textarea/>
+        editBox = $('<textarea>'+curVal+'</textarea>');
       }
       else
       { // Use an input box, with a few extra settings based on type.
