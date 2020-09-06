@@ -377,7 +377,7 @@
      */
     static addExtension (extension)
     {
-      if (extension instanceof Nano.ModelAPI.Extension)
+      if (extension.prototype instanceof Nano.ModelAPI.Extension)
       {
         if (this._extensions === undefined)
           this._extensions = [];
