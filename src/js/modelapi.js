@@ -387,6 +387,43 @@
       {
         throw new Error("addExtension() called with non Extension");
       }
+
+      return this;
+    }
+
+    /**
+     * Add a function to an init group ('init', 'pre_init', or 'post_init').
+     *
+     * @param string name  The name of the init function.
+     * @param function func  The actual function to run during the init stage.
+     * @param string group  The name of the init group.
+     *                      'pre_init': Functions to call before model data.
+     *                      'init': Functions to call to load model data.
+     *                      'post_init': Functions to call after model data.
+     *                      The default if omitted is 'post_init'
+     */
+    static onInit (name, func, group='init')
+    {
+      if (typeof name !== 'string')
+      {
+        throw new Error("onInit() function name must be a string");
+      }
+      if (typeof func !== 'function')
+      {
+        throw new Error("onInit() passed non-function");
+      }
+      if (['init','pre_init','post_init'].indexOf(group) === -1)
+      {
+        throw new Error("onInit() called with invalid group name");
+      }
+      if (this.prototype[group][name] !== undefined)
+      {
+        throw new Error("onInit() attempt to overwrite "+group+"."+name);
+      }
+
+      this.prototype[group] = func;
+
+      return this;
     }
   
     /** 

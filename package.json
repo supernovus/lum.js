@@ -9,25 +9,25 @@
     "url": "https://github.com/supernovus/nano.js.git"
   },
   "dependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "compare-versions": "*",
-    "del": "*",
+    "@babel/core": "^7.12.9",
+    "@babel/preset-env": "^7.12.7",
+    "compare-versions": "^3.6.0",
+    "del": "^6.0.0",
     "gulp": "^4.0",
     "gulp-babel": "*",
-    "gulp-clean-css": "*",
+    "gulp-clean-css": "^4.3.0",
     "gulp-connect": "^5.7.0",
     "gulp-file-cache": "*",
     "gulp-jsdoc3": "^2.0.0",
     "gulp-rename": "^1.4.0",
-    "gulp-sass": "*",
-    "gulp-sourcemaps": "*",
-    "gulp-terser-js": "^5.0.0",
+    "gulp-sass": "^4.1.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-terser-js": "^5.2.2",
     "gulp-transform": "^3.0.5",
     "gulp-uglify": "*",
     "http-request": "*",
-    "terser": "*",
-    "uglify-js": "*",
-    "yargs": "*"
+    "terser": "^5.5.1",
+    "uglify-js": "^3.12.0",
+    "yargs": "^16.1.1"
   }
 }
