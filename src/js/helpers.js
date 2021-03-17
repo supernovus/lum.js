@@ -282,10 +282,10 @@
    *
    * Can also clone extended properties that aren't serialized in JSON.
    *
-   * @param {Object}                object           Object to clone.
+   * @param {object}                object           Object to clone.
    * @param {boolean|array|object}  copyProperties   See below.
    *
-   * @return {Object}  A clone of the object.
+   * @return {object}  A clone of the object.
    *
    * If copyProperties is defined, and is a non-false value, then we'll
    * call Nano.copyProperties(object, clone, copyProperties);
@@ -302,6 +302,12 @@
 
   /**
    * See if a value is set, and if not, return a default value.
+   * This considers both undefined and null as "not set".
+   *
+   * @param {any}    opt       The value we are testing.
+   * @param {any}    defvalue  The default value if opt was null or undefined.
+   *
+   * @return {any}   Either the opt or the defvalue.
    */
   Nano.getDef = function (opt, defvalue)
   {
@@ -310,16 +316,75 @@
     return opt;
   }
 
+  function needObj (obj)
+  {
+    if (typeof obj !== "object" || obj === null)
+    {
+      throw new Error("Invalid object");
+    }
+  }
+  Nano.needObj = needObj;
+
+  const JS_TYPES =
+  [
+    "object", "boolean", "number", "bigint", "string",
+    "symbol", "function", "undefined",
+  ];
+
+  function needType (type, val, passObject=false)
+  {
+    if (typeof type !== "string" || !JS_TYPES.includes(type))
+    {
+      throw new Error("Invalid type "+JSON.stringify(type)+" specified");
+    }
+    
+    if (passObject && type === "object")
+    { // Pass it on to needObj() which rejects null.
+      return needObj(val);
+    }
+
+    if (typeof val !== type)
+    {
+      throw new Error(`Invalid ${type} value`);
+    }
+  }
+  Nano.needType = needType;
+
   /**
-   * See if a property exists in an object. 
-   * If it do, return the property.
-   * If it doesn't, return a default value.
+   * See if a property exists in an object (i.e. is not undefined.)
+   *
+   * If it exists, return the property, otherwise return a default value.
+   *
+   * @param {object}  obj       An object to test for a property in.
+   * @param {string}  optname   The property name we're checking for.
+   * @param {any}     defvalue  The default value.
+   *
+   * @return {any}  Either the property value, or the default value.
    */
   Nano.getOpt = function (opts, optname, defvalue)
   {
+    needObj(opts);
+    needType("string", optname);
     if (opts[optname] === undefined)
       return defvalue;
     return opts[optname];
+  }
+
+  /**
+   * Nearly identical to getOpt, but this also considers null values as
+   * being unset and will return the default in that case.
+   *
+   * @param {object}  obj       An object to test for a property in.
+   * @param {string}  optname   The property name we're checking for.
+   * @param {any}     defvalue  The default value.
+   *
+   * @return {any}  Either the property value, or the default value.
+   */
+  Nano.getOptVal = function (opts, optname, defvalue)
+  {
+    needObj(opts);
+    needType("string", optname);
+    return Nano.getDef(opts[optname], defvalue)
   }
 
   /**

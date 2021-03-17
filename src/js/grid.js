@@ -10,11 +10,11 @@
   Nano.markLib('grid');
 
   /**
-   * Nano Grid library.
+   * Grid library.
    *
    * Inspired by GridList.js, but designed with my needs.
    *
-   * @class Nano.Grid
+   * @class Lum.Grid
    */
   class Grid
   {
