@@ -302,17 +302,34 @@
 
   /**
    * See if a value is set, and if not, return a default value.
-   * This considers both undefined and null as "not set".
    *
-   * @param {any}    opt       The value we are testing.
-   * @param {any}    defvalue  The default value if opt was null or undefined.
+   * @param {any}    opt        The value we are testing.
+   * @param {any}    defvalue   The default value if opt was null or undefined.
    *
-   * @return {any}   Either the opt or the defvalue.
+   * @param {bool}   allowNull  If true, allow null to count as "set".
+   *                            Default is false.
+   * @param {bool}   isLazy     If true, and defvalue is a function, return
+   *                            the value from the function as the default.
+   *                            No parameters are passed to the function.
+   *                            Default is false.
+   * @param {object} lazyThis   If specified, and isLazy is true, this object
+   *                            will be used as the `this` for the function.
+   *                            The default is null, i.e. no `this` context.
+   *
+   * @return {any}   Either the specified `opt` value or the default value.
    */
-  Nano.getDef = function (opt, defvalue)
+  Nano.getDef = function (opt, defvalue, allowNull=false, isLazy=false,
+    lazyThis=null)
   {
-    if (opt === undefined || opt === null)
+    if (opt === undefined || (!allowNull && opt === null))
+    { // The defined value was not "set" as per our rules.
+      if (isLazy && typeof defvalue === "function")
+      { // Get the default value from a passed in function.
+        return defvalue.call(lazyThis);
+      }
       return defvalue;
+    }
+
     return opt;
   }
 
@@ -351,40 +368,28 @@
   Nano.needType = needType;
 
   /**
-   * See if a property exists in an object (i.e. is not undefined.)
+   * See if a property in an object is set.
    *
-   * If it exists, return the property, otherwise return a default value.
+   * If it is, return the property, otherwise return a default value.
+   * This uses the getDef() method, and as such supports the same options.
+   * However read the parameters carefully, as the defaults may be different!
    *
-   * @param {object}  obj       An object to test for a property in.
-   * @param {string}  optname   The property name we're checking for.
-   * @param {any}     defvalue  The default value.
+   * @param {object}  opts       An object to test for a property in.
+   * @param {string}  optname    The property name we're checking for.
+   * @param {any}     defvalue   The default value.
    *
-   * @return {any}  Either the property value, or the default value.
-   */
-  Nano.getOpt = function (opts, optname, defvalue)
-  {
-    needObj(opts);
-    needType("string", optname);
-    if (opts[optname] === undefined)
-      return defvalue;
-    return opts[optname];
-  }
-
-  /**
-   * Nearly identical to getOpt, but this also considers null values as
-   * being unset and will return the default in that case.
-   *
-   * @param {object}  obj       An object to test for a property in.
-   * @param {string}  optname   The property name we're checking for.
-   * @param {any}     defvalue  The default value.
+   * @param {bool}    allowNull  Same as getDef, but the default is true.
+   * @param {bool}    isLazy     Same as getDef.
+   * @param {object}  lazyThis   Same as getDef.
    *
    * @return {any}  Either the property value, or the default value.
    */
-  Nano.getOptVal = function (opts, optname, defvalue)
+  Nano.getOpt = function (opts, optname, defvalue, 
+    allowNull=true, isLazy=false, lazyThis=null)
   {
     needObj(opts);
     needType("string", optname);
-    return Nano.getDef(opts[optname], defvalue)
+    return Nano.getDef(opts[optname], defvalue, allowNull, isLazy, lazyThis);
   }
 
   /**
