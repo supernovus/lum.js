@@ -400,7 +400,7 @@
      *                      'pre_init': Functions to call before model data.
      *                      'init': Functions to call to load model data.
      *                      'post_init': Functions to call after model data.
-     *                      The default if omitted is 'post_init'
+     *                      The default if omitted is 'init'
      */
     static onInit (name, func, group='init')
     {
@@ -408,14 +408,23 @@
       {
         throw new Error("onInit() function name must be a string");
       }
-      if (typeof func !== 'function')
+
+      if (typeof func === 'string' && typeof group === 'function')
+      { // Reversed order of parameters.
+        let temp = group;
+        group = func;
+        func = temp;
+      }
+      else if (typeof func !== 'function')
       {
         throw new Error("onInit() passed non-function");
       }
+
       if (['init','pre_init','post_init'].indexOf(group) === -1)
-      {
+      { 
         throw new Error("onInit() called with invalid group name");
       }
+
       if (this.prototype[group][name] !== undefined)
       {
         throw new Error("onInit() attempt to overwrite "+group+"."+name);
