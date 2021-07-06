@@ -1,7 +1,3 @@
-/**
- * A copy of the Observable library from riot.js without the rest of
- * the riot.js framework. I want to keep it small and simple.
- */
 (function(Nano)
 {
 "use strict";
@@ -13,29 +9,111 @@ if (Nano === undefined)
 
 Nano.markLib('observable');
 
-Nano.observable = function(el) {
+/**
+ * Make an object support the observable API.
+ *
+ * Adds on(), off(), one(), and trigger() methods.
+ * 
+ * @param {object} el  The object we are making observable.
+ * @param {object} opts  Options that define behaviours.
+ *
+ *  'wildcard' (string)  =>  The event name used as a wildcard (default: '*')
+ *  'wrapthis' (boolean) =>  If true, 'this' will be a wrapper (default: false)
+ *  'addname'  (boolean) =>  If true callbacks with multiple events will have
+ *                           the name of the triggered event added as the first
+ *                           parameter. 
+ *
+ * If 'wrapthis' is true, the function will be called with a wrapper object as 
+ * the 'this' variable instead of the target object. The wrapper will be:
+ *
+ * {
+ *   self: el,        // The target object.
+ *   name: event,     // The event name that was triggered.
+ *   wildcard: bool,  // Will be true if this was a wildcard event handler.
+ *   func: function,  // The function being called.
+ * }
+ *
+ * This library was original based on the observable library from riot.js,
+ * but has been refactored and expanded a lot since then.
+ *
+ * @returns {object} el
+ */
+Nano.observable = function(el={}, opts={}) 
+{
+  if (el === null || (typeof el !== 'object' && typeof el !== 'function'))
+  { // Don't know how to handle this, sorry.
+    throw new Error("non-object sent to observable()");
+  }
 
-  /**
-   * Extend the original object or create a new empty one
-   * @type { Object }
-   */
+  if (typeof opts === 'boolean')
+  { // Assume it's the wrapthis option.
+    opts = {wrapthis: opts};
+  }
+  else if (typeof opts !== 'object' || opts === null)
+  {
+    opts = {};
+  }
 
-  el = el || {}
+  const wildcard = opts.wildcard || '*';
 
-  /**
-   * Private variables and methods
-   */
-  var callbacks = {},
-    slice = Array.prototype.slice,
-    onEachEvent = function(e, fn) { e.replace(/\S+/g, fn) },
-    defineProperty = function (key, value) {
-      Object.defineProperty(el, key, {
-        value: value,
-        enumerable: false,
-        writable: false,
-        configurable: false
-      })
+  const wrapthis = (typeof opts.wrapthis === 'boolean') 
+    ? opts.wrapthis 
+    : false;
+
+  const addname = (typeof opts.addname === 'boolean') 
+    ? opts.addname 
+    : !wrapthis;
+
+  const slice = Array.prototype.slice;
+
+  function onEachEvent (e, fn) 
+  { 
+    e.replace(/\S+/g, fn);
+  }
+
+  function defineProperty (key, value) 
+  {
+    Object.defineProperty(el, key, 
+    {
+      value: value,
+      enumerable: false,
+      writable: false,
+      configurable: false
+    });
+  }
+
+  function runCallback (name, fn, args)
+  {
+    if (fn.busy) return;
+    fn.busy = 1;
+
+    let fthis;
+
+    if (wrapthis)
+    {
+      const isWild = (name === wildcard);
+      const fname = isWild ? (addname ? args[0] : args.shift()) : name;
+      fthis = 
+      {
+        self: el,
+        name: fname,
+        func: fn,
+        wildcard: isWild,
+      };
     }
+    else
+    {
+      fthis = el;
+    }
+
+    let fargs = (fn.typed && addname) ? [name].concat(args) : args;
+
+    fn.apply(fthis, fargs);
+
+    fn.busy = 0;
+  }
+
+  let callbacks = {};
 
   /**
    * Listen to the given space separated list of `events` and execute the `callback` each time an event is triggered.
@@ -43,16 +121,22 @@ Nano.observable = function(el) {
    * @param  { Function } fn - callback function
    * @returns { Object } el
    */
-  defineProperty('on', function(events, fn) {
-    if (typeof fn != 'function')  return el
+  defineProperty('on', function(events, fn) 
+  {
+    if (typeof fn !== 'function')
+    {
+      console.error("non-function passed to on()");
+      return el;
+    }
 
-    onEachEvent(events, function(name, pos) {
-      (callbacks[name] = callbacks[name] || []).push(fn)
-      fn.typed = pos > 0
-    })
+    onEachEvent(events, function(name, pos) 
+    {
+      (callbacks[name] = callbacks[name] || []).push(fn);
+      fn.typed = pos > 0;
+    });
 
-    return el
-  })
+    return el;
+  });
 
   /**
    * Removes the given space separated list of `events` listeners
@@ -60,20 +144,32 @@ Nano.observable = function(el) {
    * @param   { Function } fn - callback function
    * @returns { Object } el
    */
-  defineProperty('off', function(events, fn) {
-    if (events == '*' && !fn) callbacks = {}
-    else {
-      onEachEvent(events, function(name) {
-        if (fn) {
+  defineProperty('off', function(events, fn) 
+  {
+    if (events === wildcard && !fn) 
+    { // Clear all callbacks.
+      callbacks = {};
+    }
+    else 
+    {
+      onEachEvent(events, function(name) 
+      {
+        if (fn) 
+        { // Find a specific callback to remove.
           var arr = callbacks[name]
-          for (var i = 0, cb; cb = arr && arr[i]; ++i) {
-            if (cb == fn) arr.splice(i--, 1)
+          for (var i = 0, cb; cb = arr && arr[i]; ++i) 
+          {
+            if (cb == fn) arr.splice(i--, 1);
           }
-        } else delete callbacks[name]
-      })
+        } 
+        else 
+        { // Remove all callbacks for this event.
+          delete callbacks[name];
+        }
+      });
     }
     return el
-  })
+  });
 
   /**
    * Listen to the given space separated list of `events` and execute the `callback` at most once
@@ -81,48 +177,59 @@ Nano.observable = function(el) {
    * @param   { Function } fn - callback function
    * @returns { Object } el
    */
-  defineProperty('one', function(events, fn) {
-    function on() {
+  defineProperty('one', function(events, fn) 
+  {
+    function on() 
+    {
       el.off(events, on)
       fn.apply(el, arguments)
     }
-    return el.on(events, on)
-  })
+    return el.on(events, on);
+  });
 
   /**
    * Execute all callback functions that listen to the given space separated list of `events`
    * @param   { String } events - events ids
    * @returns { Object } el
    */
-  defineProperty('trigger', function(events) {
-
+  defineProperty('trigger', function(events) 
+  {
     // getting the arguments
     // skipping the first one
-    var args = slice.call(arguments, 1),
-      fns
+    const args = slice.call(arguments, 1);
 
-    onEachEvent(events, function(name) {
+    onEachEvent(events, function(name) 
+    {
+      const fns = slice.call(callbacks[name] || [], 0);
 
-      fns = slice.call(callbacks[name] || [], 0)
-
-      for (var i = 0, fn; fn = fns[i]; ++i) {
-        if (fn.busy) return
-        fn.busy = 1
-        fn.apply(el, fn.typed ? [name].concat(args) : args)
+      for (var i = 0, fn; fn = fns[i]; ++i) 
+      {
+        runCallback(name, fn, args);
         if (fns[i] !== fn) { i-- }
-        fn.busy = 0
       }
 
-      if (callbacks['*'] && name != '*')
-        el.trigger.apply(el, ['*', name].concat(args))
+      if (callbacks[wildcard] && name != wildcard)
+      { // Trigger the wildcard.
+        el.trigger.apply(el, ['*', name].concat(args));
+      }
 
-    })
+    });
 
     return el
-  })
+  });
 
   return el
 
+} // observable()
+
+/**
+ * Check if an object has 'trigger' and 'on' methods.
+ */
+Nano.observable.is = function (obj)
+{
+  return (typeof obj === 'object' && obj !== null
+    && typeof obj.trigger === 'function'
+    && typeof obj.on === 'function');
 }
 
 })(window.Lum);

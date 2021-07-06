@@ -13,6 +13,9 @@
 
   /**
    * A class to represent a View Controller in a GUI.
+   *
+   * I'm planning to eventually replace this with something better, but
+   * for now, it works, so not too concerned.
    */
   Nano.ViewController = class 
   {
@@ -307,6 +310,14 @@
       else
       {
         fileBox = $('<input type="file">');
+        if (typeof opts.multiple === 'boolean')
+        {
+          fileBox.prop('multiple', opts.multiple);
+        }
+        if (typeof opts.accept === 'string')
+        {
+          fileBox.prop('accept', opts.accept);
+        }
       }
   
       var clickNow = opts.clickNow;

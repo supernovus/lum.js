@@ -10,6 +10,8 @@
   Lum.needLibs('observable');
   Lum.markLib('elementeditor');
 
+  const isObs = Lum.observable.is; 
+
   const T_STR    = 0;
   const T_INT    = 1;
   const T_FLOAT  = 2;
@@ -447,5 +449,134 @@
     } // close()
 
   } // class Lum.ElementEditor
+
+  /**
+   * A special factory class for building editors with preset options.
+   */
+  Lum.ElementEditor.Factory = class
+  {
+    constructor(options)
+    {
+      if (typeof options !== 'object' 
+        || options === null
+        || Object.keys(options).length === 0)
+      { // Missing or empty options, why are you building a factory?
+        throw new Error("No options specified");
+      }
+
+      const saveEvent = (typeof options.saveEvent === 'string')
+        ? options.saveEvent
+        : 'onSaveEditor';
+      const cancelEvent = (typeof options.cancelEvent === 'string')
+        ? options.cancelEvent
+        : 'onCancelEditor';
+      const closeEvent = (typeof options.closeEvent === 'string')
+        ? options.closeEvent
+        : 'onCloseEditor';
+      const openEvent = (typeof options.openEvent === 'string')
+        ? options.openEvent
+        : 'onOpenEditor';
+
+      const editOpts = this.editorOpts
+        = (typeof options.editor === 'object' && options.editor !== null)
+        ? options.editor // This will be modified, so be careful.
+        : {};
+
+      this.editorClass = (typeof options.class === 'function')
+        ? options.class
+        : Lum.ElementEditor;
+
+      if (options.onSave)
+      {
+        editOpts.onSave = this._callback(options.onSave, saveEvent);
+      }
+      if (options.onCancel)
+      {
+        editOpts.onCancel = this._callback(options.onCancel, cancelEvent);
+      }
+      if (options.onClose)
+      {
+        editOpts.onClose = this._callback(options.onClose, closeEvent);
+      }
+      if (options.onOpen)
+      {
+        editOpts.onOpen = this._callback(options.onOpen, openEvent);
+      }
+    }
+
+    // Build an ElemeentEditor instance with our construct options.
+    build(element, type, options)
+    {
+      if (typeof options === 'object' && options !== null)
+      { // Options were passed, let's add our own to it.
+        for (const key in this.editorOpts)
+        {
+          if (options[key] === undefined)
+          {
+            options[key] = this.editorOpts[key];
+          }
+        }
+      }
+      else
+      { // No valid options passed, just use our own.
+        options = this.editorOpts;
+      }
+      const Editor = this.editorClass;
+      return new Editor(element, type, options);
+    }
+
+    // A wrapper for getEditor that will build using the factory.
+    get(element, type, options)
+    {
+      const Editor = this.editorClass;
+      let editor = Editor.getEditor(element);
+      if (!(editor instanceof Editor))
+      { // Wasn't initialized.
+        editor = this.build(element, type, options);
+      }
+      return editor;
+    }
+
+    // Finally a way to get an editor and open it all at once.
+    open(element, type, options)
+    {
+      const buildopts = (typeof options === 'object' 
+        && typeof options.build === 'object')
+        ? options.build
+        : options;
+
+      const editor = this.get(element, type, buildopts);
+
+      const openopts = (typeof options === 'object'
+        && typeof options.open === 'object')
+        ? options.open
+        : options;
+
+      editor.open(openopts);
+
+      return editor;
+    }
+
+    _callback(eventHandler, eventName)
+    {
+      if (isObs(eventHandler))
+      {
+        const self = this;
+        function callback () 
+        {
+          const args = Array.prototype.slice.call(arguments, 0);
+          args.unshift(eventName);
+          args.push(this);
+          eventHandler.trigger.apply(eventHandler, args);
+        }
+        return callback;
+      }
+      else
+      { // It's not observable, so pass it through untouched.
+        return eventHandler;
+      }
+    }
+
+  }
 
 })(jQuery);
