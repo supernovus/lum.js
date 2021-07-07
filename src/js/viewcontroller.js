@@ -1,15 +1,15 @@
-(function(Nano, $, observable)
+(function($)
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('helpers');
+  //Lum.needLibs('helpers');
 
-  Nano.markLib('viewcontroller');
+  Lum.markLib('viewcontroller');
 
   /**
    * A class to represent a View Controller in a GUI.
@@ -17,17 +17,17 @@
    * I'm planning to eventually replace this with something better, but
    * for now, it works, so not too concerned.
    */
-  Nano.ViewController = class 
+  Lum.ViewController = class 
   {
-    constructor ()
+    constructor (conf={})
     {
       /**
        * A reference to ourself. If observable() is found, we apply it.
        */
-      if (observable !== undefined)
+      if (Lum.hasLib('observable'))
       {
         console.debug("Using observable for ViewController");
-        observable(this);
+        Lum.observable(this, conf.observable);
       }
       else
       {
@@ -169,13 +169,13 @@
         console.error("The 'clone' option requires a 'render' option.", name, def);
         return;
       }
-      else if (Nano.render !== undefined && Nano.render.riot2 !== undefined)
+      else if (Lum.render !== undefined && Lum.render.riot2 !== undefined)
       {
-        render = Nano.render.riot2;
+        render = Lum.render.riot2;
       }
-      else if (Nano.render !== undefined && Nano.render.riot1 !== undefined)
+      else if (Lum.render !== undefined && Lum.render.riot1 !== undefined)
       {
-        render = Nano.render.riot1;
+        render = Lum.render.riot1;
       }
       else
       {
@@ -352,13 +352,7 @@
       return class extends this {};
     }
 
-  } // class Nano.ViewController
+  } // class Lum.ViewController
 
-})(
-  window.Lum,
-  window.jQuery,                 // jQuery is always required. 
-  window.riot 
-  ? window.riot.observable       // If 'riot' exists, use it.
-  : window.Lum.observable  // Nano may contain the observable trait.
-);
+})(window.jQuery);
 

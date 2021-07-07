@@ -1,13 +1,13 @@
-(function(Nano, $)
+(function($)
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.markLib('grid');
+  Lum.markLib('grid');
 
   /**
    * Grid library.
@@ -33,9 +33,9 @@
       this.applySettings(defs, options);
   
       // Apply 'observable' trait if available.
-      if (Nano.observable !== undefined)
+      if (Lum.hasLib('observable'))
       {
-        Nano.observable(this);
+        Lum.observable(this, options.observable);
       }
       else
       {
@@ -45,7 +45,7 @@
         }
         this.on = this.off = this.one = function ()
         {
-          console.error("Nano observable library wasn't loaded.");
+          console.error("Lum observable library wasn't loaded.");
           return this;
         }
       }
@@ -83,13 +83,13 @@
     clone ()
     {
       this.trigger('preClone', this.items, this.settings);
-      var settings = Nano.clone(this.settings);
+      var settings = Lum.clone(this.settings);
       for (var s in this._copySettings)
       {
         var setting = this._copySettings;
         settings[setting] = this.settings[setting];
       }
-      settings.items = Nano.clone(this.items);
+      settings.items = Lum.clone(this.items);
       this.trigger('postClone', this.items, this.settings);
       return new this.constructor(settings);
     }
@@ -671,11 +671,11 @@
 
   } // class Grid
 
-  // Assign the Grid class to Nano.Grid
-  Nano.Grid = Grid; 
+  // Assign the Grid class to Lum.Grid
+  Lum.Grid = Grid; 
 
   // We'll add the conflict resolution methods to the resolveConflicts object.
-  var rc = Nano.Grid.prototype.resolveConflicts;
+  var rc = Lum.Grid.prototype.resolveConflicts;
 
   /**
    * Use findEmptyPosition() to find an available space.
@@ -753,8 +753,8 @@
    * An extension of the Grid library with extra features for dealing with
    * DOM elements and events, for rendering a grid on a web page.
    *
-   * @class Nano.Grid.Display
-   * @extends Nano.Grid
+   * @class Lum.Grid.Display
+   * @extends Lum.Grid
    */
   class DisplayGrid extends Grid
   {
@@ -861,8 +861,8 @@
           w: gitem.w * cw,
           h: gitem.h * ch,
         };
-        Nano.addProperty(ditem, 'gridItem', gitem, CF);
-        Nano.addProperty(gitem, 'displayItem', ditem, CF);
+        Lum.addProperty(ditem, 'gridItem', gitem, CF);
+        Lum.addProperty(gitem, 'displayItem', ditem, CF);
         this.display.push(ditem);
         this.trigger('buildDisplayItem', ditem);
       }
@@ -982,8 +982,8 @@
 
   } // class DisplayGrid
 
-  // Assign the DisplayGrid class to Nano.Grid.Display
-  Nano.Grid.Display = DisplayGrid;
+  // Assign the DisplayGrid class to Lum.Grid.Display
+  Lum.Grid.Display = DisplayGrid;
 
   // Everything past here requires jQuery UI to be loaded.
   if ($ === undefined || $.ui === undefined)
@@ -992,7 +992,7 @@
     return;
   }
 
-  Nano.markLib('grid.ui');
+  Lum.markLib('grid.ui');
 
   /**
    * UIGrid
@@ -1000,8 +1000,8 @@
    * An extension of the DisplayGrid library that uses jQuery UI to perform
    * item placement, and other UI related tasks.
    *
-   * @class Nano.Grid.UI
-   * @extends Nano.Grid.Display
+   * @class Lum.Grid.UI
+   * @extends Lum.Grid.Display
    */
   class UIGrid extends DisplayGrid
   {
@@ -1293,7 +1293,7 @@
      *
      *     // Find the Grid item for the element.
      *     var id = element.prop(id).replace('grid-item-','');
-     *     var item = Nano.oQuery.get(id, gridObj.items);
+     *     var item = Lum.oQuery.get(id, gridObj.items);
      *
      *     var opts =
      *     {
@@ -1332,7 +1332,7 @@
 
   } // class UIGrid
 
-  // Assign the UIGrid class to Nano.Grid.UI
-  Nano.Grid.UI = UIGrid;
+  // Assign the UIGrid class to Lum.Grid.UI
+  Lum.Grid.UI = UIGrid;
 
-})(window.Lum, window.jQuery);
+})(window.jQuery);

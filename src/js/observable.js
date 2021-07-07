@@ -1,13 +1,13 @@
-(function(Nano)
+(function(Lum)
 {
 "use strict";
 
-if (Nano === undefined)
+if (Lum === undefined)
 {
   throw new Error("Missing Lum core");
 }
 
-Nano.markLib('observable');
+Lum.markLib('observable');
 
 /**
  * Make an object support the observable API.
@@ -17,11 +17,20 @@ Nano.markLib('observable');
  * @param {object} el  The object we are making observable.
  * @param {object} opts  Options that define behaviours.
  *
- *  'wildcard' (string)  =>  The event name used as a wildcard (default: '*')
- *  'wrapthis' (boolean) =>  If true, 'this' will be a wrapper (default: false)
+ *  'wildcard' (string)  =>  The event name used as a wildcard. 
+ *                           Default: '*'
+ *  'wrapthis' (boolean) =>  If true, 'this' will be a wrapper. 
+ *                           Default: false
  *  'addname'  (boolean) =>  If true callbacks with multiple events will have
  *                           the name of the triggered event added as the first
  *                           parameter. 
+ *                           Default: !wrapthis
+ *  'addis'    (boolean) =>  If true, add immutable 'isObservable' property.
+ *                           Default: wrapthis
+ *  'addme'    (string)  =>  If set, add a method with this name to the object
+ *                           that is a version of Lum.observable with the
+ *                           default settings being the options passed here.
+ *                           Default: (wrapthis ? 'makeObservable' : null)
  *
  * If 'wrapthis' is true, the function will be called with a wrapper object as 
  * the 'this' variable instead of the target object. The wrapper will be:
@@ -38,11 +47,18 @@ Nano.markLib('observable');
  *
  * @returns {object} el
  */
-Nano.observable = function(el={}, opts={}) 
+Lum.observable = function(el={}, opts={}) 
 {
+  //console.debug("observable", el, opts);
+
   if (el === null || (typeof el !== 'object' && typeof el !== 'function'))
   { // Don't know how to handle this, sorry.
     throw new Error("non-object sent to observable()");
+  }
+
+  if (Lum.observable.is(el))
+  { // It's already observable.
+    return el;
   }
 
   if (typeof opts === 'boolean')
@@ -54,7 +70,12 @@ Nano.observable = function(el={}, opts={})
     opts = {};
   }
 
-  const wildcard = opts.wildcard || '*';
+  const noSpace = /^\S+$/;
+
+  const wildcard = (typeof opts.wildcard === 'string' 
+    && noSpace.test(opts.wildcard))
+    ? opts.wildcard
+    : '*';
 
   const wrapthis = (typeof opts.wrapthis === 'boolean') 
     ? opts.wrapthis 
@@ -63,6 +84,17 @@ Nano.observable = function(el={}, opts={})
   const addname = (typeof opts.addname === 'boolean') 
     ? opts.addname 
     : !wrapthis;
+
+  const addis = (typeof opts.addis === 'boolean')
+    ? opts.addis
+    : wrapthis;
+
+  const validIdent = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+
+  const addme = (typeof opts.addme === 'string'
+    && validIdent.test(opts.addme))
+    ? opts.addme
+    : (wrapthis ? 'makeObservable' : null);
 
   const slice = Array.prototype.slice;
 
@@ -218,6 +250,30 @@ Nano.observable = function(el={}, opts={})
     return el
   });
 
+  if (addis)
+  {
+    defineProperty('isObservable', true);
+  }
+
+  if (addme)
+  { // Add a wrapper for observable() that sets new default options.
+    const ourProps = Object.keys(opts);
+    defineProperty(addme, function (obj=null, mopts={})
+    {
+      if (ourProps.length > 0)
+      {
+        for (const prop of ourProps)
+        {
+          if (mopts[prop] === undefined)
+          {
+            mopts[prop] = opts[prop];
+          }
+        }
+      }
+      return Lum.observable(obj, mopts);
+    });
+  }
+
   return el
 
 } // observable()
@@ -225,7 +281,7 @@ Nano.observable = function(el={}, opts={})
 /**
  * Check if an object has 'trigger' and 'on' methods.
  */
-Nano.observable.is = function (obj)
+Lum.observable.is = function (obj)
 {
   return (typeof obj === 'object' && obj !== null
     && typeof obj.trigger === 'function'

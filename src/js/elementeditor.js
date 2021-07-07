@@ -108,7 +108,7 @@
       this.uiElement = element;  // Element from the UI we're editing.
       this.type      = type;     // Type of value we're editing.
 
-      Lum.observable(this);
+      Lum.observable(this, options.observable);
 
       if (options.onSave)
       {
@@ -481,6 +481,11 @@
         = (typeof options.editor === 'object' && options.editor !== null)
         ? options.editor // This will be modified, so be careful.
         : {};
+
+      if (options.observable !== undefined && editOpts.observable === undefined)
+      {
+        editOpts.observable = options.observable;
+      }
 
       this.editorClass = (typeof options.class === 'function')
         ? options.class

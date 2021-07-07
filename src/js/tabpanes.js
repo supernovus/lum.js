@@ -13,6 +13,10 @@
    * A GUI library to make tabbed panes.
    *
    * Requires jQuery and Nano.Hash. Supports a wide variety of tab/pane styles.
+   * 
+   * I'm working on a replacement for this that takes ideas for another tab
+   * system I built for one of my projects, and will eventually support all the
+   * different features of both, plus new features!
    *
    * @property {object} urlHash  A Nano.Hash instance.
    */

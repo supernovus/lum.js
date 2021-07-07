@@ -6,16 +6,16 @@
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('modelapi','promise');
+  Lum.needLibs('modelapi','promise');
 
-  Nano.markLib('modelapi.ws_model');
+  Lum.markLib('modelapi.ws_model');
 
-  let map = Nano.ModelAPI.prototype;
+  let map = Lum.ModelAPI.prototype;
 
   /**
    * Set up the defaults for the web service model.
@@ -72,7 +72,7 @@
    */
   map.no_ws = function (name)
   {
-    var promise = new Nano.Promise(this.__ws.deferred);
+    var promise = new Lum.Promise(this.__ws.deferred);
     promise.deferDone({success: false, error: "no web service can handle method: "+name});
     return promise;
   }
@@ -84,7 +84,7 @@
    * @param mixed listopts  Options to pass to list web service call.
    *
    * @return Promise  Use promise.done() to get the list.
-   *                  The promise is either a jqXHR, or a Nano.Promise
+   *                  The promise is either a jqXHR, or a Lum.Promise
    (                  if the list was cached, and reload was false.
    */
   map.list = function (reload, listopts)
@@ -111,7 +111,7 @@
     }
     else
     {
-      var promise = new Nano.Promise(self.__ws.deferred);
+      var promise = new Lum.Promise(self.__ws.deferred);
       promise.deferDone(self.model.cached_list);
       return promise;
     }
@@ -148,7 +148,7 @@
    * @param bool    noTriggers Don't run triggers (default false)
    *
    * @return Promise  Use promise.done() to get the document.
-   *                  The promise is either a jqXHR, or a Nano.Promise
+   *                  The promise is either a jqXHR, or a Lum.Promise
    *                  if the list was cached, and reload was false.
    */
   map.get = function (id, reload, noTriggers)
@@ -167,7 +167,7 @@
     }
     else
     {
-      var promise = new Nano.Promise(self.__ws.deferred);
+      var promise = new Lum.Promise(self.__ws.deferred);
       promise.deferDone(self.model.doc_cache[id]);
       if (!noTriggers)
         self.trigger('onLoad', self.model.doc_cache[id], id);
@@ -201,7 +201,7 @@
       }
     }
 
-    Nano.addProperty(doc, name, function (props)
+    Lum.addProperty(doc, name, function (props)
     {
 //      console.log(name, this);
       if (props === undefined)
@@ -254,8 +254,10 @@
       doc = {};
     var self = this;
 
-    if (self.make_observable !== undefined)
-      self.make_observable(doc);
+    if (Lum.hasLib('observable'))
+    {
+      Lum.observable(doc, this._extend_observable);
+    }
 
     if (self.__ws.watch)
     {
@@ -263,7 +265,7 @@
       add_watch_list(doc, 'removed', false);
     }
 
-    Nano.addProperty(doc, 'set', function (prop, value)
+    Lum.addProperty(doc, 'set', function (prop, value)
     {
       if (typeof prop === 'string' && value !== undefined)
       {
@@ -293,7 +295,7 @@
       }
     });
 
-    Nano.addProperty(doc, 'unset', function (props)
+    Lum.addProperty(doc, 'unset', function (props)
     {
       if (typeof props === 'string')
       {
@@ -323,7 +325,7 @@
       }
     });
 
-    Nano.addProperty(doc, 'save', function ()
+    Lum.addProperty(doc, 'save', function ()
     {
       return self.save(this);
     });
@@ -388,7 +390,7 @@
         var rcount = removed.length;
         if (ccount === 0 && rcount === 0)
         {
-          var promise = new Nano.Promise(true);
+          var promise = new Lum.Promise(true);
           promise.deferDone({success:false, debugMsg:"no changes"});
           return promise;
         }

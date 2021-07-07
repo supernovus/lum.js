@@ -1,22 +1,22 @@
-(function(Nano)
+(function()
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('tests','observable');
+  Lum.needLibs('tests','observable');
 
-  let testSuite = Nano.Tests.getInstance();
+  let testSuite = Lum.Tests.getInstance();
   let testSet = testSuite.getSet('observable');
 
   testSet.setHandler(function (test)
   {
     test.plan(10);
 
-    let obs1 = Nano.observable();
+    let obs1 = Lum.observable();
     test.is(typeof obs1.on, 'function', 'observable added on method');
     test.is(typeof obs1.off, 'function', 'observable added off method');
     test.is(typeof obs1.one, 'function', 'observable added one method');
@@ -50,4 +50,4 @@
 
   });
 
-})(window.Lum);
+})();

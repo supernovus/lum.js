@@ -192,42 +192,96 @@
   }
 
   /**
-   * Check for needed libraries. 
+   * Check for loaded libraries. 
    *
    * They must have been marked as loaded to pass the test.
    *
    * Any arguments are the names of libraries we need.
+   *
+   * Returns the name of the first missing library, or undefined if all
+   * requested libraries are loaded.
    */
-  Lum.needLibs = Lum.needLib = function ()
+  Lum.checkLibs = function ()
   {
     for (let l = 0; l < arguments.length; l++)
     {
-      let lib = arguments[l];
-      if (!this._loaded[lib])
+      const lib = arguments[l];
+      if (typeof lib === 'string' && !this._loaded[lib])
       {
-        throw new Error("Missing required library: "+lib);
+        return lib;
       }
     }
   }
 
   /**
+   * Run checkLibs; if it returns a string, throw a fatal error.
+   */
+  Lum.needLibs = Lum.needLib = function ()
+  {
+    const result = Lum.checkLibs.apply(this, arguments);
+    if (typeof result === 'string')
+    {
+      throw new Error("Missing required Lum library: "+result);
+    }
+  }
+
+  /**
+   * Run checkLibs; return false if the value was a string, or true otherwise.
+   */
+  Lum.wantLibs = function ()
+  {
+    const result = Lum.checkLibs.apply(this, arguments);
+    return (typeof result !== 'string');
+  }
+
+  /**
    * Check for needed jQuery plugins.
    */
-  Lum.needJq = function ()
+  Lum.checkJq = function ()
   {
     if (root.jQuery === undefined)
     {
-      throw new Error("Missing jQuery");
+      return 'jQuery';
     }
+
     let $ = root.jQuery;
+
     for (let l = 0; l < arguments.length; l++)
     {
       let lib = arguments[l];
       if ($.fn[lib] === undefined)
       {
-        throw new Error("Missing required jQuery plugin: "+lib);
+        return lib;
       }
     }
+  }
+
+  /**
+   * Run checkJq; if it returns a string, throw a fatal error.
+   */
+  Lum.needJq = function ()
+  {
+    const result = Lum.checkJq.apply(this, arguments);
+    if (typeof result === 'string')
+    {
+      if (result === 'jQuery')
+      {
+        throw new Error("Missing jQuery");
+      }
+      else
+      {
+        throw new Error("Missing required jQuery plugin: "+result);
+      }
+    }
+  }
+
+  /**
+   * Run checkJq; return false if the value was a string, or true otherwise.
+   */
+  Lum.wantJq = function ()
+  {
+    const result = Lum.checkJq.apply(this, arguments);
+    return (typeof result !== 'string');
   }
 
   // If 'window.Nano' does not already exist, create it.

@@ -1,12 +1,12 @@
 /*
  * Notifications
  *
- * Works with Nano.php's new Notifications library.
+ * Works with Lum.php's new Notifications library.
  * Replaces the old Status library.
  *
  * Requires:
  *
- *  #common (coreutils, json.jq, exists,jq)
+ *  core.js
  *  vsprintf
  *
  * Note: this object should be initialized after the document.ready
@@ -18,29 +18,33 @@
  *
  */
 
-(function (Nano, $)
+(function ($)
 {
   "use strict";
   
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('helpers');
-  Nano.markLib('notifications');
+  Lum.needLibs('helpers');
+  Lum.markLib('notifications');
 
   /**
    * A Notification system. 
    *
    * Can display messages of different classes to the user in various ways.
    */
-  Nano.Notifications = class
+  Lum.Notifications = class
   {
     constructor (options={})
     {
-      if (Nano.observable !== undefined)
-        Nano.observable(this);
+      if (Lum.hasLib('observable'))
+      {
+        Lum.observable(this, options.observable);
+      }
+
+      let hasJSON = Lum.wantJq('JSON');
   
       if (options.strings !== undefined)
       { // For maximum flexibility, pass in the strings/notifications.
@@ -50,7 +54,7 @@
           this.notifications = options.notifications;
         }
       }
-      else if ($('#modeldeps').length > 0)
+      else if (hasJSON && $('#modeldeps').length > 0)
       { // Compatibility with modeldeps style storage.
         var modeldeps = $('#modeldeps').JSON();
         if ('msgs' in modeldeps)
@@ -62,7 +66,7 @@
           this.notifications = modeldeps.notifications;
         }
       }
-      else if ($('#status_messages').length > 0)
+      else if (hasJSON && $('#status_messages').length > 0)
       { // Compatibility with older 'status_messages' storage.
         this.strings = $('#status_messages').JSON();
         if ($('#notification_messages').length > 0)
@@ -226,9 +230,9 @@
   
     extendNotification (notification)
     {
-      Nano.addProperty(notification, 'parent', this);
+      Lum.addProperty(notification, 'parent', this);
   
-      Nano.addAccessor(notification, 'text', 
+      Lum.addAccessor(notification, 'text', 
       function ()
       {
         var name = this.name;
@@ -259,7 +263,7 @@
         console.error("Notification text is immutable!");
       });
   
-      Nano.addProperty(notification, 'keyCount', function ()
+      Lum.addProperty(notification, 'keyCount', function ()
       {
         if (this.key && this.parent.keyCount[this.key] !== undefined)
         {
@@ -268,7 +272,7 @@
         return 1;
       });
   
-      Nano.addProperty(notification, 'remove', function (opts={})
+      Lum.addProperty(notification, 'remove', function (opts={})
       {
         if (opts === true)
         { // Remove from parent, and redraw the list.
@@ -808,9 +812,9 @@
       this.types[typeName] = typeOpts;
     }
 
-  } // class Nano.Notifications
+  } // class Lum.Notifications
 
-  Nano.Notifications.DefaultTypes =
+  Lum.Notifications.DefaultTypes =
   {
     default: {class: 'default'},
     message: {class: 'message', prefix: 'msg.',  actions:['dismiss']},
@@ -820,7 +824,7 @@
     system:  {class: 'system',  noGroup: true},
   };
 
-  Nano.Notifications.DefaultTimeouts =
+  Lum.Notifications.DefaultTimeouts =
   {
     default: 1500,
     message: 1500,
@@ -830,7 +834,7 @@
     error:   6000,
   }
 
-  Nano.Notifications.DefaultPriority =
+  Lum.Notifications.DefaultPriority =
   {
     default: 100,
     message: 200,
@@ -840,7 +844,7 @@
     error:   600,
   };
 
-  Nano.Notifications.DefaultHandlers =
+  Lum.Notifications.DefaultHandlers =
   {
     dismiss: function (notObj)
     {
@@ -848,7 +852,7 @@
     }
   };
 
-  Nano.Notifications.DefaultEngine = function (elselector, notification, actselector)
+  Lum.Notifications.DefaultEngine = function (elselector, notification, actselector)
   {
     let elem = $(elselector).clone();
     elem.attr(this.msgKeyAttr, notification.key);
@@ -909,4 +913,4 @@
     return elem;
   }
 
-})(window.Lum, window.jQuery);
+})(window.jQuery);

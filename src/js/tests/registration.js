@@ -1,13 +1,13 @@
-(function(Nano)
+(function()
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('tests');
+  Lum.needLibs('tests');
 
   /*
    * In this file, we register all of our current test sets.
@@ -15,11 +15,11 @@
    * They aren't loaded immediately, but instead will be loaded on demand.
    *
    * Because of the nature of this script, it needs to be loaded AFTER we
-   * have initialized the Nano.Tests instance. The default test templates will
+   * have initialized the Lum.Tests instance. The default test templates will
    * do this automatically.
    */
 
-  let testSuite = Nano.Tests.getInstance();
+  let testSuite = Lum.Tests.getInstance();
 
   // A quick function to make a data set.
   testSuite.makePeople = function (opts={})
@@ -88,7 +88,7 @@
 
   let ext = '.js'; // Default file extension for our scripts.
 
-  // For most Nano libraries, this will work.
+  // For most Lum libraries, this will work.
   function test (lib, name, deps=[])
   {
     deps.push(L+lib+ext);
@@ -156,7 +156,7 @@
   //test('listing', 'Listing', [pager, riot_tmpl]);
   //test('modal', 'Modal Dialog', [jqui]);
   let observ = test('observable', 'Observable');
-  let prom = test('promise', 'Nano Promise');
+  let prom = test('promise', 'Lum Promise');
   //let ws = test('webservice', 'Webservice', [core]);
   //testext(ws, 'compat', 'Webservice Compat');
   let modelapi = test('modelapi', 'Model API', [core,hash,existsjq,jsonjq]);
@@ -172,4 +172,4 @@
 
   // Add more tests as we add/change libraries.
 
-})(window.Lum);
+})();

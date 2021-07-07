@@ -1,15 +1,15 @@
-(function(Nano, $, observable)
+(function($)
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('helpers');
+  Lum.needLibs('helpers');
 
-  Nano.markLib('modelapi');
+  Lum.markLib('modelapi');
 
   // TODO: rewrite the debugging stuff, and move into the new debug.js
   var debug = typeof console.debug === 'function' ? console.debug : console.log;
@@ -37,17 +37,20 @@
    *  json.jq.js
    *
    */
-  Nano.ModelAPI = class
+  Lum.ModelAPI = class
   {
     /**
      * Build a ModelAPI instance.
      */
     constructor (conf={})
     {
-      if (observable !== undefined)
+      if (Lum.hasLib('observable'))
       {
-        observable(this);
-        this.make_observable = observable;
+        const obsopts = (conf.observable !== undefined)
+          ? conf.observable
+          : this._default_observable;
+        //console.debug("modelapi observable", conf, obsopts, this);
+        Lum.observable(this, obsopts);
       }
 
       /**
@@ -212,7 +215,7 @@
         this.debugging = {};
       }
   
-      if (Nano.Hash === undefined)
+      if (!Lum.hasLib('hash'))
       { // The Hash library wasn't loaded.
         return;
       }
@@ -222,7 +225,7 @@
         shortOpt: true,
         json: (debugValues !== undefined)
       }
-      var hash = new Nano.Hash(hashOpts);
+      var hash = new Lum.Hash(hashOpts);
       var debugFlags = hash.getOpt('debug');
   
       if (debugFlags === undefined)
@@ -377,7 +380,7 @@
      */
     static addExtension (extension)
     {
-      if (extension.prototype instanceof Nano.ModelAPI.Extension)
+      if (extension.prototype instanceof Lum.ModelAPI.Extension)
       {
         if (this._extensions === undefined)
           this._extensions = [];
@@ -476,7 +479,7 @@
     {
       var opts = source.opts;
       this.onDebug('loadModel', '-- Loading web service', name, opts);
-      var wsclass = 'class' in opts ? opts.class : Nano.WebService;
+      var wsclass = 'class' in opts ? opts.class : Lum.WebService;
       if (name in this.debugging)
       {
         opts.debug = this.debugging[name];
@@ -499,8 +502,8 @@
      */
     _load_json_model (name, source)
     {
-      Nano.needLib('helpers');
-      Nano.needJq('JSON', 'exists');
+      Lum.needLib('helpers');
+      Lum.needJq('JSON', 'exists');
 
       var elname;
       if ('element' in source)
@@ -530,7 +533,7 @@
         }
   
         // Add a special "save" function.
-        Nano.addProperty(jsondata, 'save', function (target)
+        Lum.addProperty(jsondata, 'save', function (target)
         {
           if (!target)
             target = elname;
@@ -547,11 +550,11 @@
   
         // Add a special "json" function. This requires the
         // format_json library to have been loaded.
-        Nano.addProperty(jsondata, 'json', function (format)
+        Lum.addProperty(jsondata, 'json', function (format)
         {
           var json = JSON.stringify(this);
-          if (format && typeof Nano.format_json === 'function')
-            return Nano.format_json(json);
+          if (format && typeof Lum.format_json === 'function')
+            return Lum.format_json(json);
           else
             return json;
         });
@@ -571,12 +574,12 @@
       return class extends this {};
     }
 
-  } // class Nano.ModelAPI
+  } // class Lum.ModelAPI
 
   /**
    * Extensions to the ModelAPI should extend this class.
    */
-  Nano.ModelAPI.Extension = class
+  Lum.ModelAPI.Extension = class
   {
     /**
      * The extension is passed a copy of the Model instance during it's
@@ -597,7 +600,7 @@
      */
     constructor(apiInstance)
     {
-      if (!(apiInstance instanceof Nano.ModelAPI))
+      if (!(apiInstance instanceof Lum.ModelAPI))
       {
         throw new Error("Extension must be passed it's parent Model");
       }
@@ -723,12 +726,12 @@
         console.error("Non-object sent to addHandledMethods()", methodsToAdd);
       }
     }
-  } // class Nano.ModelAPI.Extension
+  } // class Lum.ModelAPI.Extension
 
   /**
    * Load a bunch of models at once.
    */
-  Nano.ModelAPI.prototype.init.loadSources = function (conf)
+  Lum.ModelAPI.prototype.init.loadSources = function (conf)
   {
     if (conf.sources === undefined || conf.sources === null)
     {
@@ -742,11 +745,12 @@
     } // for (sources)
   }
 
-})(
-  window.Lum,
-  window.jQuery,                 // jQuery is always required. 
-  window.riot
-  ? window.riot.observable       // If 'riot' exists, use it.
-  : window.Lum.observable  // We may contain the observable trait.
-);
+  /**
+   * And finally for backwards compatibility, the default settings for
+   * the observable trait if it's loaded. You can override this in your
+   * child classes if you want different defaults.
+   */
+  Lum.ModelAPI.prototype._default_observable = {addme: 'make_observable'};
+
+})(window.jQuery);
 
