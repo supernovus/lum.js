@@ -156,6 +156,7 @@
      */
     need (group, func, conf)
     {
+      //console.debug("need", group, func, conf);
       if (group._inittab && group._inittab[func]) return; // Already called.
       if (group[func] === undefined)              return; // Invalid function.
       group[func].call(this, conf);                       // Call it.
@@ -169,6 +170,7 @@
      */
     _init (initgroup, conf)
     {
+      //console.debug("_init", initgroup, conf);
       for (var initfunc in this[initgroup])
       {
         if (initfunc === '_inittab' || initfunc === 'prototype') continue;
@@ -433,7 +435,7 @@
         throw new Error("onInit() attempt to overwrite "+group+"."+name);
       }
 
-      this.prototype[group] = func;
+      this.prototype[group][name] = func;
 
       return this;
     }
