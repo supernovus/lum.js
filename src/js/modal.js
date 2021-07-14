@@ -115,7 +115,8 @@
         this.content.selector = options.element;
         this.content.element  = $(options.element);
         this.content.display = options.display ? options.display : dt.default;
-        this.content.fadeOut = options.fadeOut; // There is no fadeIn, sorry.
+        this.content.fadeOut = options.fadeOut; // This always works.
+        this.content.fadeIn  = options.fadeIn;  // A real kludge.
       }
       else
       {
@@ -163,23 +164,40 @@
     /**
      * Show the dialog, at a specific position relative to a passed element.
      */
-    show (posElement)
+    show (posElement='body')
     {
       // Sanity check.
-      if (!this.content) { return; }
-  
-      var pos = $(posElement);
-  
-      var before = this.events.beforeShow;
-      if (before !== null && before !== undefined)
-      {
-        before.call(this, pos);
+      if (!this.content) 
+      { 
+        console.error("No content, cannot show()", this);
+        return; 
       }
-    
-      var content = this.content.element;
-      var display = this.content.display;
-      var offset = pos.offset();
+
+      if (posElement === null
+        || (typeof posElement !== 'string' && typeof posElement !== 'object'))
+      {
+        console.error("Invalid posElement", posElement, this);
+        return;
+      }
   
+      const pos = this.lastPos = $(posElement);
+      const content = this.content.element;
+  
+      const before = this.events.beforeShow;
+      if (typeof before === 'function')
+      {
+        const ret = before.call(this, pos, content);
+        if (ret === false)
+        { // Something went wrong, goodbye.
+          return;
+        }
+      }
+  
+      const fade   = this.content.fadeIn;
+      const offset = pos.offset();
+
+      let display = this.content.display;
+
       if (typeof display === 'string' && display in dt)
       {
         display = dt[display];
@@ -187,7 +205,11 @@
 
       if (typeof display === 'function')
       {
-        content.show();
+        let sbf = display.showBeforeFade;
+        if (!fade || sbf)
+        { // Show the content right away.
+          content.show();
+        }
         var coords = display(content, offset, pos);
         if (coords && 'x' in coords && 'y' in coords)
         {
@@ -197,6 +219,14 @@
             left:     coords.x+'px', 
             top:      coords.y+'px' 
           });
+        }
+        if (fade)
+        { // This is iffy at best.
+          if (sbf)
+          { // Hide it again.
+            content.hide();
+          }
+          content.fadeIn(fade);
         }
       }
       else
@@ -210,12 +240,17 @@
         this.mask.show(true);
       }   
   
-      var after = this.events.afterShow;
-      if (after !== null && after !== undefined)
+      const after = this.events.afterShow;
+      if (typeof after === 'function')
       {
-        after.call(this, pos);
+        const ret = after.call(this, pos, content);
+        if (ret !== undefined)
+        { // It's something specific we want to return.
+          return ret;
+        }
       }
   
+      return content;
     }
   
     /**
@@ -224,17 +259,26 @@
     hide ()
     {
       // Sanity check.
-      if (!this.content) { return; }
-  
-      var before = this.events.beforeHide;
-      if (before !== null && before !== undefined)
+      if (!this.content) 
       {
-        before.call(this, pos);
+        console.error("No content, cannot hide()", this);
+        return; 
+      }
+  
+      const content = this.content.element;
+
+      const before = this.events.beforeHide;
+      if (typeof before === 'function')
+      {
+        const ret = before.call(this, content);
+        if (ret === false)
+        { // Bye bye
+          return;
+        }
       }
   
       // First, close the dialog itself.
-      var content = this.content.element;
-      var fade = this.content.fadeOut;
+      const fade = this.content.fadeOut;
       if (fade)
       {
         content.fadeOut(fade);
@@ -253,9 +297,14 @@
       var after = this.events.afterHide;
       if (after !== null && after !== undefined)
       {
-        after.call(this, pos);
+        const ret = after.call(this, content);
+        if (ret !== undefined)
+        { // Send it off.
+          return ret;
+        }
       }
   
+      return content;
     }
 
   } // ModalDialog
@@ -274,6 +323,7 @@
     var y = offset.top;
     return {x:x, y:y};
   }
+  dt.below.showBeforeFade = false;
 
   dt.belowCenter = function (content, offset)
   {
@@ -281,6 +331,7 @@
     var y = offset.top + 10;
     return {x:x, y:y};
   }
+  dt.belowCenter.showBeforeFade = true;
 
   dt.center = function (content, offset)
   {
@@ -294,6 +345,7 @@
     );
     return {x:x, y:y};
   }
+  dt.center.showBeforeFade = true;
 
   dt.abscenter = function (content, offset)
   {
@@ -308,6 +360,7 @@
       'margin-top':   marginy,
     });
   }
+  dt.showBeforeFade = true;
 
   dt.avgCenter = function (content, offset)
   {
@@ -318,6 +371,7 @@
       top:      '25%',
     });
   }
+  dt.showBeforeFade = false;
 
   dt.uiElementCenter = function (content, offset, pos)
   {
@@ -333,6 +387,7 @@
       return dt.belowCenter(content, offset);
     }
   }
+  dt.showBeforeFade = true;
 
   dt.uiWindowCenter = function (content, offset, pos)
   {
@@ -348,6 +403,7 @@
       return dt.abscenter(content, offset);
     }
   }
+  dt.showBeforeFade = true;
 
   // The new default is uiWindowCenter.
   dt.default = dt.uiWindowCenter;

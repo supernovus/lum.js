@@ -110,6 +110,10 @@
       this.uiElement = element;  // Element from the UI we're editing.
       this.type      = type;     // Type of value we're editing.
 
+      // This can be left undefined. If it's a string, it's the id of the list.
+      // If it's a jQuery instance, we get the 'id' property from it.
+      this.dataList  = options.dataList;
+
       Lum.observable(this, options.observable);
 
       if (options.onSave)
@@ -384,6 +388,18 @@
         else
         { // A common old text box.
           editBox.prop("type", "text");
+          if (typeof this.dataList === 'string')
+          {
+            editBox.attr("list", this.dataList);
+          }
+          else if (this.dataList instanceof jQuery)
+          {
+            const listId = this.dataList.prop('id');
+            if (listId)
+            {
+              editBox.attr("list", listId);
+            }
+          }
         }
       }
 
