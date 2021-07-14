@@ -82,6 +82,54 @@
        * See if we have debugging in the hash.
        */
       this.updateDebug(conf.debug);
+
+      // See if there's any init groups registered, and make sure they have
+      // the proper 'api' property set.
+      if (typeof this._initGroups === 'object')
+      {
+        for (let groupName in this._initGroups)
+        {
+          this._initGroups[groupName].api = this;
+        }
+      }
+
+      // See if there's any legacy init groups to be set up.
+      const groups = ['pre_init','init','post_init'];
+      for (let g in groups)
+      {
+        const groupName = groups[g];
+        const legacyGroup = this[groupName];
+        if (Object.keys(legacyGroup).length > 0)
+        { // There's legacy init items.
+          if (this._initGroups === undefined)
+          { // Double safety check.
+            this._initGroups = {};
+          }
+          
+          if (this._initGroups[groupName] === undefined)
+          {
+            this._initGroups[groupName] = new InitGroup(groupName, this);
+          }
+
+          const initGroup = this._initGroups[groupName];
+          
+          for (let legacyName in legacyGroup)
+          {
+            if (legacyName === '@init@') continue;
+            if (legacyName === 'prototype') continue;
+            if (legacyName === '_inittab') continue;
+            let legacyFunc = legacyGroup[legacyName];
+            initGroup.add(legacyName, legacyFunc, true);
+          }
+
+          legacyGroup['@init@'] = initGroup;
+        }
+      }
+
+      /**
+       * Stuff to do prior to loading extensions.
+       */
+      this._init('pre_ext_init', conf);
  
       /**
        * Before we do any further initialization, load extensions.
@@ -121,17 +169,22 @@
       /**
        * Stuff to do before loading our sources.
        */
-      this.pre_init(conf);
+      this._init('pre_init', conf);
       
       /**
-       * Load our sources, and other such features.
+       * Load our sources added via conf.sources.
        */
-      this.init(conf);
+      this._loadSources(conf);
+
+      /**
+       * Run init stuff that adds more sources.
+       */
+      this._init('init', conf);
   
       /**
        * Stuff to do after loading our sources.
        */
-      this.post_init(conf);
+      this._init('post_init', conf);
   
       /**
        * Finally, after ALL initialization, see if any loaded
@@ -156,46 +209,30 @@
      */
     need (group, func, conf)
     {
-      //console.debug("need", group, func, conf);
-      if (group._inittab && group._inittab[func]) return; // Already called.
-      if (group[func] === undefined)              return; // Invalid function.
-      group[func].call(this, conf);                       // Call it.
-      if (group._inittab === undefined) 
-        group._inittab = {};
-      group._inittab[func] = true;                        // Mark it as called.
+      if (typeof group === 'object' && typeof group['@init@'] === 'object')
+      { // It's a legacy group.
+        console.warn("Deprecated use of ModelAPI.need()", group, func, conf);
+        return group['@init@'].need(func, conf);
+      }
+      else if (typeof group === 'string' 
+        && typeof this._initGroups[group] === 'object')
+      { // The modern groups are easy as pie.
+        return this._initGroups[group].need(func, conf);
+      }
+      return false;
     }
   
     /**
      * Call an entire group of initialization methods.
      */
-    _init (initgroup, conf)
+    _init (group, conf)
     {
-      //console.debug("_init", initgroup, conf);
-      for (var initfunc in this[initgroup])
+      if (typeof this._initGroups[group] === 'object')
       {
-        if (initfunc === '_inittab' || initfunc === 'prototype') continue;
-  
-        this.need(this[initgroup], initfunc, conf);
+        return this._initGroups[group].run(conf);
       }
     }
   
-    // predefined init groups.
-  
-    pre_init (conf)
-    {
-      this._init('pre_init', conf);
-    }
-  
-    init (conf)
-    {
-      this._init('init', conf);
-    }
-  
-    post_init (conf)
-    {
-      this._init('post_init', conf);
-    }
-
     /**
      * Update debugging flags based on URL hash.
      *
@@ -397,15 +434,18 @@
     }
 
     /**
-     * Add a function to an init group ('init', 'pre_init', or 'post_init').
+     * Add a function to an init group.
      *
      * @param string name  The name of the init function.
      * @param function func  The actual function to run during the init stage.
      * @param string group  The name of the init group.
-     *                      'pre_init': Functions to call before model data.
-     *                      'init': Functions to call to load model data.
-     *                      'post_init': Functions to call after model data.
-     *                      The default if omitted is 'init'
+     *
+     *                      'pre_ext_init': Called before extensions are loaded.
+     *                      'pre_init': Called before model data is loaded.
+     *                      'init': Called to load model data.
+     *                      'post_init': Called after model data is loaded.
+     *
+     *                      The default if omitted is 'init'.
      */
     static onInit (name, func, group='init')
     {
@@ -425,21 +465,39 @@
         throw new Error("onInit() passed non-function");
       }
 
-      if (['init','pre_init','post_init'].indexOf(group) === -1)
-      { 
-        throw new Error("onInit() called with invalid group name");
-      }
-
-      if (this.prototype[group][name] !== undefined)
+      if (this.prototype._initGroups === undefined)
       {
-        throw new Error("onInit() attempt to overwrite "+group+"."+name);
+        this.prototype._initGroups = {};
       }
 
-      this.prototype[group][name] = func;
+      if (this.prototype._initGroups[group] === undefined)
+      {
+        this.prototype._initGroups[group] = new InitGroup(name);
+      }
+
+      this.prototype._initGroups[group].add(name, func);
 
       return this;
     }
+
+    /**
+     * Load a bunch of models at once.
+     */
+    _loadSources (conf)
+    {
+      if (conf.sources === undefined || conf.sources === null)
+      {
+        return;
+      }
   
+      for (var name in conf.sources)
+      {
+        var source = conf.sources[name];
+        this._loadModel(name, source);
+      } // for (sources)
+    }
+
+
     /** 
      * Add a model source definition, then load the model.
      */
@@ -730,22 +788,82 @@
     }
   } // class Lum.ModelAPI.Extension
 
-  /**
-   * Load a bunch of models at once.
-   */
-  Lum.ModelAPI.prototype.init.loadSources = function (conf)
+  // A private class used by the new init system.
+  class InitGroup
   {
-    if (conf.sources === undefined || conf.sources === null)
+    constructor(name, api=null)
     {
-      return;
+      this.api = api;
+      this.name = name;
+      this.methods = {};
     }
-  
-    for (var name in conf.sources)
+
+    add(name, method, apiIsThis=false)
     {
-      var source = conf.sources[name];
-      this._loadModel(name, source);
-    } // for (sources)
-  }
+      if (typeof name === 'string' && typeof method === 'function')
+      {
+        if (this.methods[name] === undefined)
+        {
+          method._run_init = false;
+          method._this_api = false;
+          this.methods[name] = method;
+          return true;
+        }
+        else
+        {
+          console.error("cannot overwrite init method", name, method, this); 
+        }
+      }
+      else
+      {
+        console.error("invalid init method", name, method, this);
+      }
+      return false;
+    }
+
+    /**
+     * Run a named init script in this group.
+     */
+    need (name, conf)
+    {
+      const meth = this.methods[name];
+
+      if (typeof meth !== 'function')
+      {
+        console.error("invalid init method requested", name, this, conf);
+        return false;
+      }
+
+      if (meth._run_init)
+      { // This function has already been run.
+        return true;
+      }
+
+      const wantThis = (meth._this_api && this.api) ? this.api : this;
+
+      const ret = meth.call(wantThis, conf);
+      meth._run_init = true;
+      
+      return ret;
+    }
+
+    /**
+     * Run all init scripts in this group.
+     */
+    run(conf)
+    {
+      for (const name in this.methods)
+      {
+        this.need(name, conf);
+      }
+    }
+
+  } // class InitGroup
+
+  // The next three lines are for the old init system.
+  Lum.ModelAPI.prototype.pre_init = {};
+  Lum.ModelAPI.prototype.init = {};
+  Lum.ModelAPI.prototype.post_init = {};
 
   /**
    * And finally for backwards compatibility, the default settings for

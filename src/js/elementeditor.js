@@ -28,6 +28,7 @@
   const E_CANCEL = "cancel";
   const E_CLOSE = "close";
   const E_OPEN = "open";
+  const E_UPDATE_SET = "updateSetValue";
 
   /**
    * A super simple class for making certain element fields editable.
@@ -45,6 +46,7 @@
     static get CANCEL() { return E_CANCEL; }
     static get CLOSE() { return E_CLOSE; }
     static get OPEN() { return E_OPEN; }
+    static get UPDATE_SET() { return E_UPDATE_SET; }
 
     static get DATA_NAME() { return DATA_NAME; }
 
@@ -139,6 +141,9 @@
 
       this.autoFocus = ('autoFocus' in options)
         ? options.autoFocus : true;
+
+      this.autoSelect = ('autoSelect' in options)
+        ? options.autoSelect : false;
 
       this.closeOnBlur = ('closeOnBlur' in options) 
         ? options.closeOnBlur : true;
@@ -382,20 +387,24 @@
         }
       }
 
-      this.trigger(E_OPEN, editBox);
+      this.trigger(E_OPEN, editBox, curVal);
       this._setEditElement(editBox, options);
       this.uiElement.empty().append(editBox);
       if (this.autoFocus)
       {
-        this.focus();
+        this.focus(this.autoSelect);
       }
     } // open()
 
-    focus()
+    focus(select=false)
     {
       if (this.editElement instanceof $)
       {
         this.editElement.focus();
+        if (select)
+        {
+          this.editElement[0].select();
+        }
       }
       else
       {
@@ -411,7 +420,7 @@
 
       if (typeof save !== 'boolean')
       { // Determine save automatically.
-        save = (newVal != curVal);
+        save = (newVal !== curVal);
       }
 
       if (typeof this.validator === 'function')
@@ -430,15 +439,22 @@
         }
       }
 
+      // A way for the 'save', 'cancel', and 'close' methods to
+      // change the setVal dynamically.
+      this.on(E_UPDATE_SET, function (val)
+      {
+        setVal = val;
+      });
+
       if (save)
       {
-        this.trigger(E_SAVE, newVal, curVal);
         setVal = newVal;
+        this.trigger(E_SAVE, newVal, curVal);
       }
       else
       {
-        this.trigger(E_CANCEL, curVal, newVal);
         setVal = curVal;
+        this.trigger(E_CANCEL, curVal, newVal);
       }
 
       this.trigger(E_CLOSE, setVal, save, curVal, newVal);
@@ -477,6 +493,10 @@
         ? options.openEvent
         : 'onOpenEditor';
 
+      this.defaultType = (typeof options.type === 'number')
+        ? options.type
+        : Lum.ElementEditor.T_STR;
+
       const editOpts = this.editorOpts
         = (typeof options.editor === 'object' && options.editor !== null)
         ? options.editor // This will be modified, so be careful.
@@ -512,6 +532,16 @@
     // Build an ElemeentEditor instance with our construct options.
     build(element, type, options)
     {
+      if (typeof type === 'object')
+      {
+        options = type;
+        type = this.defaultType;
+      }
+      else if (typeof type !== 'number')
+      {
+        type = this.defaultType;
+      }
+
       if (typeof options === 'object' && options !== null)
       { // Options were passed, let's add our own to it.
         for (const key in this.editorOpts)
@@ -533,6 +563,12 @@
     // A wrapper for getEditor that will build using the factory.
     get(element, type, options)
     {
+      if (typeof type === 'object')
+      {
+        options = type;
+        type = this.defaultType;
+      }
+
       const Editor = this.editorClass;
       let editor = Editor.getEditor(element);
       if (!(editor instanceof Editor))
@@ -545,6 +581,12 @@
     // Finally a way to get an editor and open it all at once.
     open(element, type, options)
     {
+      if (typeof type === 'object')
+      {
+        options = type;
+        type = this.defaultType;
+      }
+
       const buildopts = (typeof options === 'object' 
         && typeof options.build === 'object')
         ? options.build

@@ -2,23 +2,23 @@
  * Modal dialog boxes, and UI masks made easy.
  */
 
-(function ($, Nano)
+(function ($)
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.markLib('modal');
+  Lum.markLib('modal');
 
   /**
    * Quick class to represent a Mask to cover the UI when a Modal is open.
    *
-   * @class Nano.Mask
+   * @class Lum.Mask
    */
-  Nano.Mask = class
+  Lum.Mask = class
   {
     constructor (options)
     {
@@ -89,7 +89,7 @@
           $(this.element).hide();    
       }
     }
-  } // class Nano.Mask
+  } // class Lum.Mask
 
   /**
    * Simple Modal Dialog class.
@@ -101,7 +101,7 @@
    *
    * Requires jQuery.
    */
-  Nano.ModalDialog = class
+  Lum.ModalDialog = class
   {
     constructor (options)
     {
@@ -114,7 +114,7 @@
         this.content = {};
         this.content.selector = options.element;
         this.content.element  = $(options.element);
-        this.content.display = options.display ? options.display : 'below';
+        this.content.display = options.display ? options.display : dt.default;
         this.content.fadeOut = options.fadeOut; // There is no fadeIn, sorry.
       }
       else
@@ -132,7 +132,7 @@
         }
         else
         { // It's a set of options to build a new Mask object.
-          this.mask = new Nano.Mask(options.mask);
+          this.mask = new Lum.Mask(options.mask);
         }
       }
       else
@@ -150,9 +150,19 @@
       };
     } // constructor()
 
-  /**
-   * Show the dialog, at a specific position relative to a passed element.
-   */
+    /**
+     * Set an event handler on our content element.
+     */
+    on ()
+    {
+      if (!this.content) { return; }
+      const elem = this.content.element;
+      return elem.on.apply(elem, arguments);
+    }
+
+    /**
+     * Show the dialog, at a specific position relative to a passed element.
+     */
     show (posElement)
     {
       // Sanity check.
@@ -170,10 +180,15 @@
       var display = this.content.display;
       var offset = pos.offset();
   
-      if (display in dt)
+      if (typeof display === 'string' && display in dt)
+      {
+        display = dt[display];
+      }
+
+      if (typeof display === 'function')
       {
         content.show();
-        var coords = dt[display](content, offset, pos);
+        var coords = display(content, offset, pos);
         if (coords && 'x' in coords && 'y' in coords)
         {
           content.css(
@@ -203,9 +218,9 @@
   
     }
   
-  /**
-   * Hide the dialog.
-   */
+    /**
+     * Hide the dialog.
+     */
     hide ()
     {
       // Sanity check.
@@ -245,13 +260,13 @@
 
   } // ModalDialog
 
-/*
- * Globally known display types.
- *
- * These are registered as a global object, not as instance objects.
- * Keep that in mind when considering extending it.
- */
-  var dt = Nano.ModalDialog.displayTypes = {};
+  /*
+   * Globally known display types.
+   *
+   * These are registered as a global object, not as instance objects.
+   * Keep that in mind when considering extending it.
+   */
+  const dt = Lum.ModalDialog.displayTypes = {};
 
   dt.below = function (content, offset)
   {
@@ -334,5 +349,8 @@
     }
   }
 
-})(window.jQuery, window.Lum);
+  // The new default is uiWindowCenter.
+  dt.default = dt.uiWindowCenter;
+
+})(window.jQuery);
 
