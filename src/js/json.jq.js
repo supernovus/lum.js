@@ -9,22 +9,19 @@
  * This does not support multiple elements, and thus does not use this.each()
  * Also, when loading, we return the JSON, so chaining is unsupported.
  *
- * This expects the JSON object to be loaded, so either your browser must
- * support it, or you must load the json3.dist.js library before using this.
- *
  */
 
 (function($) 
 {
-  $.fn.JSON = function (obj)
+  $.fn.JSON = function (obj, rep, space)
   {
-    if (!obj)
+    if (obj === undefined)
     {
       return JSON.parse(this.val());
     }
     else
     {
-      return this.val(JSON.stringify(obj));
+      return this.val(JSON.stringify(obj, rep, space));
     }
   };
 })(jQuery);

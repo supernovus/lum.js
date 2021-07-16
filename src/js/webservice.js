@@ -10,6 +10,9 @@
  *
  * See webservice/compat.js for backwards compatibility with v3.
  *
+ * TODO: Rip out the simplistic debugging and replace it with support for
+ *       the new Lum.Debug library instead. Don't forget to update the
+ *       toggleDebug() method in ModelAPI when you do this.
  */
 
 (function (Nano)

@@ -1,6 +1,19 @@
 /**
  * Add some boiler plate code for working with a web service that handles the
  * model data (listing, get, save, etc.)
+ *
+ * DEPRECATION NOTICE: 
+ *
+ * While I'm not removing this library, I'm deprecating it, and not
+ * using it anymore, and have plans to replace it eventually with
+ * something better that has separate classes and is easier to manage.
+ *
+ * With the advent of proper classes, native promises, and better overall
+ * native APIs, a lot of what this extension did is no longer necessary.
+ *
+ * Plus I no longer recommend "extending" the objects returned from web service
+ * calls. Instead I write proper child classes, and pass the web service
+ * response to their constructors to use to populate the real child object.
  */
 (function($)
 {

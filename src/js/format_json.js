@@ -2,17 +2,17 @@
  * A function and jQuery wrapper for formatting JSON text in a friendly way.
  */
 
-(function (Nano, jQuery)
+(function (jQuery)
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.markLib('format_json');
-  let format = Nano.registerNamespace('Nano.format');
+  Lum.markLib('format_json');
+  let format = Lum.registerNamespace('Lum.format');
 
   // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
   format.json = function (val)
@@ -87,5 +87,5 @@
     }
   }
 
-})(window.Lum, window.jQuery);
+})(window.jQuery);
 

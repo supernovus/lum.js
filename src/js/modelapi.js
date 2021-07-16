@@ -10,10 +10,7 @@
   Lum.needLibs('helpers');
 
   Lum.markLib('modelapi');
-
-  // TODO: rewrite the debugging stuff, and move into the new debug.js
-  var debug = typeof console.debug === 'function' ? console.debug : console.log;
-
+ 
   /**
    * A Model API base core. Use this as the foundation for your API objects.
    *
@@ -27,7 +24,7 @@
    * 
    * Internal recommendations:
    *
-   *  hash.js
+   *  debug.js
    *  observable.js
    *
    * Requirements for JSON model sources:
@@ -41,9 +38,20 @@
   {
     /**
      * Build a ModelAPI instance.
+     *
+     * @param {object} conf   An optional set of configuration options.
+     *
+     *  'observable' {object}   If set, options for the Lum.observable() call.
+     *  'debug'      {object}   If set, it's default debugging options.
+     *
      */
     constructor (conf={})
     {
+      if (conf === null || typeof conf !== 'object')
+      { // Sorry, that's not valid.
+        throw new Error("ModelAPI constructor only accepts an object");
+      }
+
       if (Lum.hasLib('observable'))
       {
         const obsopts = (conf.observable !== undefined)
@@ -72,17 +80,43 @@
        * The conf property stores a copy of our initialization data.
        */
       this.conf = conf;
-  
-      /**
-       * Should we show the 'tag' when using onDebug() calls?
-       */
-      this.showDebugTag = false;
-  
-      /**
-       * See if we have debugging in the hash.
-       */
-      this.updateDebug(conf.debug);
 
+      if (Lum.hasLib('debug'))
+      { // Set up the debugging.
+
+        let dbgopts = {};
+        if (typeof conf.debug === 'object' && conf.debug !== null)
+        { // Let's see if it's the debug conf, or the list of flags.
+          if (conf.debug.flags === undefined 
+            && conf.debug.showFlag === undefined)
+          { // It doesn't have either of the options, so it's flags.
+            dbgopts = {flags: conf.debug};
+          }
+          else
+          { // It had one or more of the options, use it.
+            dbgopts = conf.debug;
+          }
+        }
+
+        if (typeof conf.hash === 'object' && dbgopts.hash === undefined)
+        { // A shortcut.
+          dbgopts.hash = conf.hash;
+        }
+
+        /**
+         * Our debug instance.
+         */
+        this.debug = new Lum.Debug(dbgopts);
+
+        // Now set up some handlers.
+        const self = this;
+        this.debug.on('toggle', function (flag, toggle)
+        {
+          self.toggleDebug(flag, toggle, true);
+        });
+
+      } // if hasLib('debug')
+  
       // See if there's any init groups registered, and make sure they have
       // the proper 'api' property set.
       if (typeof this._initGroups === 'object')
@@ -116,8 +150,6 @@
           for (let legacyName in legacyGroup)
           {
             if (legacyName === '@init@') continue;
-            if (legacyName === 'prototype') continue;
-            if (legacyName === '_inittab') continue;
             let legacyFunc = legacyGroup[legacyName];
             initGroup.add(legacyName, legacyFunc, true);
           }
@@ -232,183 +264,47 @@
         return this._initGroups[group].run(conf);
       }
     }
-  
-    /**
-     * Update debugging flags based on URL hash.
-     *
-     * You can use #debug to toggle the '*' flag, which turns on all debugging.
-     * Or #debug=flag to set a single one.
-     * Or #debug=flag1=flag2=flag3 to set a few.
-     *
-     * If debugValues are passed then:
-     * #debug={"flag1":true,"flag2":false} is also available.
-     */
-    updateDebug (debugValues)
+    
+    isDebug ()
     {
-      if (debugValues !== undefined)
-      { // Use the pre-determined values.
-        this.debugging = debugValues;
-      }
-      else
-      { // Start with a fresh slate.
-        this.debugging = {};
-      }
-  
-      if (!Lum.hasLib('hash'))
-      { // The Hash library wasn't loaded.
-        return;
-      }
-  
-      var hashOpts = 
+      if (this.debug)
       {
-        shortOpt: true,
-        json: (debugValues !== undefined)
-      }
-      var hash = new Lum.Hash(hashOpts);
-      var debugFlags = hash.getOpt('debug');
-  
-      if (debugFlags === undefined)
-      { // Nothing found, we don't do anything.
-        return; 
-      }
-  
-      if (debugFlags === null)
-      { // The null value means #debug was passed, which is an alias for '*'
-        debug("Enabling global debugging.");
-        this.debug('*', true);
-        return;
-      }
-  
-      if (typeof debugFlags === 'string')
-      { // A single flag was passed.
-        this.debug(debugFlags, true);
-        return;
-      }
-  
-      if (Array.isArray(debugFlags))
-      { // Output was an array of debug flags.
-        for (var k in debugFlags)
-        {
-          var keyword = debugFlags[k];
-          debug("Enabling debugging on", keyword);
-          this.debug(keyword, true);
-        }
-        return;
-      }
-  
-      if (typeof debugFlags === 'object')
-      { // Advanced use, probably not super useful.
-        for (var key in debugFlags)
-        {
-          var val = debugFlags[key];
-          debug("Settings debug flag", key, val);
-          this.debug(key, val);
-        }
-        return;
-      }
-  
-    }
-  
-    /**
-     * Check to see if debugging is enabled on a certain tag.
-     */
-    isDebug (tag)
-    {
-      if (Array.isArray(tag))
-      { // Check one of a bunch of tags.
-        for (var t in tag)
-        {
-          if (this.isDebug(tag[t]))
-          { // One of the tags matched, we're good!
-            return true;
-          }
-        }
-        // None of the tags matched.
-        return false;
-      }
-      else if (typeof tag === 'string' && 
-          tag in this.debugging && this.debugging[tag])
-      { // Explicit tag matched.
-        return true;
-      }
-      else if ('*' in this.debugging && this.debugging['*'])
-      { // Wildcard tag was set.
-        return true;
-      }
-      return false;
-    }
-  
-    /**
-     * Check debugging tag, and if true, send the rest of the arguments
-     * to the console log.
-     */
-    onDebug (tag)
-    {
-      if (this.isDebug(tag))
-      {
-        var slicePos = this.showDebugTag ? 0 : 1;
-        var args = Array.prototype.slice.call(arguments, slicePos);
-        debug.apply(console, args);
+        return this.debug.is.apply(this.debug, arguments);
       }
     }
   
-    /**
-     * Toggle debugging on tags.
-     */
-    debug (tag, toggle)
+    onDebug ()
     {
-      if (Array.isArray(tag))
-      { // An array of tags, recurse it.
-        for (var t in tag)
-        {
-          this.debug(tag[t], toggle);
-        }
-      }
-      else
+      if (this.debug)
       {
-        if (toggle === undefined || toggle === null)
-        { // Invert the current setting.
-          toggle = this.debugging[tag] ? false : true;
-        }
-  
-        // Update the debugging setting.
-        this.debugging[tag] = toggle;
-  
-        // Check for web services that we can toggle debugging on.
-        var models  = this.model;
-        var sources = this.conf.sources;
-        if (tag == '*')
-        { // Wildcard. We will change all web services.
-          for (var modelname in models)
+        return this.debug.when.apply(this.debug, arguments);
+      }
+    }
+    
+    /**
+     * A handler for when this.debug.toggle() is called.
+     */
+    toggleDebug (flag, toggle)
+    {
+      // Check for web services that we can toggle debugging on.
+      var models  = this.model;
+      var sources = this.conf.sources;
+      if (flag == '*')
+      { // Wildcard. We will change all web services.
+        for (var modelname in models)
+        {
+          if (modelname in sources && sources[modelname].type == 'ws')
           {
-            if (modelname in sources && sources[modelname].type == 'ws')
-            {
-              models[modelname]._debug = toggle;
-            }
+            models[modelname]._debug = toggle;
           }
         }
-        else
-        { // Check for specific web service.
-          if (tag in models && tag in sources && sources[tag].type == 'ws')
-            models[tag]._debug = toggle;
-        }
       }
-    }
-  
-    /**
-     * Toggle all currently registered debugging options.
-     */
-    toggleDebug (toggle)
-    {
-      for (var key in this.debugging)
-      {
-        var val = this.debugging[key];
-        if (val)
-        {
-          this.debug(key, toggle);
-        }
+      else
+      { // Check for specific web service.
+        if (flag in models && flag in sources && sources[flag].type == 'ws')
+          models[flag]._debug = toggle;
       }
-    }
+    } // toggleDebug()
 
     /**
      * Add an extension class.
@@ -540,11 +436,7 @@
       var opts = source.opts;
       this.onDebug('loadModel', '-- Loading web service', name, opts);
       var wsclass = 'class' in opts ? opts.class : Lum.WebService;
-      if (name in this.debugging)
-      {
-        opts.debug = this.debugging[name];
-      }
-      else if ('*' in this.debugging && this.debugging['*'])
+      if (this.debug && this.debug.is(name))
       {
         opts.debug = true;
       }
@@ -627,6 +519,86 @@
         this.model[name] = jsondata;
       } // if element exists
     }
+
+    /**
+     * A static wrapper around onInit() specifically designed to add
+     * new web service definitions, taking care of most boilerplate
+     * automatically. 
+     *
+     * @param {string} name     The name of the web service we're adding.
+     * @param {string} baseUrl  The base URL of the web service.
+     * @param {object} methods  Methods we're adding to the web service.
+     *
+     */
+    static addWS(name, baseUrl, methods)
+    {
+      //console.debug("addWS", name, baseUrl, methods);
+      if (typeof methods !== 'object')
+      {
+        throw new Error(`Invalid methods passed to addWS(${name})`);
+      }
+
+      this.onInit(name, 'pre_init', function (conf)
+      {
+        //console.debug("addWS::pre_init", name, conf, this);
+        if (conf.sources === undefined)
+        { // First method adding model sources.
+          conf.sources = {};
+        }
+        else if (conf.sources[name] !== undefined)
+        { // This web service has been added already!
+          throw new Error(`Web service ${name} already defined`);
+        }
+
+        conf.sources[name] =
+        {
+          type: 'ws',
+          opts:
+          {
+            url: baseUrl,
+            methods: methods,
+          }
+        }
+      });
+    } // addWS
+
+    /**
+     * A static wrapper around onInit() designed to extend a web service
+     * previously added with addWS(). This allows us to have admin-specific
+     * methods that aren't in the base web service model.
+     *
+     * @param {string} wsName    The name of the web service we're extending.
+     * @param {string} extName   A name for this specific extension set.
+     * @param {object} methods   Methods we're adding to the web service.
+     *
+     */
+    static extendWS(wsName, extName, methods)
+    {
+      //console.debug("extendWS", wsName, extName, methods);
+      if (typeof methods !== 'object')
+      {
+        throw new Error(`Invalid methods passed to extendWS(${wsName})`);
+      }
+
+      this.onInit(wsName+'_'+extName, 'pre_init', function (conf)
+      { // Let's do this.
+        //console.debug("extendWS::pre_init", wsName, extName, conf, this);
+
+        this.need(wsName, conf);
+
+        if (conf.sources === undefined 
+          || typeof conf.sources[wsName].opts.methods !== 'object')
+        { // No such source.
+          throw new Error(`Web service ${wsName} was not defined before ${extName} tried to extend it`);
+        }
+
+        const wsMeths = conf.sources[wsName].opts.methods;
+        for (const meth in methods)
+        { // Let's add the new methods to the existing ones.
+          wsMeths[meth] = methods[meth];
+        }
+      });
+    } // extendWS
   
     static makeAPI ()
     {
@@ -805,7 +777,7 @@
         if (this.methods[name] === undefined)
         {
           method._run_init = false;
-          method._this_api = false;
+          method._this_api = apiIsThis;
           this.methods[name] = method;
           return true;
         }

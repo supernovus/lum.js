@@ -1,20 +1,20 @@
-(function(Nano)
+(function()
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.markLib('hash');
+  Lum.markLib('hash');
 
   const JSON_ALL = /^(\[.*?\]|\{.*?\})$/;
   const JSON_ARR = /^\[.*?\]$/;
   const JSON_OBJ = /^\{.*?\}$/;
 
   /**
-   * Nano URL Hash management class.
+   * Lum URL Hash management class.
    *
    * You can create an instance of this for any library that uses URL
    * hashes, and it supports a wide variety of URL hash functionality.
@@ -22,7 +22,7 @@
    * @property {boolean} shortOpt  Allow short option fallback?
    * @property {boolean} autoArray Use smart array format detection?
    */
-  Nano.Hash = class
+  Lum.Hash = class
   {
     /**
      * Create a URLHash instance.
@@ -125,7 +125,7 @@
      */
     getOpts (getOpts={})
     {
-      var hashOpts = (typeof getOpts.defaults === 'object' && getOpts.defaults !== null) ? Nano.clone(getOpts.defaults) : {};
+      var hashOpts = (typeof getOpts.defaults === 'object' && getOpts.defaults !== null) ? Lum.clone(getOpts.defaults) : {};
   
       var hash = 'hash' in getOpts ? getOpts.hash : this._getHash();
   
@@ -639,7 +639,7 @@
      */
     static getOpts (getOpts, hashOpts)
     {
-      return new Nano.Hash(hashOpts).getOpts(getOpts);
+      return new Lum.Hash(hashOpts).getOpts(getOpts);
     }
 
     /**
@@ -653,7 +653,7 @@
      */
     static getOpt (name, getOpts, hashOpts)
     {
-      return new Nano.Hash(hashOpts).getOpt(name, getOpts);
+      return new Lum.Hash(hashOpts).getOpt(name, getOpts);
     }
 
     /**
@@ -665,7 +665,7 @@
      */
     static replace (reps, setOpts, hashOpts)
     {
-      return new Nano.Hash(hashOpts).replace(reps, setOpts);
+      return new Lum.Hash(hashOpts).replace(reps, setOpts);
     }
 
     /**
@@ -678,8 +678,8 @@
      */
     static update (updates, setOpts, getOpts, hashOpts)
     {
-      return new Nano.Hash(hashOpts).update(updates, setOpts, getOpts);
+      return new Lum.Hash(hashOpts).update(updates, setOpts, getOpts);
     }
 
   }
-})(window.Lum);
+})();
