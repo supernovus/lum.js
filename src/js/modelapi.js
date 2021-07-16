@@ -126,6 +126,10 @@
           this._initGroups[groupName].api = this;
         }
       }
+      else
+      { // Add it.
+        this._initGroups = {};
+      }
 
       // See if there's any legacy init groups to be set up.
       const groups = ['pre_init','init','post_init'];
@@ -134,12 +138,7 @@
         const groupName = groups[g];
         const legacyGroup = this[groupName];
         if (Object.keys(legacyGroup).length > 0)
-        { // There's legacy init items.
-          if (this._initGroups === undefined)
-          { // Double safety check.
-            this._initGroups = {};
-          }
-          
+        { // There's legacy init items.          
           if (this._initGroups[groupName] === undefined)
           {
             this._initGroups[groupName] = new InitGroup(groupName, this);
