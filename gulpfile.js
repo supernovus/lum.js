@@ -4,10 +4,9 @@
 
 var gulp   = require('gulp');
 var babel  = require('gulp-babel');
-var uglify = require('gulp-uglify');
 var terser = require('gulp-terser-js');
 var del    = require('del');
-var sass   = require('gulp-sass');
+var sass   = require('gulp-sass')(require('sass'));
 var cssmin = require('gulp-clean-css');
 var srcmap = require('gulp-sourcemaps');
 var fcache = require('gulp-file-cache');
@@ -120,7 +119,7 @@ gulp.task('build-es5', function ()
     .pipe(es5cache.filter())
     .pipe(srcmap.init())
     .pipe(babel({presets: ['@babel/env']}))
-    .pipe(uglify())
+    .pipe(terser())
     .pipe(es5cache.cache())
     .pipe(srcmap.write('maps'))
     .pipe(gulp.dest(destes5))

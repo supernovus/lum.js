@@ -2,7 +2,7 @@
 
 // TODO: More error checking, validation, etc.
 
-const VERSION = '1.5+';
+const VERSION = '4';
 
 const VERBOSE_OPTION =
 {
@@ -12,7 +12,7 @@ const VERBOSE_OPTION =
   default: false,
 }
 
-var UglifyJS = require('uglify-js');
+var terser = require('terser');
 var http = require('http-request');
 var fs = require('fs');
 var path = require('path');
@@ -264,7 +264,7 @@ function make_handler (source, dest, finfo, processing, argv)
     if (source.uglify)
     {
   //    console.log('string>>>'+string);
-      var output = UglifyJS.minify(string);
+      var output = terser.minify(string);
       if (output && output.code)
       {
 //        console.log('minified>>>'+output.code);
@@ -370,6 +370,7 @@ function download_dep (sfile, sources, suite, argv, processing, finfo)
 
 function upgrade_dep (depname, argv, processing)
 {
+  //console.log("upgrade_dep", depname, argv, processing);
   if (processing === undefined)
     processing = {count: 1, upgrade: true};
   else
@@ -379,6 +380,11 @@ function upgrade_dep (depname, argv, processing)
   var suite = finfo.from;
   var sources = get_sources(suite);
   var source = sources[depname];
+  if (source === undefined)
+  { // It's been removed.
+    delete(installed[depname]);
+    return;
+  }
   var download = false;
   var deferredProcessing = false;
 

@@ -7,15 +7,10 @@
     throw new Error("Missing Lum core");
   }
 
-  //Lum.needLibs('helpers');
-
   Lum.markLib('viewcontroller');
 
   /**
    * A class to represent a View Controller in a GUI.
-   *
-   * I'm planning to eventually replace this with something better, but
-   * for now, it works, so not too concerned.
    */
   Lum.ViewController = class 
   {
@@ -160,8 +155,8 @@
       }
   
       var render;
-      if ('render' in def)
-      {
+      if (typeof def.render === 'function')
+      { // A custom render function, cool.
         render = def.render;
       }
       else if ('clone' in def)
@@ -169,11 +164,11 @@
         console.error("The 'clone' option requires a 'render' option.", name, def);
         return;
       }
-      else if (Lum.render !== undefined && Lum.render.riot2 !== undefined)
+      else if (Lum.hasLib('render.riot2'))
       {
         render = Lum.render.riot2;
       }
-      else if (Lum.render !== undefined && Lum.render.riot1 !== undefined)
+      else if (Lum.hasLib('render.riot1'))
       {
         render = Lum.render.riot1;
       }

@@ -3,13 +3,13 @@
   {
     "uglify": false,
     "version": "2.3.5",
-    "url": "http://requirejs.org/docs/release/2.3.5/minified/require.js"
+    "url": "http://requirejs.org/docs/release/2.3.6/minified/require.js"
   },
   "jquery.js":
   {
     "uglify": false,
     "version": "3.3.1",
-    "url": "https://code.jquery.com/jquery-3.3.1.min.js"
+    "url": "https://code.jquery.com/jquery-3.6.0.min.js"
   },
   "jquery-2.js":
   {
@@ -33,7 +33,7 @@
   {
     "uglify": false,
     "version": "3.0",
-    "url": "https://code.jquery.com/jquery-migrate-3.0.0.min.js"
+    "url": "https://code.jquery.com/jquery-migrate-3.3.2.min.js"
   },
   "jquery-ui.js":
   {
@@ -59,12 +59,6 @@
     "version": "1.11.4",
     "url": "http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"
   },
-  "json3.js":
-  {
-    "uglify": false,
-    "version": "3.3.2",
-    "url": "http://cdnjs.cloudflare.com/ajax/libs/json3/3.3.2/json3.min.js"
-  },
   "underscore.js":
   {
     "uglify": false,
@@ -75,8 +69,19 @@
     },
     "url": "http://underscorejs.org/underscore-min.js"
   },
+  "luxon.js":
+  {
+    "uglify": false,
+    "version":
+    {
+      "regex": "VERSION=[\"'](\\d+\\.\\d+(\\.\\d+)?)[\"']",
+      "match": 1
+    },
+    "url": "https://moment.github.io/luxon/global/luxon.min.js"
+  },
   "moment.js":
   {
+    "note": "Deprecated",
     "uglify": false,
     "version":
     {
@@ -84,21 +89,6 @@
       "match": 1
     },
     "url": "http://momentjs.com/downloads/moment.min.js"
-  },
-  "moment-locales.js":
-  {
-    "@parent": "moment.js",
-    "url": "http://momentjs.com/downloads/moment-with-locales.min.js"
-  },
-  "moment-timezone-small.js":
-  {
-    "@parent": "moment.js",
-    "url": "https://momentjs.com/downloads/moment-timezone-with-data-10-year-range.min.js"
-  },
-  "moment-timezone-full.js":
-  {
-    "@parent": "moment.js",
-    "url": "https://momentjs.com/downloads/moment-timezone-with-data.min.js"
   },
   "sprintf.js":
   {
@@ -131,6 +121,11 @@
       "json": "https://raw.githubusercontent.com/mscdex/base91.js/master/package.json"
     }
   },
+  "base91-nano.js":
+  {
+    "url": "https://github.com/pkalogiros/base91.js.git",
+    "version": "1"
+  },
   "clipboard.js":
   {
     "uglify": false,
@@ -144,6 +139,12 @@
   {
     "uglify": false,
     "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/lodash.min.js",
+    "version": "4.17.10"
+  },
+  "lodash-core.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/core.min.js",
     "version": "4.17.10"
   },
   "jquery-ui-touch-punch.js":

@@ -393,7 +393,7 @@
         }
       }
 
-      $(elname).on('click', handler);
+      btn.on('click', handler);
 
     } // static button()
 

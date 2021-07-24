@@ -1,16 +1,16 @@
-(function($, Nano)
+(function($)
 {
   "use strict";
 /* jshint asi: true, laxbreak: true */
 
-  if (Nano === undefined)
+  if (window.Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.needLibs('helpers','pager');
+  Lum.needLibs('helpers','pager');
 
-  Nano.markLib('listing');
+  Lum.markLib('listing');
 
 /**
  * A Listing component with advanced features such as sorting and searching.
@@ -20,7 +20,7 @@
  * This does not bind any actions to the listing buttons, so you still
  * need to do that yourself.
  */
-Nano.Listing = class
+Lum.Listing = class
 {
   constructor (options)
   {
@@ -33,32 +33,43 @@ Nano.Listing = class
       console.log("Invalid or missing 'getData' parameter, cannot continue.");
       return false;
     }
-  
-    // Find a rendering engine to render our template with.
-    if ('renderer' in options)
-    { // Must be a function that works like: func(templateText, variables)
-      this.renderer = options.renderer;
-    }
-    else if (window.riot !== undefined && riot.render !== undefined)
-    { // We have explicitly loaded riot with the riot.render engine.
-      this.renderer = riot.render;
-    }
-    else if (Nano.render !== undefined && Nano.render.riot2 !== undefined)
-    { // Use the Riot v2 rendering engine (aka 'riot.tmpl')
-      this.renderer = Nano.render.riot2;
-    }
-    else if (Nano.render !== undefined && Nano.render.riot1 !== undefined)
-    { // Use the Riot v1 rendering engine (aka 'riot.render')
-      this.renderer = Nano.render.riot1;
-    }
-    else if (window.riot !== undefined && riot.version.split('.')[0] === 'v2')
-    { // Riot v2 is loaded, let's borrow it's rendering engine.
-      this.renderer = riot.util.tmpl;
+
+    if (options.listTemplate === 'function')
+    { // Render using: template(data);
+      this.template = options.ListTemplate;
     }
     else
-    { // No appropriate rendering engine found, bail out!
-      console.log("Could not determine rendering engine, cannot continue.");
-      return false;
+    { // We're going to assume the template is an HTML element.
+      if (options.listTemplate instanceof jQuery)
+      { // It's already a jQuery instance.
+        this.template = options.listTemplate;
+      }
+      else if (typeof options.listTemplate === 'string'
+        || options.listTemplate instanceof Element)
+      { // It's a selector string or DOM Element.
+        this.template = $(options.listTemplate);
+      }
+      else
+      { // Use the first script with the 'list_item' class.
+        this.template = $('script.list_item').first();
+      }
+
+      if (typeof options.renderer === 'function')
+      { // Render using: func(templateText, variables)
+        this.renderer = options.renderer;
+      }
+      else if (Lum.hasLib('render.riot2'))
+      { // Use the riot2 rendering engine.
+        this.renderer = Lum.render.riot2;
+      }
+      else if (Lum.hasLib('render.riot1'))
+      { // Use the riot1 rendering engine.
+        this.renderer = Lum.render.riot1;
+      }
+      else
+      { // No appropriate rendering engine found, bail out!
+        throw new Error("No valid rendering engine found");
+      }
     }
   
     if (options.namespace)
@@ -111,17 +122,7 @@ Nano.Listing = class
   
     // Save the initial content.
     this.empty_list = this.element.html();
-  
-    if ('listTemplate' in options)
-    {
-      this.template = $(options.listTemplate);
-    }
-    else
-    {
-      // Use the first script with the 'list_item' class.
-      this.template = $('script.list_item').first();
-    }
-  
+   
     if ('preRender' in options)
     {
       this.preRender = options.preRender;
@@ -267,9 +268,9 @@ Nano.Listing = class
   
     // If there is a location hash, it's the default page.
     this.useHash = 'useHash' in options ? options.useHash : false;
-    if (this.useHash && Nano.Hash !== undefined)
+    if (this.useHash && Lum.Hash !== undefined)
     {
-      let hash = new Nano.Hash({shortOpt: true});
+      let hash = new Lum.Hash({shortOpt: true});
       pagerOpts.useHash = true;
       pagerOpts.hash = hash;
       var pagenum = hash.getOpt('page');
@@ -290,7 +291,7 @@ Nano.Listing = class
       this.reloadSearch();
   
     // Build our pager option.
-    this.pager = new Nano.Pager(pagerOpts);
+    this.pager = new Lum.Pager(pagerOpts);
   
     // Display the first page. This will render the pager.
     this.refresh();
@@ -715,7 +716,7 @@ Nano.Listing = class
             }
             else if (typeof curcol === 'object' && colspec !== undefined)
             { // We need to use the nested search.
-              var subcol = Nano.getNested(curcol, colspec);
+              var subcol = Lum.getNested(curcol, colspec);
               if (typeof subcol === 'string')
               { // We can only search strings at this point.
                 if (subcol.search(find) !== -1)
@@ -751,7 +752,7 @@ Nano.Listing = class
         {
           function get_col (obj)
           {
-            return Nano.getNested(obj, col);
+            return Lum.getNested(obj, col);
           }
           var sort_str_asc = function (a, b)
           {
@@ -941,8 +942,6 @@ Nano.Listing = class
     var start = (page - 1) * show;
     var end   = start + show;
   
-    var tmpl = this.template.html();
-  
   //  console.log("sse:", show, start, end);
   //  console.log({tmpl: tmpl, list: list});
   
@@ -954,12 +953,26 @@ Nano.Listing = class
   //    console.log("  == ", obj);
       if ('preRender' in this)
         this.preRender(obj);
-      var item = $(this.renderer(tmpl, obj));
+      var item = this._render(obj);
       if ('postRender' in this)
         this.postRender(item, obj);
       list.append(item);
     }
     return true;
+  }
+
+  // Internal method to render.
+  _render(obj)
+  {
+    if (typeof this.template === 'function')
+    { // Using a template function
+      return this.template(obj);
+    }
+    else
+    { // Using the classic rendering system.
+      const tmpl = this.template.html();
+      return $(this.renderer(tmpl, obj));
+    }
   }
   
   changePage (page)
@@ -967,8 +980,8 @@ Nano.Listing = class
     return this.pager.changePage(page);
   }
 
-} // class Nano.Listing
+} // class Lum.Listing
 
 // End of module.
-})(window.jQuery, window.Lum);
+})(window.jQuery);
 
