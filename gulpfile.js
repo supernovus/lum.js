@@ -2,39 +2,40 @@
  * Default Nano.js gulpfile for gulp 4.x
  */
 
-var gulp   = require('gulp');
-var babel  = require('gulp-babel');
-var terser = require('gulp-terser-js');
-var del    = require('del');
-var sass   = require('gulp-sass')(require('sass'));
-var cssmin = require('gulp-clean-css');
-var srcmap = require('gulp-sourcemaps');
-var fcache = require('gulp-file-cache');
-var connect = require('gulp-connect');
-var transform = require('gulp-transform');
-var rename = require('gulp-rename');
-var jsdoc  = require('gulp-jsdoc3');
-var fs = require('fs');
+const gulp   = require('gulp');
+const babel  = require('gulp-babel');
+const terser = require('gulp-terser-js');
+const del    = require('del');
+const sass   = require('gulp-sass')(require('sass'));
+const cssmin = require('gulp-clean-css');
+const srcmap = require('gulp-sourcemaps');
+const fcache = require('gulp-file-cache');
+const connect = require('gulp-connect');
+const transform = require('gulp-transform');
+const rename = require('gulp-rename');
+const jsdoc  = require('gulp-jsdoc3');
+const fs = require('fs');
 
-var es6cfile = '.gulp-cache-es6';
-var es5cfile = '.gulp-cache-es5';
-var ccfile = '.gulp-cache-css';
-var es6cache = new fcache(es6cfile);
-var es5cache = new fcache(es5cfile);
-var csscache = new fcache(ccfile);
+const es6cfile = '.gulp-cache-es6';
+const es5cfile = '.gulp-cache-es5';
+const ccfile = '.gulp-cache-css';
+const es6cache = new fcache(es6cfile);
+const es5cache = new fcache(es5cfile);
+const csscache = new fcache(ccfile);
 
-var srcjs  = 'src/js/**/*.js';
-var destes6 = 'scripts/nano/';
-var destes5 = 'scripts/nano-es5/';
+const srcjs  = 'src/js/**/*.js';
+const destes6 = 'scripts/nano/';
+const destes5 = 'scripts/nano-es5/';
 
-var srccss  = 'src/sass/**/*.scss';
-var destcss = 'style/nano/';
+const srccss  = 'src/sass/**/*.scss';
+const destcss = 'style/nano/';
 
-var srctests = 'src/tests/'
-var desttests = 'docs/tests/';
+const srctests = 'src/tests/'
+const desttests = 'docs/tests/';
 
-var downloaded_js  = 'scripts/ext';
-var downloaded_css = 'style/ext';
+const downloaded_js  = 'scripts/ext';
+const downloaded_css = 'style/ext';
+const downloaded_conf = 'conf/installed_deps.json';
 
 gulp.task('clean-es5', function ()
 {
@@ -66,7 +67,7 @@ gulp.task('clean-docs', function ()
   return del('docs/api');
 });
 
-var clean_tasks =
+const clean_tasks =
 [
   'clean-js',
   'clean-css',
@@ -74,7 +75,7 @@ var clean_tasks =
 
 gulp.task('clean', gulp.parallel(clean_tasks));
 
-var clean_all_tasks =
+const clean_all_tasks =
 [
   'clean-js',
   'clean-css',
@@ -86,7 +87,7 @@ gulp.task('clean-all', gulp.parallel(clean_all_tasks));
 
 gulp.task('clean-deps', function ()
 {
-  var cleanitems =
+  const cleanitems =
   [
     downloaded_js,
     downloaded_css,
@@ -143,15 +144,16 @@ gulp.task('build-css', function ()
 
 gulp.task('build-tests', function ()
 { // I'm using a custom template engine utilizing 'transform' here.
-  var loadedTemplates = {};
+  const loadedTemplates = {};
+
   function parseTemplate (content, file)
   {
-    var config = JSON.parse(content);
+    const config = JSON.parse(content);
     if (!config.template)
     {
       throw new Error("Missing 'template' in test configuration");
     }
-    var template;
+    let template;
     if (config.template in loadedTemplates)
     {
       template = loadedTemplates[config.template];
@@ -182,12 +184,12 @@ var server;
 
 gulp.task('build-docs', function (done)
 { // Using gulp-jsdoc3 to build API documentation.
-  var config = require('./conf/jsdoc.json');
+  const config = require('./conf/jsdoc.json');
   gulp.src(['README.md', srcjs], {read: false})
   .pipe(jsdoc(config, done));
 });
 
-var build_tasks =
+const build_tasks =
 [
   'build-js',
   'build-css',
@@ -195,7 +197,7 @@ var build_tasks =
 
 gulp.task('build', gulp.parallel(build_tasks)); 
 
-var build_all_tasks =
+const build_all_tasks =
 [
   'build-js',
   'build-css',
@@ -239,7 +241,7 @@ gulp.task('watch-tests', function ()
   return gulp.watch(srctests+'*', gulp.series('build-tests'));
 });
 
-var watch_tasks =
+const watch_tasks =
 [
   'watch-js',
   'watch-css',
@@ -248,7 +250,7 @@ var watch_tasks =
 
 gulp.task('watch', gulp.parallel(watch_tasks));
 
-var watch_ws_tasks =
+const watch_ws_tasks =
 [
   'webserver',
   'watch',
@@ -256,7 +258,7 @@ var watch_ws_tasks =
 
 gulp.task('watch-ws', gulp.parallel(watch_ws_tasks));
 
-var watch_docs_ws_tasks =
+const watch_docs_ws_tasks =
 [
   'webserver',
   'watch-docs',
