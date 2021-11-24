@@ -1,0 +1,54 @@
+{
+  "@metadata":
+  {
+    "description": "Historical versions of jQuery, jQuery UI, and the jQuery Migrate plugins."
+  },
+  "jquery-2.js":
+  {
+    "uglify": false,
+    "version": "2.2.4",
+    "url": "http://code.jquery.com/jquery-2.2.4.min.js"
+  },
+  "jquery-1.js":
+  {
+    "uglify": false,
+    "version": "1.12.4",
+    "url": "https://code.jquery.com/jquery-1.12.4.min.js"
+  },
+  "jquery-migrate-1.js":
+  {
+    "uglify": false,
+    "version": "1.4.1",
+    "url": "http://code.jquery.com/jquery-migrate-1.4.1.min.js"
+  },
+  "jquery-migrate-3.js":
+  {
+    "uglify": false,
+    "version": "3.0",
+    "url": "https://code.jquery.com/jquery-migrate-3.3.2.min.js"
+  },
+  "jquery-ui-1.12.js":
+  {
+    "uglify": false,
+    "version": "1.12.1",
+    "url": "http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+  },
+  "jquery-ui-1.12.css":
+  {
+    "css": true,
+    "version": "1.12.1",
+    "url": "http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"
+  },
+  "jquery-ui-1.11.js":
+  {
+    "uglify": false,
+    "version": "1.11.4",
+    "url": "http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+  },
+  "jquery-ui-1.11.css":
+  {
+    "css": true,
+    "version": "1.11.4",
+    "url": "http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"
+  }
+}

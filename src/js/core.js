@@ -164,11 +164,37 @@
   }
 
   /**
+   * Make a link to a library/function into the Lum namespace.
+   *
+   * Unlike raw calls to registerNamespace() or exportNamespace(), this
+   * automatically assumes we want to add the link to the 'Lum' global
+   * namespace by default.
+   *
+   * As an example, if there's a global function called base91() and we want to
+   * make an alias to it called Lum.Base91.mscdex() then we'd call:
+   *
+   *  Lum.link(window.base91, 'Base91.mscdex');
+   *
+   * @param {object|function} obj  The library/function we're linking to.
+   * @param {string} target  The namespace within {prefix} we're assigning to.
+   * @param {boolean} [overwrite=false]  Overwrite existing target namespace?
+   * @param {string} [prefix="Lum."]  Prefix for the namespace target.
+   *
+   * @return Lum  The core Lum library is returned for chaining purposes.
+   */
+  Lum.link = function (obj, target, overwrite=false, prefix="Lum.")
+  {
+    this.registerNamespace(prefix+target, obj, overwrite);
+    return this;
+  }
+
+  /**
    * Make a global alias to ourself.
    */
   Lum.exportAlias = function (target, overwrite=false)
   {
     this.registerNamespace(target, this, overwrite);
+    return this;
   }
 
   /**
@@ -179,6 +205,7 @@
   Lum.markLib = function (lib)
   {
     this._loaded[lib] = true;
+    return this;
   }
 
   /**
@@ -223,6 +250,7 @@
     {
       throw new Error("Missing required Lum library: "+result);
     }
+    return this;
   }
 
   /**
@@ -273,6 +301,7 @@
         throw new Error("Missing required jQuery plugin: "+result);
       }
     }
+    return this;
   }
 
   /**

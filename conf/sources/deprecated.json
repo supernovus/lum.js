@@ -1,0 +1,16 @@
+{
+  "@metadata":
+  {
+    "description": "Libraries that might still be in common use, but which are now deprecated and should be phased out."
+  },
+  "moment.js":
+  {
+    "uglify": false,
+    "version":
+    {
+      "regex": "version=[\"'](\\d+\\.\\d+(\\.\\d+)?)[\"']",
+      "match": 1
+    },
+    "url": "http://momentjs.com/downloads/moment.min.js"
+  }
+}

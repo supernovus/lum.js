@@ -12,6 +12,9 @@ const VERBOSE_OPTION =
   default: false,
 }
 
+const TAG_META = "@metadata";
+const TAG_PARENT = "@parent";
+
 var terser = require('terser');
 var http = require('http-request');
 var fs = require('fs');
@@ -66,6 +69,13 @@ require('yargs')
         type: 'string',
         default: 'main',
       })
+      .option('all',
+      {
+        alias: 'A',
+        describe: 'Install from all registered suites.',
+        type: 'boolean',
+        default: false,
+      })
       .option('force',
       {
         alias: 'f',
@@ -78,14 +88,14 @@ require('yargs')
   },
   (argv) =>
   {
-    var suite = argv.suite;
+    var suite = argv.all ? 'all' : argv.suite;
     var sources = get_sources(suite);
     if (argv.singledep)
     {
       var depname = argv.singledep;
       if (depname in sources)
       {
-        download_dep(depname, sources, suite, argv);
+        download_dep(depname, sources, argv);
       }
       else
       {
@@ -94,7 +104,7 @@ require('yargs')
     }
     else
     {
-      download_deps(sources, suite, argv);
+      download_deps(sources, argv);
     }
   })
   .command('upgrade [singledep]', 'Upgrade dependencies', (yargs) =>
@@ -143,11 +153,28 @@ function get_sources (suite)
   if (sourceCache[suite] === undefined)
   {
     sourceCache[suite] = require('../conf/sources/'+suite+'.json');
+
+    let includes = null; // If @metadata.include is set, it'll go here.
+
     for (var depname in sourceCache[suite])
     {
       var dep = sourceCache[suite][depname];
+
+      if (depname === TAG_META)
+      { // Metadata is handled separately.
+        if (typeof dep.includes === 'object')
+        { // It should be an array of suites to include.
+          includes = dep.includes;
+        }
+        // Nothing else is used in the metadata.
+        continue;
+      } // if dep == @metadata
+
+      // We're going to mark the suite down in the dep for later reference.
+      dep.suite = suite;
+
       if (dep['@parent'] !== undefined)
-      {
+      { // This dependency has a parent object.
         var parentName = dep['@parent'];
         var parentDep = sourceCache[suite][parentName];
         for (var prop in parentDep)
@@ -157,9 +184,27 @@ function get_sources (suite)
             dep[prop] = parentDep[prop];
           }
         }
+      } // if dep.@parent
+
+    } // for dep in deps
+
+    if (typeof includes === 'object' && includes !== null)
+    { // Includes were found in the metadata, let's include them.
+      for (var i in includes)
+      {
+        let sources = get_sources(includes[i]);
+        for (var depname in sources)
+        {
+          if (sourceCache[suite][depname] === undefined)
+          { // That dep is not already in the sources, add it now.
+            sourceCache[suite][depname] = sources[depname];
+          }
+        }
       }
     }
-  }
+
+  } // if sourceCache is undefined
+
   return sourceCache[suite];
 }
 
@@ -260,6 +305,37 @@ function make_handler (source, dest, finfo, processing, argv)
       }
     }
 
+    if (typeof source.append === 'string')
+    { // Append a string.
+      string += source.append;
+    }
+
+    if (typeof source.alias === 'object' 
+      && typeof source.alias.from === 'string'
+      && typeof source.alias.to === 'string')
+    { // Append a special function to create an alias.
+      // Only works if core.js was loaded before the external dependency,
+      // otherwise no alias will be made.
+      let from = source.alias.from;
+      let to = source.alias.to;
+
+      // Add {"overwrite": true} to force the link even if it already exists.
+      let overwrite = source.alias.overwrite ? ',true' : '';
+
+      // Add {"error": true} to make the library report an error if the Lum
+      // library wasn't found. Otherwise it will simple fail silently.
+      let onError = source.alias.error 
+        ? "\nelse {\nconsole.error('Lum not found');\n}\n"
+        : "\n";
+
+      let func = "(function(l) {\nif (l !== undefined) {\n";
+      func += "l.link("+from+","+to+overwrite+");\n";
+      func += "}"+onError+"})(window.Lum)";
+
+      // Okay, now append the generated function to the string.
+      string += func;
+    }
+
     var file = fs.createWriteStream(dest);
     if (source.uglify)
     {
@@ -290,7 +366,7 @@ function make_handler (source, dest, finfo, processing, argv)
   }
 }
 
-function download_deps (sources, suite, argv)
+function download_deps (sources, argv)
 { 
   mkdir(scriptroot);
   mkdir(jsroot);
@@ -300,22 +376,27 @@ function download_deps (sources, suite, argv)
   var processing = {count: 0, upgrade: false};
   for (var sfile in sources)
   {
-    download_dep(sfile, sources, suite, argv, processing);
+    if (sfile !== TAG_META)
+    { // Anything other than the metadata should be a dependency file.
+      download_dep(sfile, sources, argv, processing);
+    }
   }
 } // function download_deps()
 
-function download_dep (sfile, sources, suite, argv, processing, finfo)
+function download_dep (sfile, sources, argv, processing, finfo)
 {
   if (processing === undefined)
     processing = {count: 1, upgrade: false};
   else if (!processing.upgrade)
     processing.count++;
 
+  var source = sources[sfile];
+
   if (finfo === undefined)
   {
     if (installed[sfile] === undefined)
     {
-      finfo = installed[sfile] = {from: suite};
+      finfo = installed[sfile] = {from: source.suite};
     }
     else
     {
@@ -323,7 +404,6 @@ function download_dep (sfile, sources, suite, argv, processing, finfo)
     }
   }
 
-  var source = sources[sfile];
   var dest;
   if (source.css)
   {
@@ -418,7 +498,7 @@ function upgrade_dep (depname, argv, processing)
 
       if (download)
       {
-        download_dep(depname, sources, suite, argv, processing, finfo);
+        download_dep(depname, sources, argv, processing, finfo);
       }
       else
       {
@@ -437,7 +517,7 @@ function upgrade_dep (depname, argv, processing)
   {
     if (download)
     { // Okay, let's download this.
-      download_dep(depname, sources, suite, argv, processing, finfo);
+      download_dep(depname, sources, argv, processing, finfo);
     }
     else
     { // We're done.

@@ -1,0 +1,51 @@
+{
+  "@metadata":
+  {
+    "description": "Extra utility libraries not used by any Lum.js library, but still might be useful on their own."
+  },
+  "require.js":
+  {
+    "uglify": false,
+    "version": "2.3.5",
+    "url": "http://requirejs.org/docs/release/2.3.6/minified/require.js"
+  },
+  "underscore.js":
+  {
+    "uglify": false,
+    "version":
+    {
+      "regex": "Underscore.js\\s+(\\d+\\.\\d+(\\.\\d+)?)",
+      "match": 1
+    },
+    "url": "http://underscorejs.org/underscore-min.js"
+  },
+  "lodash.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/lodash.min.js",
+    "version": "4.17.10"
+  },
+  "lodash-core.js":
+  {
+    "@parent": "lodash.js",
+    "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/core.min.js"
+  },
+  "ua-parser.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/faisalman/ua-parser-js/master/dist/ua-parser.min.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/faisalman/ua-parser-js/master/bower.json"
+    }
+  },
+  "jquery-ui-touch-punch.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/jquery.ui.touch-punch.min.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/bower.json"
+    }
+  }
+}

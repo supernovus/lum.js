@@ -1,73 +1,25 @@
 {
-  "require.js":
+  "@metadata":
   {
-    "uglify": false,
-    "version": "2.3.5",
-    "url": "http://requirejs.org/docs/release/2.3.6/minified/require.js"
+    "description": "The main set of libraries I use most commonly, and that are used by the Lum.js libraries as dependencies."
   },
   "jquery.js":
   {
     "uglify": false,
-    "version": "3.3.1",
+    "version": "3.6.0",
     "url": "https://code.jquery.com/jquery-3.6.0.min.js"
-  },
-  "jquery-2.js":
-  {
-    "uglify": false,
-    "version": "2.2.4",
-    "url": "http://code.jquery.com/jquery-2.2.4.min.js"
-  },
-  "jquery-1.js":
-  {
-    "uglify": false,
-    "version": "1.12.4",
-    "url": "https://code.jquery.com/jquery-1.12.4.min.js"
-  },
-  "jquery-migrate-1.js":
-  {
-    "uglify": false,
-    "version": "1.4.1",
-    "url": "http://code.jquery.com/jquery-migrate-1.4.1.min.js"
-  },
-  "jquery-migrate-3.js":
-  {
-    "uglify": false,
-    "version": "3.0",
-    "url": "https://code.jquery.com/jquery-migrate-3.3.2.min.js"
   },
   "jquery-ui.js":
   {
     "uglify": false,
-    "version": "1.12.1",
-    "url": "http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-  },
-  "jquery-ui-1.11.js":
-  {
-    "uglify": false,
-    "version": "1.11.4",
-    "url": "http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+    "version": "1.13.0",
+    "url": "http://code.jquery.com/ui/1.13.0/jquery-ui.min.js"
   },
   "jquery-ui.css":
   {
     "css": true,
-    "version": "1.12.1",
-    "url": "http://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css"
-  },
-  "jquery-ui-1.11.css":
-  {
-    "css": true,
-    "version": "1.11.4",
-    "url": "http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"
-  },
-  "underscore.js":
-  {
-    "uglify": false,
-    "version":
-    {
-      "regex": "Underscore.js\\s+(\\d+\\.\\d+(\\.\\d+)?)",
-      "match": 1
-    },
-    "url": "http://underscorejs.org/underscore-min.js"
+    "version": "1.13.0",
+    "url": "http://code.jquery.com/ui/1.13.0/themes/smoothness/jquery-ui.css"
   },
   "luxon.js":
   {
@@ -78,17 +30,6 @@
       "match": 1
     },
     "url": "https://moment.github.io/luxon/global/luxon.min.js"
-  },
-  "moment.js":
-  {
-    "note": "Deprecated",
-    "uglify": false,
-    "version":
-    {
-      "regex": "version=[\"'](\\d+\\.\\d+(\\.\\d+)?)[\"']",
-      "match": 1
-    },
-    "url": "http://momentjs.com/downloads/moment.min.js"
   },
   "sprintf.js":
   {
@@ -115,16 +56,12 @@
   },
   "base91.js":
   {
+    "uglify": true,
     "url": "https://raw.githubusercontent.com/mscdex/base91.js/master/lib/base91.js",
     "version":
     {
       "json": "https://raw.githubusercontent.com/mscdex/base91.js/master/package.json"
     }
-  },
-  "base91-nano.js":
-  {
-    "url": "https://github.com/pkalogiros/base91.js.git",
-    "version": "1"
   },
   "clipboard.js":
   {
@@ -135,36 +72,6 @@
       "json": "https://raw.githubusercontent.com/zenorocha/clipboard.js/master/package.json"
     }
   },
-  "lodash.js":
-  {
-    "uglify": false,
-    "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/lodash.min.js",
-    "version": "4.17.10"
-  },
-  "lodash-core.js":
-  {
-    "uglify": false,
-    "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.10-npm/core.min.js",
-    "version": "4.17.10"
-  },
-  "jquery-ui-touch-punch.js":
-  {
-    "uglify": false,
-    "url": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/jquery.ui.touch-punch.min.js",
-    "version":
-    {
-      "json": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/bower.json"
-    }
-  },
-  "ua-parser.js":
-  {
-    "uglify": false,
-    "url": "https://raw.githubusercontent.com/faisalman/ua-parser-js/master/dist/ua-parser.min.js",
-    "version":
-    {
-      "json": "https://raw.githubusercontent.com/faisalman/ua-parser-js/master/bower.json"
-    }
-  },
   "feature.js":
   {
     "uglify": false,
@@ -173,5 +80,29 @@
     {
       "json": "https://raw.githubusercontent.com/viljamis/feature.js/master/package.json"
     }
+  },
+  "easel.js":
+  {
+    "uglify": false,
+    "url": "https://code.createjs.com/1.0.0/easeljs.min.js",
+    "version":
+    {
+      "regex": "version=[\"'](\\d+\\.\\d+(\\.\\d+)?)[\"']",
+      "match": 1
+    }
+  },
+  "idb.js":
+  {
+    "uglify": false,
+    "url": "https://cdn.jsdelivr.net/npm/idb/build/umd.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/jakearchibald/idb/main/package.json"
+    }
+  },
+  "idb-ittr.js":
+  {
+    "@parent": "idb.js",
+    "url": "https://cdn.jsdelivr.net/npm/idb/build/umd-with-async-ittr.js"
   }
 }

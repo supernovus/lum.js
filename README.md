@@ -61,6 +61,18 @@ Or you can simply force re-downloading all script using:
   ./bin/deps.js install --force
 ```
 
+## Installing deps from different dep suites
+
+```
+  ./bin/deps.js install -s <suite> [libname]
+```
+
+## Installing all packages from all dep suites
+
+```
+  ./bin/deps.js install -A
+```
+
 ## More help with deps.js
 
 Try one of the following:
