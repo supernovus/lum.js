@@ -15,17 +15,17 @@ const VERBOSE_OPTION =
 const TAG_META = "@metadata";
 const TAG_PARENT = "@parent";
 
-var terser = require('terser');
-var http = require('http-request');
-var fs = require('fs');
-var path = require('path');
-var compareVer = require('compare-versions');
+const terser = require('terser');
+const http = require('http-request');
+const fs = require('fs');
+const path = require('path');
+const compareVer = require('compare-versions');
 
-var scriptroot = 'scripts/';
-var jsroot = scriptroot+'ext/';
+const scriptroot = 'scripts/';
+const jsroot = scriptroot+'ext/';
 
-var styleroot = 'style/';
-var cssroot = styleroot+'ext/';
+const styleroot = 'style/';
+const cssroot = styleroot+'ext/';
 
 // The 'version' property can be in three forms:
 //  1. A string. In which case it's considered the version.
@@ -38,11 +38,11 @@ var cssroot = styleroot+'ext/';
 // We'll record the versions in conf/installed_deps.json which will be in
 // the .gitignore file.
 
-var installed_conf = 'conf/installed_deps.json';
-var installed = {};
+const installed_conf = 'conf/installed_deps.json';
+const installed = {};
 try
 {
-  var stat = fs.lstatSync(installed_conf);
+  let stat = fs.lstatSync(installed_conf);
   if (stat.isFile())
   {
     installed = require('../'+installed_conf);
@@ -50,13 +50,13 @@ try
 }
 catch (e) {}
 
-var sourceCache = {};
+const sourceCache = {};
 
 require('yargs')
   .version(VERSION)
   .command('install [singledep]', 'Install dependencies', (yargs) =>
   {
-    var opts = yargs
+    const opts = yargs
       .positional('singledep',
       {
         describe: 'Install only the specified dependency.',
@@ -88,11 +88,11 @@ require('yargs')
   },
   (argv) =>
   {
-    var suite = argv.all ? 'all' : argv.suite;
-    var sources = get_sources(suite);
+    const suite = argv.all ? 'all' : argv.suite;
+    const sources = get_sources(suite);
     if (argv.singledep)
     {
-      var depname = argv.singledep;
+      const depname = argv.singledep;
       if (depname in sources)
       {
         download_dep(depname, sources, argv);
@@ -109,7 +109,7 @@ require('yargs')
   })
   .command('upgrade [singledep]', 'Upgrade dependencies', (yargs) =>
   {
-    var opts = yargs
+    const opts = yargs
       .positional('singledep', 
       {
         describe: 'Upgrade only the specified dependency.',
@@ -128,7 +128,7 @@ require('yargs')
     {
       if (argv.singledep)
       {
-        var depname = argv.singledep;
+        const depname = argv.singledep;
         if (depname in installed)
         {
           upgrade_dep(depname, argv);
@@ -152,13 +152,13 @@ function get_sources (suite)
 {
   if (sourceCache[suite] === undefined)
   {
-    sourceCache[suite] = require('../conf/sources/'+suite+'.json');
+    sourceCache[suite] = require(`../conf/sources/${suite}.json`);
 
     let includes = null; // If @metadata.include is set, it'll go here.
 
-    for (var depname in sourceCache[suite])
+    for (const depname in sourceCache[suite])
     {
-      var dep = sourceCache[suite][depname];
+      const dep = sourceCache[suite][depname];
 
       if (depname === TAG_META)
       { // Metadata is handled separately.
@@ -175,9 +175,9 @@ function get_sources (suite)
 
       if (dep['@parent'] !== undefined)
       { // This dependency has a parent object.
-        var parentName = dep['@parent'];
-        var parentDep = sourceCache[suite][parentName];
-        for (var prop in parentDep)
+        const parentName = dep['@parent'];
+        const parentDep = sourceCache[suite][parentName];
+        for (const prop in parentDep)
         {
           if (dep[prop] === undefined)
           {
@@ -190,10 +190,10 @@ function get_sources (suite)
 
     if (typeof includes === 'object' && includes !== null)
     { // Includes were found in the metadata, let's include them.
-      for (var i in includes)
+      for (const i in includes)
       {
         let sources = get_sources(includes[i]);
-        for (var depname in sources)
+        for (const depname in sources)
         {
           if (sourceCache[suite][depname] === undefined)
           { // That dep is not already in the sources, add it now.
@@ -358,13 +358,16 @@ function make_handler (source, dest, finfo, processing, argv)
       file.write(string);
     }
     file.close();
+
     if (!deferredProcessing)
     { // We're done processing this file.
       processing.count--;
       try_save(processing);
     }
-  }
-}
+
+  } // handler function
+
+} // make_handler()
 
 function download_deps (sources, argv)
 { 
@@ -373,7 +376,7 @@ function download_deps (sources, argv)
   mkdir(styleroot);
   mkdir(cssroot);
   
-  var processing = {count: 0, upgrade: false};
+  const processing = {count: 0, upgrade: false};
   for (var sfile in sources)
   {
     if (sfile !== TAG_META)
@@ -381,7 +384,7 @@ function download_deps (sources, argv)
       download_dep(sfile, sources, argv, processing);
     }
   }
-} // function download_deps()
+} // download_deps()
 
 function download_dep (sfile, sources, argv, processing, finfo)
 {
@@ -414,21 +417,22 @@ function download_dep (sfile, sources, argv, processing, finfo)
     dest = jsroot+sfile;
   }
   console.log("Checking for "+dest);
+
   var exists = false;
   if (!argv.force && !processing.upgrade)
   {
     try
     {
-      var stat = fs.lstatSync(dest);
-      exists = stat.isFile();
+      exists = fs.lstatSync(dest).isFile();
     }
     catch (e) {}
   }
+
   if (!exists)
   {
     console.log(" --> Downloading "+source.url);
     //http.get(source.url, make_handler(source, dest));
-    var getOpts =
+    const getOpts =
     {
       url: source.url,
     };
@@ -445,8 +449,10 @@ function download_dep (sfile, sources, argv, processing, finfo)
   { // Skip it.
     processing.count--;
   }
+
   try_save(processing);
-}
+
+} // download_dep()
 
 function upgrade_dep (depname, argv, processing)
 {
@@ -456,17 +462,18 @@ function upgrade_dep (depname, argv, processing)
   else
     processing.count++;
   
-  var finfo = installed[depname];
-  var suite = finfo.from;
-  var sources = get_sources(suite);
-  var source = sources[depname];
+  const finfo = installed[depname];
+  const suite = finfo.from;
+  const sources = get_sources(suite);
+  const source = sources[depname];
   if (source === undefined)
   { // It's been removed.
     delete(installed[depname]);
     return;
   }
-  var download = false;
-  var deferredProcessing = false;
+
+  let download = false;
+  let deferredProcessing = false;
 
   if (typeof source.version === 'string')
   { // Look at the version info
@@ -478,12 +485,12 @@ function upgrade_dep (depname, argv, processing)
   else if (typeof source.version === 'object' && source.version.json)
   { // We'll download the JSON version file.
     deferredProcessing = true;
-    var jsonUrl = source.version.json;
-    var jsonHandler = function (err, res)
+    const jsonUrl = source.version.json;
+    const jsonHandler = function (err, res)
     {
-      var download = false;
-      var string = res.buffer.toString();
-      var json = JSON.parse(string);
+      let download = false;
+      const string = res.buffer.toString();
+      const json = JSON.parse(string);
       if (json !== undefined && json.version !== undefined)
       {
         if (!finfo.version || compareVer(json.version, finfo.version) === 1)
@@ -529,8 +536,8 @@ function upgrade_dep (depname, argv, processing)
 
 function upgrade_deps (argv)
 {
-  var processing = {count: 0, upgrade: true};
-  for (var depname in installed)
+  const processing = {count: 0, upgrade: true};
+  for (const depname in installed)
   {
     upgrade_dep(depname, argv, processing);
   }

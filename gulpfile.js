@@ -91,6 +91,7 @@ gulp.task('clean-deps', function ()
   [
     downloaded_js,
     downloaded_css,
+    downloaded_conf,
   ];
   return del(cleanitems);
 });
