@@ -1,5 +1,5 @@
 /*
- * Core utilities used by other Lum libraries.
+ * Lum Core: The engine for the Lum.js library set.
  */
 (function (root)
 {
@@ -20,7 +20,81 @@
   // A private function to check for any non-null, non-undefined value.
   function not_null(v) { return (v !== undefined && v !== null); }
 
-  const lock = Object.freeze;
+  // Constants for the clone() method added by addClone().
+  const CLONE_DEF  = 0, // Shallow clone of enumerable properties. 
+        CLONE_JSON = 1, // Deep clone using JSON (Arrays included).
+        CLONE_FULL = 2, // Shallow clone of all object properties.
+        CLONE_ALL  = 3; // Shallow clone of all properties (Arrays included).
+
+  // Add a 'clone()' method to an object to return either a shallow or
+  // deep clone of an object. The clone will by default also be given
+  // the clone() method, so clones can be infinitely recursive.
+  function addClone(obj, defReclone=true, defRelock=false)
+  {
+    return Object.defineProperty(obj, 'clone',
+    {
+      value: function (mode=CLONE_DEF, reclone=defReclone, relock=defRelock)
+      {
+        let clone;
+        if (mode === CLONE_JSON)
+        { // Deep clone enumerable properties using JSON trickery.
+          clone = JSON.parse(JSON.stringify(obj));
+        }
+        else if (mode !== CLONE_FULL && Array.isArray(obj))
+        { // Make a shallow copy using slice.
+          clone = obj.slice();
+        }
+        else
+        { // Build a clone using a simple loop.
+          clone = {};
+
+          let props;
+          if (mode === CLONE_ALL || mode === CLONE_FULL)
+          { // All object properties.
+            props = Object.getOwnPropertyNames(obj);
+          }
+          else
+          { // Enumerable properties.
+            props = Object.keys(obj);
+          }
+
+          for (let p = 0; p < props.length; p++)
+          {
+            let prop = props[p];
+            clone[prop] = obj[prop];
+          }
+        }
+
+        if (reclone)
+        { // Add the clone() method to the clone.
+          addClone(clone, reclone, lock);
+        }
+
+        if (relock)
+        { // Add the lock() method to the clone.
+          addLock(clone);
+        }
+
+        return clone;
+      }
+    });
+  }
+
+  // Create a frozen, but (by default) clonable constant object.
+  function lock(obj, clonable=true, reclone=true, relock=true)
+  {
+    if (clonable)
+    {
+      addClone(obj, reclone, relock);
+    }
+    return Object.freeze(obj);
+  }
+
+  // Add a bound version of the lock function to an object.
+  function addLock(obj)
+  {
+    return Object.defineProperty(obj, 'lock', lock.bind(null, obj));
+  }
 
   // Constants for all common descriptor configs.
   const DESC_RO    = lock({}),
@@ -227,8 +301,9 @@
   // Exporting our static helpers via a '_' property.
   Lum.prop(Lum, '_', lock(
   {
-    O, F, S, B, N, is_obj, not_null,
+    O, F, S, B, N, is_obj, not_null, lock, addClone, addLock,
     DESC_RO, DESC_CONF, DESC_ENUM, DESC_WRITE, DESC_RW, DESC_DEF, DESC_OPEN,
+    CLONE_DEF, CLONE_JSON, CLONE_FULL, CLONE_ALL,
   }));
 
   // And a circular reference to the raw, un-proxied Lum object.
@@ -368,7 +443,7 @@
   reg.useProp = true;
 
   // The descriptor used by default to register namespaces.
-  reg.defaultDescriptor = JSON.parse(JSON.stringify(DESC_ENUM));
+  reg.defaultDescriptor = DESC_ENUM.clone();
 
   /**
    * Get a namespace.
