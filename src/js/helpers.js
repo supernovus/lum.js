@@ -1,24 +1,24 @@
 /*
- * Core utilities used by other Nano libraries.
+ * Core utilities used by other Lum libraries.
  */
 
-(function (Nano)
+(function (Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
+  if (Lum === undefined)
   {
     throw new Error("Missing Lum core");
   }
 
-  Nano.markLib('helpers');
+  Lum.markLib('helpers');
 
   /**
    * A way to handle Mixins/Traits.
    *
    * This is basically a magic wrapper around copyInto() which we use
    * instead of Object.assign() as we don't want to overwrite properties
-   * by default. See {@link Nano.copyInto} for the valid parameters.
+   * by default. See {@link Lum.copyInto} for the valid parameters.
    *
    * This does a bit of magic before passing it's parameters to copyInto().
    * As it's designed to extend the class prototype and only the prototype,
@@ -26,7 +26,7 @@
    * will automatically use the prototype of the function/class. If you want
    * to copy static class properties, use copyInto() directly instead of this.
    */
-  Nano.addTraits = function (target, ...inSources)
+  Lum.addTraits = function (target, ...inSources)
   {
     var outSources = [];
 
@@ -61,14 +61,14 @@
       }
     }
 
-    return Nano.copyInto(target, outSources);
+    return Lum.copyInto(target, outSources);
   }
 
   /**
    * Copy properties between objects. Can be used for mixins/traits.
    *
    * This calls
-   *  Nano.copyProperties(source, target, {default: true, overwrite: overwrite})
+   *  Lum.copyProperties(source, target, {default: true, overwrite: overwrite})
    * for each of the sources specified (with the current overwrite value.)
    *
    * @param  {object|function} target   The target we are copying into.
@@ -80,10 +80,10 @@
    * If 'overwrite' is false (the default) then they will not be overwritten.
    *
    */
-  Nano.copyInto = function (target, ...sources)
+  Lum.copyInto = function (target, ...sources)
   {
     var overwrite = false;
-//    console.log("Nano.copyInto()", target, sources);
+//    console.log("Lum.copyInto()", target, sources);
     for (var s in sources)
     {
       var source = sources[s];
@@ -96,7 +96,7 @@
       else if (stype === 'object' || stype === 'function')
       {
 //        console.log("copying properties", source);
-        Nano.copyProperties(source, target, {default: true, overwrite: overwrite});
+        Lum.copyProperties(source, target, {default: true, overwrite: overwrite});
       }
       else
       {
@@ -135,7 +135,7 @@
    *
    * @return void
    */
-  Nano.copyProperties = function (source, target, propOpts)
+  Lum.copyProperties = function (source, target, propOpts)
   {
     if (propOpts === null || typeof propOpts !== 'object')
       propOpts = {default: true};
@@ -197,6 +197,8 @@
    * A wrapper around Object.defineProperty() that assigns a value to
    * the property.
    *
+   * DEPRECATED: Use Lum.prop() from core.js instead.
+   *
    * @param object object    The object we are adding a property to.
    * @param string name      The property name.
    * @param mixed  val       The value we are assigning to the property.
@@ -210,26 +212,44 @@
    *  'writable'       Should this property be writable (default: false).
    *
    */
-  Nano.addProperty = function (object, name, val, opts)
+  Lum.addProperty = function (object, name, val, opts)
   {
-    if (opts === true)
-      opts = {configurable: true};
-    else if (typeof opts !== 'object' || opts === null)
-      opts = {};
+    let msg = 'Lum.addProperty(object, name, val';
+    let func;
 
-    var props =
+    if (opts === true)
     {
-      value:         val,
-      enumerable:    ('enumerable'   in opts ? opts.enumerable   : false),
-      configurable:  ('configurable' in opts ? opts.configurable : false),
-      writable:      ('writable'     in opts ? opts.writable     : false),
-    }; 
-    Object.defineProperty(object, name, props);
+      msg += ', true)';
+      func = function()
+      {
+        return Lum.prop(object, name, val, {configurable: true});
+      }
+    }
+    else if (typeof opts === 'object' && opts !== null)
+    { 
+      msg += ', opts)';
+      func = function()
+      {
+        return Lum.prop(object, name, val, opts);
+      }
+    }
+    else
+    {
+      msg += ')';
+      func = function() 
+      {
+        return Lum.prop(object, name, val);
+      }
+    }
+
+    return Lum.deprecated(msg, func);
   }
 
   /**
    * A wrapper around Object.defineProperty() that assigns an accessor to
    * the property.
+   *
+   * DEPRECATED: Use Lum.prop() from core.js instead.
    *
    * @param object   object    The object we are adding an accessor to.
    * @param string   name      The property name for the accessor.
@@ -244,36 +264,54 @@
    *  'enumerable'     Should this property be enumerable (default: false).
    *
    */
-  Nano.addAccessor = function (object, name, getter, setter, opts)
+  Lum.addAccessor = function (object, name, getter, setter, opts)
   {
-    if (opts === true)
-      opts = {configurable: true};
-    else if (typeof opts !== 'object' || opts === null)
-      opts = {};
+    let msg = 'Lum.addAccessor(object, name, getter, setter';
+    let func;
 
-    var props =
-    {
-      get:          getter,
-      set:          setter,
-      enumerable:   ('enumerable'   in opts ? opts.enumerable   : false),
-      configurable: ('configurable' in opts ? opts.configurable : false),
-    };
-    Object.defineProperty(object, name, props);
+    if (opts === true)
+    { 
+      msg += ', true)';
+      func = function() {
+        return Lum.prop(object, name, getter, setter, {configurable: true});
+      }
+    }
+    else if (typeof opts === 'object' && opts !== null)
+    { 
+      msg += ', opts)';
+      func = function() {
+        return Lum.prop(object, name, getter, setter, opts);
+      }
+    }
+    else
+    { 
+      msg += ')';
+      func = function() {
+        return Lum.prop(object, name, getter, setter);
+      }
+    }
+
+    return Lum.deprecated(msg, func);
   }
 
   /**
    * Add 'addProperty' and 'addAccessor' helpers to the object directly.
-   * Useful if you're going to be adding a lot of properties/accessors.
+   *
+   * Like the above two methods, this is DEPRECATED. Use Lum.prop() instead.
    */
-  Nano.addMetaHelpers = function (object, configurable)
+  Lum.addMetaHelpers = function (object, configurable)
   {
-    Nano.addProperty(object, 'addProperty', function (pn,pf,opts)
+    Lum.deprecated('Lum.addMetaHelpers(object, configurable)',
+      'Lum.prop(object, "prop"); // See Lum.prop() for details');
+
+    Lum.addProperty(object, 'addProperty', function (pn,pf,opts)
     {
-      Nano.addProperty(this, pn, pf, opts);
+      Lum.addProperty(this, pn, pf, opts);
     }, configurable);
-    Nano.addProperty(object, 'addAccessor', function (pn, gf, sf, opts)
+
+    Lum.addProperty(object, 'addAccessor', function (pn, gf, sf, opts)
     {
-      Nano.addAccessor(this, pn, gf, sf, opts);
+      Lum.addAccessor(this, pn, gf, sf, opts);
     }, configurable);
   }
 
@@ -288,14 +326,14 @@
    * @return {object}  A clone of the object.
    *
    * If copyProperties is defined, and is a non-false value, then we'll
-   * call Nano.copyProperties(object, clone, copyProperties);
+   * call Lum.copyProperties(object, clone, copyProperties);
    */
-  Nano.clone = function clone (object, copyProperties)
+  Lum.clone = function clone (object, copyProperties)
   {
     var clone = JSON.parse(JSON.stringify(object));
     if (copyProperties)
     {
-      Nano.copyProperties(object, clone, copyProperties);
+      Lum.copyProperties(object, clone, copyProperties);
     }
     return clone;
   }
@@ -318,7 +356,7 @@
    *
    * @return {any}   Either the specified `opt` value or the default value.
    */
-  Nano.getDef = function (opt, defvalue, allowNull=false, isLazy=false,
+  Lum.getDef = function (opt, defvalue, allowNull=false, isLazy=false,
     lazyThis=null)
   {
     if (opt === undefined || (!allowNull && opt === null))
@@ -340,7 +378,7 @@
       throw new Error("Invalid object");
     }
   }
-  Nano.needObj = needObj;
+  Lum.needObj = needObj;
 
   const JS_TYPES =
   [
@@ -365,7 +403,7 @@
       throw new Error(`Invalid ${type} value`);
     }
   }
-  Nano.needType = needType;
+  Lum.needType = needType;
 
   /**
    * See if a property in an object is set.
@@ -384,19 +422,19 @@
    *
    * @return {any}  Either the property value, or the default value.
    */
-  Nano.getOpt = function (opts, optname, defvalue, 
+  Lum.getOpt = function (opts, optname, defvalue, 
     allowNull=true, isLazy=false, lazyThis=null)
   {
     needObj(opts);
     needType("string", optname);
-    return Nano.getDef(opts[optname], defvalue, allowNull, isLazy, lazyThis);
+    return Lum.getDef(opts[optname], defvalue, allowNull, isLazy, lazyThis);
   }
 
   /**
    * Get a property from a nested data structure.
    * Based on the same way we handle namespaces.
    */
-  Nano.getNested = function (obj, proppath)
+  Lum.getNested = function (obj, proppath)
   {
     if (typeof proppath === 'string')
     {

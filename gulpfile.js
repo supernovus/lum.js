@@ -4,7 +4,7 @@
 
 const gulp   = require('gulp');
 const babel  = require('gulp-babel');
-const terser = require('gulp-terser-js');
+const terser = require('gulp-terser');
 const del    = require('del');
 const sass   = require('gulp-sass')(require('sass'));
 const cssmin = require('gulp-clean-css');

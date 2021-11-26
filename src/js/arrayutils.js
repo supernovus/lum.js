@@ -1,20 +1,26 @@
 /**
  * Utils for working with Arrays.
  */
-(function (Nano)
+(function (Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  Lum.markLib('arrayutils');
 
-  Nano.markLib('arrayutils');
+  Lum.array = {};
 
-  Nano.array = {};
-
-  Nano.array.indexOf = function (array, value)
+  /**
+   * Find the index of a value in an array.
+   *
+   * This isn't really needed anymore as Array.indexOf() is a thing now.
+   * It's kept for backwards compatibility only.
+   *
+   * @param {Array} array  The array.
+   * @param {mixed} value  The value to look for.
+   *
+   * @return {number}  The index or -1 if the value was not found.
+   */
+  Lum.array.indexOf = function (array, value)
   {
     var index  = -1,
         length = array.length;
@@ -29,7 +35,18 @@
     return -1;
   }
 
-  Nano.array.contains = function (array, value)
+  /**
+   * See if an array contains a value.
+   *
+   * This isn't really needed anymore as Array.includes() is a thing now.
+   * It's kept for backwards compatibility only.
+   *
+   * @param {Array} array  The array.
+   * @param {mixed} value  The value to look for.
+   *
+   * @return {boolean}  Was the value in the array?
+   */
+  Lum.array.contains = function (array, value)
   {
     var index  = -1,
         length = array.length;
@@ -44,43 +61,65 @@
     return false;
   }
 
-  Nano.array.powerset = function (ary) 
+  /**
+   * Return a Powerset of values in the array.
+   *
+   * @param {Array} array  The array to make the powerset from.
+   *
+   * @return {Array}  The powerset.
+   */
+  Lum.array.powerset = function (array) 
   {
     var ps = new Array(new Array());
-    for (var i=0; i < ary.length; i++) 
+    for (var i=0; i < array.length; i++) 
     {
       // we modify the ps array in the next loop,
       // so can't use the ps.length property directly in the loop condition.
       var current_length = ps.length;
       for (var j = 0; j < current_length; j++) 
       {
-        ps.push(ps[j].concat(ary[i]));
+        ps.push(ps[j].concat(array[i]));
       }
     }
     return ps;
   }
 
-  Nano.array.random = function (array)
+  /**
+   * Get a random element from an array.
+   *
+   * @param {Array} array  The array to get an item from.
+   *
+   * @return {mixed}  The randomly selected item.
+   */
+  Lum.array.random = function (array)
   {
     return array[Math.floor(Math.random()*array.length)];
   }
 
-  if (Nano.addProperty !== undefined)
+  /**
+   * Add a bound version of a Lum.array method to an array itself.
+   *
+   * @param {Array} array  The array to add the method to.
+   * @param {string} method  The name of the Lum.array method to add.
+   */
+  Lum.array.extend = function (array, method)
   {
-    Nano.array.extend = function (array, method)
-    {
-      // Don't override existing methods.
-      if (array[method] === undefined && typeof Nano.array[method] === 'function')
+    if (Array.isArray(array) && typeof method === 'string')
+    { 
+      if (array[method] === undefined && typeof this[method] === 'function')
       {
-        Nano.addProperty(array, method, function ()
-        {
-          var args = Array.prototype.slice.call(arguments);
-          args.unshift(this);
-          return Nano.array[method].apply(Nano.array, args);
-        });
+        Lum.prop(array, method, this[method].bind(this, array));
       }
+      else
+      {
+        console.error("Cannot overwrite existing method", array, method);
+      }
+    }
+    else
+    {
+      throw new Error("Invalid parameters passed to Lum.array.extend()");
     }
   }
 
-})(window.Lum);
+})(self.Lum);
 

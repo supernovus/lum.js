@@ -19,7 +19,7 @@
       throw new Error("Lum.load() had no options passed");
     }
     
-    let defloc = ('loc' in options) ? options.loc : document.head;
+    let defloc = ('loc' in options) ? options.loc : null;
 
     if (typeof options.js === 'object' && options.js !== null)
     { // Some JS files to load.
@@ -112,25 +112,38 @@
 
   }
 
-  Lum.load.js = function (url, func, loc=document.head)
+  Lum.load.js = function (url, func, loc=null)
   {
-    var script = document.createElement('script');
-    script.src = url;
-    if (typeof func === 'function')
+    if (Lum.context.isBrowser())
     {
-      script.onload = func;
-      script.onreadystatechange = func;
+      loc = loc || document.head;
+      var script = document.createElement('script');
+      script.src = url;
+      if (typeof func === 'function')
+      {
+        script.onload = func;
+        script.onreadystatechange = func;
+      }
+      loc.appendChild(script);
     }
-    loc.appendChild(script);
+    else if (Lum.context.isWorker())
+    {
+      self.importScripts(url);
+      func();
+    }
   }
 
-  Lum.load.css = function (url, loc=document.head)
+  Lum.load.css = function (url, loc=null)
   {
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
-    link.href = url;
-    loc.appendChild(link);
+    if (Lum.context.isBrowser())
+    {
+      loc = loc || document.head;
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = url;
+      loc.appendChild(link);
+    }
   }
 
-})(window.Lum);
+})(self.Lum);

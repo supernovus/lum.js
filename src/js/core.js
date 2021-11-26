@@ -1,7 +1,6 @@
 /*
  * Core utilities used by other Lum libraries.
  */
-
 (function (root)
 {
   "use strict";
@@ -12,12 +11,246 @@
     return;
   }
 
+  // A few quick private constants for tests.
+  const O='object', F='function', S='string', B='boolean', N='number';
+
+  // A private function to check for real objects (i.e. not null).
+  function is_obj(v) { return (typeof v === O && v !== null); }
+
+  // A private function to check for any non-null, non-undefined value.
+  function not_null(v) { return (v !== undefined && v !== null); }
+
+  const lock = Object.freeze;
+
+  // Constants for all common descriptor configs.
+  const DESC_RO    = lock({}),
+        DESC_CONF  = lock({configurable:true}),
+        DESC_ENUM  = lock({enumerabe:true}),
+        DESC_WRITE = lock({writable:true}),
+        DESC_RW    = lock({configurable:true,writable:true}),
+        DESC_DEF   = lock({configurable:true,enumerable:true}),
+        DESC_OPEN  = lock({configurable:true,enumerable:true,writable:true});
+
   /** 
    * The global Lum namespace.
    *
    * @namespace Lum
+   *
+   * Can also be used as a special shortcut function in plugins.
+   *
+   * @param {object} opts  Options for the shortcut function usage.
+   *
+   *  "libs" {Array}          Apply as arguments to `needLibs()` method.
+   *
+   *  "jq"   {Array|true}     Call `needJq()` method:
+   *                          If `Array` apply as arguments.
+   *                          If `true`, call with no arguments.
+   *
+   *  "need" {Array}          Apply as arguments to `needNamespaces()` method.
+   *
+   *  "is"   {string}         Call `markLib()` with this single argument.
+   *
+   *  "ns"   {string|Array}   Call `registerNamespace()` method:
+   *                          If `string` call with this single argument.
+   *                          If `Array` apply as arguments.
+   *                          NOTE: `registerNamespace()` first argument may
+   *                          be an array, in order to use that optional
+   *                          syntax, you'd have to use a nested array here.
+   *                          e.g. `{"ns":[["name","space"], value, true]}`
+   *
+   * @return {mixed}  The return values depend on the options.
+   *
+   * If `opts.ns` was specified, return the value from `registerNamespace()`. 
+   * Otherwise will return the Lum object itself.
+   *
+   * @throws {Error} Any errors that any of the requested methods can throw.
    */
-  root.Lum = {_loaded:{}};
+  function Lum(opts={})
+  {
+    if (Array.isArray(opts.libs))
+    { // Test for required Lum libraries.
+      Lum.needLibs.apply(Lum, opts.libs);
+    }
+
+    if (opts.jq === true)
+    { // See if jQuery is loaded.
+      Lum.needJq();
+    }
+    else if (Array.isArray(opts.jq))
+    { // See if specific jQuery extensions are loaded.
+      Lum.needJq.apply(Lum, opts.jq);
+    }
+
+    if (Array.isArray(opts.need))
+    { // Test for required namespaces.
+      Lum.needNamespaces.apply(Lum, opts.need);
+    }
+
+    if (typeof opts.is === S)
+    { // Mark the library as loaded.
+      Lum.markLib(opts.is);
+    }
+
+    if (typeof opts.ns === S)
+    { // A single namespace parameter.
+      return Lum.registerNamespace(opts.ns);
+    }
+    else if (Array.isArray(opts.ns))
+    { // Multiple parameters to be applied.
+      return Lum.registerNamespace.apply(Lum, opts.ns);
+    }
+    else
+    { // No ns option, we're done here.
+      return Lum;
+    }
+
+  } // Lum() core function.
+
+  // Store loaded libraries in a private object.
+  const loaded = {};
+
+  // Not using these yet, but plan to in v5.
+  const wrap_defs = {}, wrap_opts = {};
+
+  /**
+   * A magic wrapper for Object.defineProperty()
+   *
+   * Yeah, there was the old addProperty(), addAccessor(), and addMetaHelpers()
+   * methods in the helpers.js but I prefer how this is designed, and have
+   * deprecated those methods (and indeed made them use this behind the scenes.)
+   *
+   * Rather than documenting the arguments in the usual manner, I'm
+   * going to simply show all of the ways this method can be called.
+   *
+   * `Lum.prop(object)`
+   *
+   *   Return a function that is a bound copy of this function with
+   *   the object as it's first parameter.
+   *
+   * `Lum.prop(object, string)`
+   *
+   *   Add a property to the object which is mapped to a bound copy of
+   *   this function with the object as it's first parameter.
+   *
+   * `Lum.prop(object, string, function, function)`
+   *
+   *   Add a getter and setter property with the default descriptor.
+   *
+   * `Lum.prop(object, string, function, function, object)`
+   *
+   *   Add a getter and setter property with specified descriptor options.
+   *   Do not use `get`, `set`, or `value` in the descriptor options.
+   *
+   * `Lum.prop(object, string, function, null, object)`
+   *
+   *   Add a getter only with specified descriptor options.
+   *   Same restrictions to the descriptor options as above.
+   *   You can specify `{}` as the descriptor options to use the defaults.
+   *
+   * `Lum.prop(object, string, null, function, object)`
+   *
+   *   Add a setter only with specified descriptor options.
+   *   Same restrictions as above, and again you can use `{}` for defaults.
+   *
+   * `Lum.prop(object, string, !null)`
+   *
+   *   Add a property with the specified non-null value.
+   *   This uses the default descriptor.
+   *
+   * `Lum.prop(object, string, !null, object)`
+   *
+   *   Add a property value with the specified descriptor options.
+   *   Has the same restrictions to the descriptor options as above.
+   *
+   * `Lum.prop(object, string, null, object)`
+   *
+   *   Add a property using the descriptor object alone.
+   *   This has no restrictions to the descriptor object except those
+   *   enforced by Object.defineProperty() itself.
+   *   There's no real benefit to this usage over Object.defineProperty(),
+   *   other than being slightly shorter to type. Your choice.
+   *
+   */
+  Lum.prop = function (obj, prop, arg1, arg2, arg3)
+  {
+    if (prop === undefined)
+    { // A special case, returns a function bound to the object.
+      return Lum.prop.bind(Lum, obj);
+    }
+    else if (typeof prop !== S)
+    { // The property must in every other case be a string.
+      throw new Error("Non-string property passed to Lum.prop()");
+    }
+
+    let desc = {};
+
+    if (arg1 === undefined && arg2 === undefined)
+    { // Another special case, the property is a bound version of this.
+      return Lum.prop(obj, prop, Lum.prop(obj));
+    }
+    else if (typeof arg1 === F && typeof arg2 === F)
+    { // A getter and setter were specified.
+      if (is_obj(arg3))
+      { // A custom descriptor.
+        desc = arg3;
+      }
+      desc.get = arg1;
+      desc.set = arg2;
+    }
+    else if (typeof arg1 === F && arg2 === null && is_obj(arg3))
+    { // A getter without a setter.
+      desc = arg3;
+      desc.get = arg1;
+    }
+    else if (arg1 === null && typeof arg2 == F && is_obj(arg3))
+    { // A setter without a getter.
+      desc = arg3;
+      desc.set = arg2;
+    }
+    else
+    { // Not a getter/setter, likely a standard value.
+      if (is_obj(arg2))
+      { // A set of options to replace the descriptor.
+        desc = arg2;
+      }
+      
+      if (arg1 !== undefined && arg1 !== null)
+      { // If you really want a null 'value', use a custom descriptor.
+        desc.value = arg1;
+      }
+    }
+
+    // If we reached here, we should have a valid descriptor now.
+    return Object.defineProperty(obj, prop, desc);
+  }
+
+  // Exporting our static helpers via a '_' property.
+  Lum.prop(Lum, '_', lock(
+  {
+    O, F, S, B, N, is_obj, not_null,
+    DESC_RO, DESC_CONF, DESC_ENUM, DESC_WRITE, DESC_RW, DESC_DEF, DESC_OPEN,
+  }));
+
+  // And a circular reference to the raw, un-proxied Lum object.
+  Lum.prop(Lum, 'self', Lum);
+
+  /**
+   * Context object.
+   *
+   * Tries to determine what browser context this is loaded in.
+   */
+  Lum.prop(Lum, 'context',
+  {
+    root: root,
+    isWindow: () => root.window !== undefined,
+    isWorker: () => root.WorkerGlobalScope !== undefined,
+    isServiceWorker: () => root.ServiceWorkerGlobalScope !== undefined,
+  });
+
+  /**
+   * Namespace management object.
+   */
+  Lum.prop(Lum, 'ns', {});
 
   /**
    * Register a global Namespace.
@@ -39,46 +272,103 @@
    * The latter syntax may be slightly faster, but it looks more cumbersome.
    * The choice is yours.
    *
-   * @param {mixed} [assign] Assign to the last element of the namespace.
+   * @param {mixed} [value] Assign to the last element of the namespace.
+   *
+   *   If this is null or undefined, it won't be used. Anything else will be.
+   *
    * @param {boolean} [overwrite=false] Overwrite the last element if it exists.
+   *  
    *  Only applicable if assign was used.
+   *
+   * @param {mixed} [useprop=null] How to assign the added namespaces.
+   *
+   *   If this is `true` we will use Lum.prop() to assign them, with the
+   *   descriptor object set in `Lum.registerNamespace.defaultDescriptor`;
+   *
+   *   If this is `false` will will simply use direct assignment.
+   *
+   *   If this is an {object} we will use Lum.prop() with it as the descriptor.
+   *
+   *   If this is anything else (including null), we will set it to the
+   *   value in the `Lum.registerNamespace.useProp` property.
    *
    * @return {object}  The last element of the namespace added.
    */
-  Lum.registerNamespace = function (namespaces, assign, overwrite=false)
+  const reg = Lum.ns.register = function (namespaces, value, 
+    overwrite=false, 
+    useprop=null)
   {
-    if (typeof namespaces === 'string')
+    if (typeof namespaces === S)
     {
       namespaces = namespaces.split('.');
     }
-    var cns = root;
-    var nscount = namespaces.length;
-    var lastns = nscount - 1;
-//    console.debug("registerNamespace", namespaces, assign, overwrite, nscount, lastns);
-    for (var n = 0; n < nscount; n++)
+    else if (!Array.isArray(namespaces))
     {
-      var ns = namespaces[n];
+      throw new Error("namespaces must be string or array");
+    }
+
+    let desc = reg.defaultDescriptor;
+
+    if (is_obj(useprop))
+    { // An explicit descriptor was passed, use it.
+      desc = useprop;
+      useprop = true;
+    }
+    else if (typeof useprop !== B)
+    { // Use the default useprop value.
+      useprop = reg.useProp;
+    }
+
+    function assign(obj, prop, val={})
+    {
+      if (useprop)
+      {
+        Lum.prop(obj, prop, val, desc);
+      }
+      else
+      {
+        obj[prop] = val;
+      }
+    }
+
+    let cns = root;
+    let nscount = namespaces.length;
+    let lastns = nscount - 1;
+
+//    console.debug("registerNamespace", namespaces, assign, overwrite, nscount, lastns);
+    for (let n = 0; n < nscount; n++)
+    {
+      let ns = namespaces[n];
 //      console.debug("Looking for namespace", n, ns, cns, cns[ns]);
       if (cns[ns] === undefined)
       {
-        if (n == lastns && assign !== undefined)
+        if (n == lastns && not_null(value))
         {
-          cns[ns] = assign;
+          assign(cns, ns, value);
 //          console.debug("Assigned", ns, cns[ns], assign);
         }
         else
         {
-          cns[ns] = {};
+          assign(cns, ns);
         }
       }
-      else if (overwrite && n == lastns && assign !== undefined)
+      else if (overwrite && n == lastns && not_null(assign))
       {
-        cns[ns] = assign;
-      }
+        assign(cns, ns, value);
+      }  
       cns = cns[ns];
     }
+
     return cns;
   }
+
+  Lum.registerNamespace = reg; // TODO: use wrap_defs instead.
+
+  // Use prop() to register namespaces.
+  reg.useProp = true;
+
+  // The descriptor used by default to register namespaces.
+  reg.defaultDescriptor = JSON.parse(JSON.stringify(DESC_ENUM));
 
   /**
    * Get a namespace.
@@ -90,7 +380,7 @@
    */
   Lum.getNamespace = function (namespaces, logerror=false)
   {
-    if (typeof namespaces === 'string')
+    if (typeof namespaces === S)
     {
       namespaces = namespaces.split('.');
     }
@@ -173,7 +463,7 @@
    * As an example, if there's a global function called base91() and we want to
    * make an alias to it called Lum.Base91.mscdex() then we'd call:
    *
-   *  Lum.link(window.base91, 'Base91.mscdex');
+   *  Lum.link(self.base91, 'Base91.mscdex');
    *
    * @param {object|function} obj  The library/function we're linking to.
    * @param {string} target  The namespace within {prefix} we're assigning to.
@@ -189,22 +479,13 @@
   }
 
   /**
-   * Make a global alias to ourself.
-   */
-  Lum.exportAlias = function (target, overwrite=false)
-  {
-    this.registerNamespace(target, this, overwrite);
-    return this;
-  }
-
-  /**
    * Mark a library as loaded.
    *
    * @param {string} lib  The name of the library we are marking as loaded.
    */
   Lum.markLib = function (lib)
   {
-    this._loaded[lib] = true;
+    loaded[lib] = true;
     return this;
   }
 
@@ -215,7 +496,7 @@
    */
   Lum.hasLib = function (lib)
   {
-    return this._loaded[lib];
+    return loaded[lib];
   }
 
   /**
@@ -233,7 +514,7 @@
     for (let l = 0; l < arguments.length; l++)
     {
       const lib = arguments[l];
-      if (typeof lib === 'string' && !this._loaded[lib])
+      if (typeof lib === S && !loaded[lib])
       {
         return lib;
       }
@@ -246,7 +527,7 @@
   Lum.needLibs = Lum.needLib = function ()
   {
     const result = Lum.checkLibs.apply(this, arguments);
-    if (typeof result === 'string')
+    if (typeof result === S)
     {
       throw new Error("Missing required Lum library: "+result);
     }
@@ -259,7 +540,15 @@
   Lum.wantLibs = function ()
   {
     const result = Lum.checkLibs.apply(this, arguments);
-    return (typeof result !== 'string');
+    return (typeof result !== S);
+  }
+
+  /**
+   * Get a list of loaded libraries. The array returned is a copy.
+   */
+  Lum.listLibs = function ()
+  {
+    return loaded.slice();
   }
 
   /**
@@ -290,7 +579,7 @@
   Lum.needJq = function ()
   {
     const result = Lum.checkJq.apply(this, arguments);
-    if (typeof result === 'string')
+    if (typeof result === S)
     {
       if (result === 'jQuery')
       {
@@ -310,11 +599,213 @@
   Lum.wantJq = function ()
   {
     const result = Lum.checkJq.apply(this, arguments);
-    return (typeof result !== 'string');
+    return (typeof result !== S);
   }
 
-  // If 'window.Nano' does not already exist, create it.
-  Lum.exportAlias('Nano');
+  /**
+   * Mark a function/method/property as deprecated.
+   *
+   * Adds a warning to the Console that the method is deprecated.
+   *
+   * It can also optionally give example replacement code, and run a function 
+   * that will call the replacement code automatically.
+   *
+   * @param {string} name  The name of the deprecated method/property/etc.
+   *
+   *   This should actually be the full method signature, or at least the
+   *   signature matching what a call to the deprecated method made.
+   *
+   *   So rather than 'someOldMethod', use 'MyClass.someOldMethod(foo, bar)'
+   *   as a more detailed name. This is only used in the Console warning.
+   *
+   *   This is the only mandatory parameter.
+   *
+   * @param {mixed} [replace={}]  Replacement options.
+   * 
+   *   If this is a {string}, it is the same as passing an {object} with
+   *   the following options specified:
+   *
+   *     ```{msg: replace}```
+   *
+   *   If it is a {function}, it is the same as passing an {object} with
+   *   the following options specified:
+   *
+   *     ```{exec: replace, msg: true, strip: true}```
+   *
+   *   If it is an {object}, then it will be a set of options:
+   *
+   *     "exec" {function}
+   *
+   *       If specified, this function will be called and the value returned.
+   *       No paramters are passed to the function, so it should be a simple 
+   *       anonymous closure which simply calls the actual replacement code.
+   *
+   *     "msg" {string|boolean}
+   *
+   *       If this is a {string} it will be added to the warning output.
+   *
+   *       If this is `true` and `exec` is set, we will extract the function
+   *       text using `exec.toString()` and add it to the warning output.
+   *
+   *       In any other cases, no replacement message will be appended.
+   *
+   *     "strip" {boolean}
+   *
+   *       If this is `true`, then we will strip `'function() { return '`
+   *       from the start of the function text (whitespace ignored), as well
+   *       as stripping '}' from the very end of the function text.
+   *
+   *       This is only applicable if `exec` is set, and `msg` is `true`.
+   *
+   *   If the `replace` value is none of the above, it will be ignored.
+   *
+   * @return {mixed}  The output is dependent on the parameters passed.
+   *
+   * If `replace` is a function or an object with 
+   *
+   * In any other case the return value will be undefined.
+   *
+   */
+  const dep = Lum.deprecated = function (name, replace={})
+  {
+    const DEP_MSG = ':Deprecated =>';
+    const REP_MSG = ':replaceWith =>';
 
-})(window);
+    if (typeof replace === S)
+    { // A string replacement example only.
+      replace = {msg: replace};
+    }
+    else if (typeof replace === F)
+    { // A function replacement.
+      replace = {exec: replace, msg: true, strip: true};
+    }
+    else if (!is_obj(replace))
+    { // Not an object, that's not valid.
+      replace = {};
+    }
+
+    const msgs = [DEP_MSG, name];
+    const exec = (typeof replace.exec === F) 
+      ? replace.exec
+      : null;
+
+    if (exec && replace.msg === true)
+    { // Extract the function text.
+      const strip = (typeof replace.strip === B)
+        ? replace.strip
+        : false;
+
+      let methtext = replace.toString();
+
+      if (strip)
+      { // Remove wrapping anonymous closure function.
+        methtext = methtext.replace(/^function\(\)\s*\{\s*(return\s*)?/, '');
+        methtext = methtext.replace(/\s*\}$/, '');
+      }
+
+      // Set the replacement msg to the method text.
+      replace.msg = methtext;
+    }
+
+    if (typeof replace.msg === 'string')
+    { // A replacement message.
+      msgs.push(REP_MSG, replace.msg);
+    }
+
+    // Show the messages.
+    console.warn.apply(console, msgs);
+
+    // Finally, call the replacement function if it was defined.
+    if (exec)
+    {
+      return exec();
+    }
+  }
+
+  /**
+   * TODO: document this. Not using it yet, but v5 likely will.
+   */
+  dep.wrap = function (obj, defs, opts={})
+  {
+    const hasValue = (prop) => 
+      typeof defs[prop] === O && defs[prop].value !== undefined;
+
+    const hasGetter = (prop) =>
+      typeof defs[prop] === O && typeof defs[prop].get === F; 
+
+    const hasSetter = (prop) =>
+      typeof defs[prop] === O && typeof defs[prop].set === F;
+
+    const useProxy = typeof opts.useProxy === B ? opts.useProxy : true;
+    const assignDirect 
+      = typeof opts.assignDirect === B ? opts.assignDirect : false;
+    
+    if (useProxy && root.Proxy !== undefined)
+    { // We have the Proxy object, hurray.
+      return new Proxy(obj, 
+      { 
+        // Getter trap.
+        get(target, prop, receiver)
+        {
+          if (prop in target)
+          { // It exists in the target.
+            return target[prop];
+          }
+          else if (hasValue(prop))
+          { // A static value, send it along.
+            return defs[prop].value;
+          }
+          else if (hasGetter(prop))
+          { // A getter method, pass through.
+            return defs[prop].get.call(target);
+          }
+        },
+        // Setter trap.
+        set(target, prop, value, receiver)
+        {
+          if (prop in target)
+          { // It exists in the target. Let's hope it's writable.
+            target[prop] = value;
+            return true;
+          }
+          else if (hasSetter(prop))
+          { // A setter method, pass through.
+            return defs[prop].set.call(target, value);
+          }
+          else
+          { // A final fallback to the target again.
+            target[prop] = value;
+            return true;
+          }
+        },
+      }); // new Proxy
+    }
+    else
+    { // We're going to assign the wrapper methods directly.
+      for (const prop in defs)
+      {
+        if (obj[prop] === undefined)
+        {
+          if (assignDirect && hasValue(prop))
+          { // We are going to use a cheap shortcut here.
+            obj[prop] = defs[prop].value;
+          }
+          else
+          { // Set up the property with a full descriptor.
+            Lum.prop(obj, prop, null, defs[prop]);
+          }
+        }
+      } // for prop
+      return obj;
+    }
+
+  } // dep.wrap()
+
+  // Now let's export Lum itself.
+  Lum.registerNamespace('Lum', dep.wrap(Lum, wrap_defs, wrap_opts));
+
+  // As well as the Nano alias if applicable.
+  Lum.registerNamespace('Nano', root.Lum);
+
+})(self);
 

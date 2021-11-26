@@ -3,16 +3,11 @@
  * matching certain property values.
  */
 
-(function (Nano)
+(function (Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.markLib('oquery');
+  Lum.markLib('oquery');
 
 /**
  * Search through an array of objects.
@@ -32,7 +27,7 @@
  * @return Mixed    Either an array of matches, or a single matching object.
  *                  If single was true, and nothing matched, we return null.
  */
-var oq = Nano.oQuery = function (query, objarr, opts)
+var oq = Lum.oQuery = function (query, objarr, opts)
 {
 //  console.debug("we're in oQuery()");
 
@@ -221,5 +216,5 @@ oq.indexes = function (query, objarray)
   return oq(query, objarray, {index: true});
 }
 
-})(window.Lum);
+})(self.Lum);
 
