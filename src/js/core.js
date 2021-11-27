@@ -12,85 +12,239 @@
   }
 
   // A few quick private constants for tests.
-  const O='object', F='function', S='string', B='boolean', N='number';
+  const O='object', F='function', S='string', B='boolean', N='number',
+        U='undefined', SY='symbol', BI='bigint';
 
-  // A private function to check for real objects (i.e. not null).
+  // Check for non-null objects (i.e. not null).
   function is_obj(v) { return (typeof v === O && v !== null); }
 
-  // A private function to check for any non-null, non-undefined value.
-  function not_null(v) { return (v !== undefined && v !== null); }
+  // Check for a "complex" value (i.e. object or function).
+  function is_complex(v) { return (typeof v === F || is_obj(v)); }
 
-  // Constants for the clone() method added by addClone().
-  const CLONE_DEF  = 0, // Shallow clone of enumerable properties. 
-        CLONE_JSON = 1, // Deep clone using JSON (Arrays included).
-        CLONE_FULL = 2, // Shallow clone of all object properties.
-        CLONE_ALL  = 3; // Shallow clone of all properties (Arrays included).
+  // A function to check for any non-null, non-undefined value.
+  function non_null(v) { return (v !== undefined && v !== null); }
 
-  // Add a 'clone()' method to an object to return either a shallow or
-  // deep clone of an object. The clone will by default also be given
-  // the clone() method, so clones can be infinitely recursive.
-  function addClone(obj, defReclone=true, defRelock=false)
+  // See if an object is an instance.
+  function is_instance(v, what) 
   {
+    if (!is_obj(v)) return false;
+    if (typeof v.prototype !== 'object' || v.prototype === null)
+    { // Has no prototype.
+      return false;
+    }
+
+    if (typeof what === F && !(v instanceof what)) return false;
+
+    // Everything passed.
+    return true;
+  }
+
+  // Constants for the clone() method.
+  const CLONE_DEF  = 0,
+        CLONE_JSON = 1,
+        CLONE_FULL = 2,
+        CLONE_ALL  = 3;
+
+  /**
+   * Clone an object or function.
+   *
+   * @param {object|function} obj - The object we want to clone.
+   * @param {object} [opts={}] Options for the cloning process.
+   * 
+   * @param {number} [opts.mode=CLONE_DEF] One of the Lum._.CLONE_* constants:
+   *
+   *   CLONE_DEF    Shallow clone of enumerable properties for most objects.
+   *   CLONE_JSON   Deep clone using JSON serialization (Arrays included.)
+   *   CLONE_FULL   Shallow clone of all object properties.
+   *   CLONE_ALL    Shallow clone of all properties (Arrays included.)
+   *
+   *   For any mode that doesn't saay "Arrays included", Array objects will
+   *   use a shortcut technique of `obj.slice()` to create the clone.
+   *
+   * @param {boolean} [opts.addClone=false] Call {@link Lum._.addClone] on the cloned object.
+   *
+   *   The options sent to this function will be used as the defaults in
+   *   the clone() method added to the object.
+   *
+   * @param {boolean} [opts.addLock=false] Call {@link Lum._.addLock} on the cloned object.
+   *
+   *   No further options for this, just add a lock() method to the clone.
+   *
+   * @return {object} - The clone of the object.
+   *
+   * @method Lum._.clone
+   */
+  function clone(obj, opts={}) 
+  {
+    //console.debug("Lum~clone()", obj, opts);
+
+    if (!is_complex(obj))
+    { // Doesn't need cloning.
+      //console.debug("no cloning required");
+      return obj;
+    }
+
+    if (!is_obj(opts))
+    { // Opts has to be a valid object.
+      opts = {};
+    }
+
+    const mode    = typeof opts.mode     === N  ? opts.mode : CLONE_DEF;
+    const reclone = typeof opts.addClone === B ? opts.addClone : false;
+    const relock  = typeof opts.addLock  === B ? opts.addLock  : false;
+
+    let copy;
+
+    //console.debug("::clone", {mode, reclone, relock});
+
+    if (mode === CLONE_JSON)
+    { // Deep clone enumerable properties using JSON trickery.
+      //console.debug("::clone using JSON cloning");
+      copy = JSON.parse(JSON.stringify(obj));
+    }
+    else if (mode !== CLONE_ALL && Array.isArray(obj))
+    { // Make a shallow copy using slice.
+      //console.debug("::clone using Array.slice()");
+      copy = obj.slice();
+    }
+    else
+    { // Build a clone using a simple loop.
+      //console.debug("::clone using simple loop");
+      copy = {};
+
+      let props;
+      if (mode === CLONE_ALL || mode === CLONE_FULL)
+      { // All object properties.
+        //console.debug("::clone getting all properties");
+        props = Object.getOwnPropertyNames(obj);
+      }
+      else
+      { // Enumerable properties.
+        //console.debug("::clone getting enumerable properties");
+        props = Object.keys(obj);
+      }
+
+      //console.debug("::clone[props]", props);
+
+      for (let p = 0; p < props.length; p++)
+      {
+        let prop = props[p];
+        copy[prop] = obj[prop];
+      }
+    }
+
+    if (reclone)
+    { // Add the clone() method to the clone, with the passed opts as defaults.
+      addClone(copy, opts);
+    }
+
+    if (relock)
+    { // Add the lock() method to the clone.
+      addLock(copy);
+    }
+
+    return copy;
+  }
+
+  /**
+   * Add a clone() method to an object.
+   *
+   * @param {object|function} obj - The object to add clone() to.
+   * @param {object} [defOpts=null] Default options for the clone() method.
+   *
+   * If `null` or anything other than an object, the defaults will be:
+   *
+   * ```{mode: CLONE_DEF, addClone: true, addLock: false}```
+   *
+   * @method Lum._.addClone
+   */
+  function addClone(obj, defOpts=null)
+  {
+    if (!is_obj(defOpts))
+    { // Assign a default set of defaults.
+      defOpts = {mode: CLONE_DEF, addClone: true, addLock: false};
+    }
+
     return Object.defineProperty(obj, 'clone',
     {
-      value: function (mode=CLONE_DEF, reclone=defReclone, relock=defRelock)
+      value: function (opts=defOpts)
       {
-        let clone;
-        if (mode === CLONE_JSON)
-        { // Deep clone enumerable properties using JSON trickery.
-          clone = JSON.parse(JSON.stringify(obj));
-        }
-        else if (mode !== CLONE_FULL && Array.isArray(obj))
-        { // Make a shallow copy using slice.
-          clone = obj.slice();
-        }
-        else
-        { // Build a clone using a simple loop.
-          clone = {};
-
-          let props;
-          if (mode === CLONE_ALL || mode === CLONE_FULL)
-          { // All object properties.
-            props = Object.getOwnPropertyNames(obj);
-          }
-          else
-          { // Enumerable properties.
-            props = Object.keys(obj);
-          }
-
-          for (let p = 0; p < props.length; p++)
-          {
-            let prop = props[p];
-            clone[prop] = obj[prop];
-          }
-        }
-
-        if (reclone)
-        { // Add the clone() method to the clone.
-          addClone(clone, reclone, lock);
-        }
-
-        if (relock)
-        { // Add the lock() method to the clone.
-          addLock(clone);
-        }
-
-        return clone;
+        return clone(obj, opts);
       }
     });
   }
 
-  // Create a frozen, but (by default) clonable constant object.
-  function lock(obj, clonable=true, reclone=true, relock=true)
+  /**
+   * Clone an object if it's not extensible (locked, sealed, frozen, etc.)
+   *
+   * If the object is extensible, it's returned as is.
+   *
+   * If not, if the object has a clone() method it will be used.
+   * Otherwise use the {@link Lum._.clone} method with default options.
+   *
+   * @param {object} obj - The object to clone if needed.
+   *
+   * @return {object} Either the original object, or an extensible clone.
+   *
+   * @method Lum._.cloneIfLocked
+   */
+  function cloneIfLocked(obj)
+  {
+    if (!Object.isExtensible(obj))
+    {
+      if (typeof obj.clone === F)
+      { // Use the object's clone() method.
+        return obj.clone();
+      }
+      else
+      { // Use our own clone method.
+        return clone(obj);
+      }
+    }
+
+    // Return the object itself, it's fine.
+    return obj;
+  }
+
+  /**
+   * Lock an object using Object.freeze()
+   *
+   * @param {object} obj - The object we want to lock.
+   * @param {boolean} [clonable=true] Pass to {@link Lum._.addClone} first?
+   * @param {object} [cloneOpts=null] Options for addClone.
+   *
+   * If cloneOpts is `null` then we will use the following:
+   *
+   * ```{mode: CLONE_DEF, addClone: true, addLock: true}```
+   *
+   * @return {object} The locked object.
+   *
+   * @method Lum._.lock
+   */
+  function lock(obj, clonable=true, cloneOpts=null)
   {
     if (clonable)
-    {
-      addClone(obj, reclone, relock);
+    { // Add the clone method before freezing.
+      if (!is_obj(cloneOpts))
+      {
+        cloneOpts = {mode: CLONE_DEF, addClone: true, addLock: true};
+      }
+      addClone(obj, cloneOpts);
     }
+
+    // Now freeze the object.
     return Object.freeze(obj);
   }
 
-  // Add a bound version of the lock function to an object.
+  /**
+   * Add a lock() method to an object.
+   *
+   * Adds a bound version of {@link Lum._.lock} to the object as a method.
+   *
+   * @param {object} - The object we're adding lock() to.
+   *
+   * @method Lum._.addLock
+   */
   function addLock(obj)
   {
     return Object.defineProperty(obj, 'lock', lock.bind(null, obj));
@@ -105,89 +259,16 @@
         DESC_DEF   = lock({configurable:true,enumerable:true}),
         DESC_OPEN  = lock({configurable:true,enumerable:true,writable:true});
 
-  /** 
-   * The global Lum namespace.
-   *
-   * @namespace Lum
-   *
-   * Can also be used as a special shortcut function in plugins.
-   *
-   * @param {object} opts  Options for the shortcut function usage.
-   *
-   *  "libs" {Array}          Apply as arguments to `needLibs()` method.
-   *
-   *  "jq"   {Array|true}     Call `needJq()` method:
-   *                          If `Array` apply as arguments.
-   *                          If `true`, call with no arguments.
-   *
-   *  "need" {Array}          Apply as arguments to `needNamespaces()` method.
-   *
-   *  "is"   {string}         Call `markLib()` with this single argument.
-   *
-   *  "ns"   {string|Array}   Call `registerNamespace()` method:
-   *                          If `string` call with this single argument.
-   *                          If `Array` apply as arguments.
-   *                          NOTE: `registerNamespace()` first argument may
-   *                          be an array, in order to use that optional
-   *                          syntax, you'd have to use a nested array here.
-   *                          e.g. `{"ns":[["name","space"], value, true]}`
-   *
-   * @return {mixed}  The return values depend on the options.
-   *
-   * If `opts.ns` was specified, return the value from `registerNamespace()`. 
-   * Otherwise will return the Lum object itself.
-   *
-   * @throws {Error} Any errors that any of the requested methods can throw.
-   */
-  function Lum(opts={})
-  {
-    if (Array.isArray(opts.libs))
-    { // Test for required Lum libraries.
-      Lum.needLibs.apply(Lum, opts.libs);
-    }
-
-    if (opts.jq === true)
-    { // See if jQuery is loaded.
-      Lum.needJq();
-    }
-    else if (Array.isArray(opts.jq))
-    { // See if specific jQuery extensions are loaded.
-      Lum.needJq.apply(Lum, opts.jq);
-    }
-
-    if (Array.isArray(opts.need))
-    { // Test for required namespaces.
-      Lum.needNamespaces.apply(Lum, opts.need);
-    }
-
-    if (typeof opts.is === S)
-    { // Mark the library as loaded.
-      Lum.markLib(opts.is);
-    }
-
-    if (typeof opts.ns === S)
-    { // A single namespace parameter.
-      return Lum.registerNamespace(opts.ns);
-    }
-    else if (Array.isArray(opts.ns))
-    { // Multiple parameters to be applied.
-      return Lum.registerNamespace.apply(Lum, opts.ns);
-    }
-    else
-    { // No ns option, we're done here.
-      return Lum;
-    }
-
-  } // Lum() core function.
+  // The core namespace.
+  const Lum = {$useSelf: true};
 
   // Store loaded libraries in a private object.
   const loaded = {};
 
-  // Not using these yet, but plan to in v5.
-  const wrap_defs = {}, wrap_opts = {};
-
   /**
    * A magic wrapper for Object.defineProperty()
+   *
+   * @method Lum.prop
    *
    * Yeah, there was the old addProperty(), addAccessor(), and addMetaHelpers()
    * methods in the helpers.js but I prefer how this is designed, and have
@@ -245,13 +326,13 @@
    *   other than being slightly shorter to type. Your choice.
    *
    */
-  Lum.prop = function (obj, prop, arg1, arg2, arg3)
+  function prop(obj, name, arg1, arg2, arg3)
   {
-    if (prop === undefined)
-    { // A special case, returns a function bound to the object.
-      return Lum.prop.bind(Lum, obj);
+    if (name === undefined)
+    { // A special case, returns a copy of this function bound to the object.
+      return prop.bind(Lum, obj);
     }
-    else if (typeof prop !== S)
+    else if (typeof name !== S)
     { // The property must in every other case be a string.
       throw new Error("Non-string property passed to Lum.prop()");
     }
@@ -260,32 +341,32 @@
 
     if (arg1 === undefined && arg2 === undefined)
     { // Another special case, the property is a bound version of this.
-      return Lum.prop(obj, prop, Lum.prop(obj));
+      return prop(obj, name, prop(obj));
     }
     else if (typeof arg1 === F && typeof arg2 === F)
     { // A getter and setter were specified.
       if (is_obj(arg3))
       { // A custom descriptor.
-        desc = arg3;
+        desc = cloneIfLocked(arg3);
       }
       desc.get = arg1;
       desc.set = arg2;
     }
     else if (typeof arg1 === F && arg2 === null && is_obj(arg3))
     { // A getter without a setter.
-      desc = arg3;
+      desc = cloneIfLocked(arg3);
       desc.get = arg1;
     }
     else if (arg1 === null && typeof arg2 == F && is_obj(arg3))
     { // A setter without a getter.
-      desc = arg3;
+      desc = cloneIfLocked(arg3);
       desc.set = arg2;
     }
     else
     { // Not a getter/setter, likely a standard value.
       if (is_obj(arg2))
       { // A set of options to replace the descriptor.
-        desc = arg2;
+        desc = cloneIfLocked(arg2);
       }
       
       if (arg1 !== undefined && arg1 !== null)
@@ -295,40 +376,341 @@
     }
 
     // If we reached here, we should have a valid descriptor now.
-    return Object.defineProperty(obj, prop, desc);
+    return Object.defineProperty(obj, name, desc);
   }
 
-  // Exporting our static helpers via a '_' property.
-  Lum.prop(Lum, '_', lock(
+  // Internal function to return either the global Lum, or local Lum depending
+  // on the Lum.$useSelf property, which defaults to true.
+  // The global Lum will likely be a Proxy object on any modern browser,
+  // whereas the local Lum is the raw object defined in this closure,
+  // and also exposed as Lum.self for things outside here.
+  function ourself()
   {
-    O, F, S, B, N, is_obj, not_null, lock, addClone, addLock,
-    DESC_RO, DESC_CONF, DESC_ENUM, DESC_WRITE, DESC_RW, DESC_DEF, DESC_OPEN,
-    CLONE_DEF, CLONE_JSON, CLONE_FULL, CLONE_ALL,
-  }));
+    return Lum.$useSelf ? Lum : root.Lum; // Yes, there is a difference.
+  }
 
-  // And a circular reference to the raw, un-proxied Lum object.
-  Lum.prop(Lum, 'self', Lum);
+  // The very first use of prop() is to add it to Lum as a method.
+  prop(Lum, 'prop', prop);
+
+  /**
+   * @namespace Lum
+   * @property {Lum} self - The 'raw' Lum object, not the global Proxy.
+   */
+  prop(Lum, 'self', Lum);
+
+  /**
+   * Build a lazy initializer property.
+   *
+   * Basically the first time the property is accessed it's built.
+   * Subsequent accesses will use the already built property.
+   * This is an extension of the {@link Lum.prop} method.
+   *
+   * @param {object} obj - The object to add the property to.
+   * @param {string} prop - The name of the property to add.
+   * @param {function} init - The function to initialize the property.
+   * @param {object} [desc=DESC_CONF] The descriptor for the property.
+   *
+   * @return {object} The object we defined the property on.
+   *
+   * @method Lum.prop.lazy
+   */
+  function lazy(obj, name, init, desc=DESC_CONF)
+  {
+    if (!is_complex(obj))
+    {
+      throw new Error("prop.lazy() obj parameter was not an object");
+    }
+    if (typeof name !== S)
+    {
+      throw new Error("prop.lazy() name parameter was not a string");
+    }
+    if (typeof init !== F)
+    {
+      throw new Error("prop.lazy() init parameter was not a function");
+    }
+
+    let value;
+
+    function func()
+    {
+      if (value === undefined)
+      {
+        value = init();
+      }
+      return value;
+    }
+
+    prop(obj, name, func, null, desc);
+  }
 
   /**
    * Context object.
    *
    * Tries to determine what browser context this is loaded in.
+   * And a few other useful features.
+   *
+   * @namespace Lum.context
    */
-  Lum.prop(Lum, 'context',
+  prop(Lum, 'context', {root: root});
+  const ctx = Lum.context;
+  lazy(ctx, 'isWindow', () => root.window !== undefined);
+  lazy(ctx, 'isWorker', () => root.WorkerGlobalScope !== undefined);
+  lazy(ctx, 'isServiceWorker', 
+    () => root.ServiceWorkerGlobalScope !== undefined);
+  lazy(ctx, 'hasProxy', () => root.Proxy !== undefined);
+
+  console.debug("Lum.context", ctx, ctx.hasProxy);
+
+  // A private cache of wrapper objects.
+  const wrappers = [];
+
+  /**
+   * A class used to create Proxy-wrapped objects.
+   *
+   * Meant for allowing backwards compatibility modes.
+   */
+  Lum.Wrapper = class
   {
-    root: root,
-    isWindow: () => root.window !== undefined,
-    isWorker: () => root.WorkerGlobalScope !== undefined,
-    isServiceWorker: () => root.ServiceWorkerGlobalScope !== undefined,
-  });
+    /**
+     * Get a wrapper for the given object.
+     *
+     * If one has already been created, return it.
+     * Otherwise create a new one, register it, and return it.
+     *
+     * @param {object} obj - The object we want to wrap.
+     * @param {object} opts - If creating a new one, options to set.
+     */
+    static getWrapper(obj, opts={})
+    {
+      //console.debug("Wrapper.getWrapper", obj, opts);
+      if (!is_complex(obj))
+      {
+        throw new Error("Wrapper.getWrapper() obj was not an object");
+      }
+
+      const isProxy = (ctx.hasProxy && is_instance(obj, Proxy));
+
+      for (let i = 0; i < wrappers.length; i++)
+      {
+        if (isProxy)
+        {
+          if (wrappers[i].proxy === obj)
+          { // Found an existing wrapper for the Proxy.
+            return wrappers[i];
+          }
+        }
+        else
+        {
+          if (wrappers[i].obj === obj)
+          { // Found an existing wrapper for the raw object.
+            return wrappers[i];
+          }
+        }
+      }
+
+      // Did not find a wrapper, let's make one.
+      const wrapper = new Lum.Wrapper(obj, opts);
+
+      wrappers.push(wrapper);
+
+      return wrapper;
+    }
+
+    constructor(obj, opts={})
+    {
+      //console.debug("Wrapper.constructor()", obj, opts);
+
+      this.obj = obj;
+      this.defs = {};
+
+      this.assign   = typeof opts.assign === B ? opts.assign : false;
+      this.fatal    = typeof opts.fatal  === B ? opts.fatal  : false;
+      this.warn     = typeof opts.warn   === B ? opts.warn   : true;
+      this.useproxy = typeof opts.proxy  === B ? opts.proxy  : ctx.hasProxy;
+
+      this.proxy = null;
+    }
+
+    add(prop, item)
+    {
+      //console.debug("Wrapper.add", prop, item, this.obj, this);
+
+      const isDescriptor = (is_obj(item) && (item.value !== undefined
+        || item.get !== undefined || item.set !== undefined));
+
+      if (this.useproxy)
+      { // We'll use our internal descriptor map.
+        if (isDescriptor)
+        { // It's a descriptor, assign it directly.
+          this.defs[prop] = item;
+        }
+        else if (non_null(item))
+        { // It's some other value, make a minimal descriptor for it.
+          this.defs[prop] = {value: item}
+        }
+      }
+      else
+      { // No proxy, we'll add the method to the object itself.
+        if (this.obj[prop] === undefined)
+        { // We will only add a wrapped property if it does not exist alreaday.
+          if (assign && def.value !== undefined)
+          { // Use direct assignment. Only works with descriptors with a 'value'.
+            obj[prop] = def.value;
+          }
+          else
+          { // Set up the property with a full descriptor.
+            Lum.prop(obj, prop, null, def);
+          }
+        }
+        else if (fatal)
+        {
+          throw new Error(`Cannot overwrite existing property ${prop}`);
+        }
+        else if (warn)
+        {
+          console.warn("Cannot overwrite existing property", prop, def, opts);
+        }
+      }
+
+    } // add()
+
+    wrap()
+    {
+      if (!this.useproxy)
+      { // Nothing to proxy.
+        return this.obj;
+      }
+
+      if (non_null(this.proxy))
+      { // Already created a Proxy.
+        return this.proxy;
+      }
+
+      const hasValue = prop => 
+        typeof this.defs[prop] === O && this.defs[prop].value !== undefined;
+
+      const getValue = prop => this.defs[prop].value;
+
+      const hasGetter = prop =>
+        typeof this.defs[prop] === O && typeof this.defs[prop].get === F; 
+
+      const getGetter = prop => this.defs[prop].get;
+
+      const hasSetter = prop =>
+        typeof this.defs[prop] === O && typeof this.defs[prop].set === F;
+
+      const getSetter = prop => this.defs[prop].set
+
+      let proxy = new Proxy(this.obj, 
+      { 
+        // Getter trap.
+        get(target, prop, receiver)
+        {
+          if (prop in target)
+          { // It exists in the target.
+            return target[prop];
+          }
+          else if (hasValue(prop))
+          { // A static value, send it along.
+            return getValue(prop);
+          }
+          else if (hasGetter(prop))
+          { // A getter method, pass through.
+            return getGetter(prop).call(target);
+          }
+        },
+        // Setter trap.
+        set(target, prop, value, receiver)
+        {
+          if (prop in target)
+          { // It exists in the target. Let's hope it's writable.
+            target[prop] = value;
+            return true;
+          }
+          else if (hasSetter(prop))
+          { // A setter method, pass through.
+            return getSetter(prop).call(target, value);
+          }
+          else
+          { // A final fallback to the target again.
+            target[prop] = value;
+            return true;
+          }
+        },
+      }); // new Proxy
+
+      // Cache the Proxy.
+      this.proxy = proxy;
+
+      return proxy;
+
+    } // wrap()
+
+  }
+
+  // A wrapper instance for Lum itself.
+  const wrap = Lum.Wrapper.getWrapper(Lum, {fatal: true});
+    //new Lum.Wrapper(Lum, {fatal: true});
+
+  /**
+   * The Lum._ property is a (mostly) read-only collection of useful
+   * constants and functions which can be imported into libraries.
+   *
+   * It is locked by default so it cannot be directly modified.
+   * It can be extended using it's own extend(newprops) method, which will
+   * add any new properties in the passed object. It WILL NOT overwrite any
+   * existing properties. Once a property is added to '_', it cannot be
+   * removed or replaced. This is for mostly indomitable constants only.
+   *
+   * A few constants that might be useful:
+   *
+   * `O, F, S, B, N, U, SY, BI` - the Javascript type names as strings.
+   *
+   * @namespace Lum._
+   */
+  prop(Lum, '_', lock(
+  {
+    // Type checking constants and functions.
+    O, F, S, B, N, U, SY, BI, is_obj, non_null, is_complex, is_instance,
+    // Low-level object utilities.
+    clone, lock, addClone, addLock, cloneIfLocked, ourself,
+    // Descriptor constants.
+    DESC_RO, DESC_CONF, DESC_ENUM, DESC_WRITE, DESC_RW, DESC_DEF, DESC_OPEN,
+    // Cloning constants.
+    CLONE_DEF, CLONE_JSON, CLONE_FULL, CLONE_ALL,
+
+    // A method to extend the '_' property.
+    extend(newprops)
+    {
+      const desc = Object.getOwnPropertyDescriptor(Lum, '_');
+      const __ = clone(Lum._); // Clone the current '_' property.
+      for (let prop in newprops)
+      {
+        if (__[prop] === undefined)
+        { // Add a new property.
+          __[prop] = newprops[prop];
+        }
+      }
+      // Okay, now let's reassign '_' using the new value.
+      prop(Lum, '_', __.lock(), desc);
+    },
+
+  }, false), DESC_CONF); // Lum._
+
+  //console.debug("TESTING clone == _.clone", 
+  //  clone, Lum._.clone, (clone === Lum._.clone));
 
   /**
    * Namespace management object.
+   *
+   * @namespace Lum.ns
    */
-  Lum.prop(Lum, 'ns', {});
+  prop(Lum, 'ns', {});
 
   /**
    * Register a global Namespace.
+   *
+   * @method Lum.ns.add
    *
    * @param {string|string[]} namespaces  The namespace we are registering.
    *
@@ -358,18 +740,18 @@
    * @param {mixed} [useprop=null] How to assign the added namespaces.
    *
    *   If this is `true` we will use Lum.prop() to assign them, with the
-   *   descriptor object set in `Lum.registerNamespace.defaultDescriptor`;
+   *   descriptor object set in `Lum.ns.add.defaultDescriptor`;
    *
    *   If this is `false` will will simply use direct assignment.
    *
    *   If this is an {object} we will use Lum.prop() with it as the descriptor.
    *
    *   If this is anything else (including null), we will set it to the
-   *   value in the `Lum.registerNamespace.useProp` property.
+   *   value in the `Lum.ns.add.useProp` property.
    *
-   * @return {object}  The last element of the namespace added.
+   * @return {object} - The last element of the namespace added.
    */
-  const reg = Lum.ns.register = function (namespaces, value, 
+  prop(Lum.ns, 'add', function (namespaces, value, 
     overwrite=false, 
     useprop=null)
   {
@@ -382,7 +764,7 @@
       throw new Error("namespaces must be string or array");
     }
 
-    let desc = reg.defaultDescriptor;
+    let desc = Lum.ns.defaultDescriptor;
 
     if (is_obj(useprop))
     { // An explicit descriptor was passed, use it.
@@ -391,7 +773,7 @@
     }
     else if (typeof useprop !== B)
     { // Use the default useprop value.
-      useprop = reg.useProp;
+      useprop = Lum.ns.useProp;
     }
 
     function assign(obj, prop, val={})
@@ -417,7 +799,7 @@
 //      console.debug("Looking for namespace", n, ns, cns, cns[ns]);
       if (cns[ns] === undefined)
       {
-        if (n == lastns && not_null(value))
+        if (n == lastns && non_null(value))
         {
           assign(cns, ns, value);
 //          console.debug("Assigned", ns, cns[ns], assign);
@@ -427,7 +809,7 @@
           assign(cns, ns);
         }
       }
-      else if (overwrite && n == lastns && not_null(assign))
+      else if (overwrite && n == lastns && non_null(assign))
       {
         assign(cns, ns, value);
       }  
@@ -435,25 +817,48 @@
     }
 
     return cns;
-  }
 
-  Lum.registerNamespace = reg; // TODO: use wrap_defs instead.
+  }); // Lum.ns.add()
+
+  // API to add new child namespaces, by default under the Lum prefix.
+  prop(Lum.ns, 'new', function(namespaces, value, prefix='Lum', useprop=null)
+  {
+    if (typeof namespaces === S)
+    {
+      namespaces = prefix + namespaces;
+    }
+    else if (Array.isArray(namespaces) && namespaces.length > 0)
+    {
+      namespaces.unshift(prefix);
+    }
+    else
+    {
+      throw new Error("namespaces must be string or array");
+    }
+
+    return Lum.ns.add(namespaces, value, false, useprop);
+  });
+
+  wrap.add('registerNamespace', Lum.ns.add);
+  //Lum.registerNamespace = Lum.ns.add; 
 
   // Use prop() to register namespaces.
-  reg.useProp = true;
+  Lum.ns.useProp = true;
 
   // The descriptor used by default to register namespaces.
-  reg.defaultDescriptor = DESC_ENUM.clone();
+  Lum.ns.defaultDescriptor = DESC_ENUM;
 
   /**
    * Get a namespace.
+   *
+   * @method Lum.ns.get
    *
    * @param {string|array} namespaces  A namespace definition.
    * @param {boolean} [logerror=false] Log errors for missing namespaces?
    *
    * @return {mixed} The namespace if it exists, or `undefined` if it doesn't.
    */
-  Lum.getNamespace = function (namespaces, logerror=false)
+  prop(Lum.ns, 'get', function (namespaces, logerror=false)
   {
     if (typeof namespaces === S)
     {
@@ -474,37 +879,53 @@
       cns = cns[ns];
     }
     return cns;
-  }
+  });
+
+  wrap.add('getNamespace', Lum.ns.get);
 
   /**
    * See if a namespace exists.
+   *
+   * @method Lum.ns.has
    *
    * @param {string|array} namespaces  A namespace definition.
    * @param {boolean} [logerror=false] Log errors for missing namespaces?
    *
    * @return {boolean} Does the namespace exist?
    */
-  Lum.hasNamespace = function (namespaces, logerror=false)
+  prop(Lum.ns, 'has', function (namespaces, logerror=false)
   {
-    return (this.getNamespace(namespaces, logerror) !== undefined);
-  }
+    return (Lum.ns.get(namespaces, logerror) !== undefined);
+  });
+
+  wrap.add('hasNamespace', Lum.ns.has);
 
   /**
    * Check for needed namespaces.
    *
-   * Any arguments are the names of namespaces we need.
+   * @param {...string} Any arguments are the names of namespaces we need.
+   *
+   * @return {Lum} - The 
+   *
+   * @throw Error - If a required namespace is missing, an error is thrown.
+   *
+   * @method Lum.ns.need
    */
-  Lum.needNamespaces = Lum.needNamespace = function ()
+  prop(Lum.ns, 'need', function ()
   {
     for (let n = 0; n < arguments.length; n++)
     {
       let ns = arguments[n];
-      if (!this.hasNamespace(ns))
+      if (!Lum.ns.has(ns))
       {
         throw new Error("Missing required namespace/library: "+JSON.stringify(ns));
       }
     }
-  }
+    return ourself();
+  });
+
+  wrap.add('needNamespaces', Lum.ns.need);
+  wrap.add('needNamespace',  Lum.ns.need);
 
   /**
    * Export a global namespace to another global namespace.
@@ -513,66 +934,77 @@
    * @param {string|strings[]} target  The target namespace.
    * @param {boolean} [overwrite=false]
    */
-  Lum.exportNamespace = function (source, target, overwrite=false)
+  prop(Lum.ns, 'export', function (source, target, overwrite=false)
   {
-    if (!overwrite && this.hasNamespace(target))
+    if (!overwrite && Lum.ns.has(target))
     {
       console.error("Will not overwrite namespace", target);
       return;
     }
-    let ns = this.getNamespace(source, true);
+    let ns = Lum.ns.get(source, true);
     if (ns === undefined)
     { // Nothing to export, goodbye.
       return;
     }
-    return this.registerNamespace(target, ns, overwrite);
-  }
+    return Lum.ns.add(target, ns, overwrite);
+  });
+
+  wrap.add('exportNamespace', Lum.ns.export);
 
   /**
-   * Make a link to a library/function into the Lum namespace.
+   * Make a link to a library/function into another namespace.
    *
-   * Unlike raw calls to registerNamespace() or exportNamespace(), this
-   * automatically assumes we want to add the link to the 'Lum' global
-   * namespace by default.
+   * @method Lum.ns.link
    *
    * As an example, if there's a global function called base91() and we want to
    * make an alias to it called Lum.Base91.mscdex() then we'd call:
    *
-   *  Lum.link(self.base91, 'Base91.mscdex');
+   *  Lum.ns.link(self.base91, 'Base91.mscdex');
    *
-   * @param {object|function} obj  The library/function we're linking to.
-   * @param {string} target  The namespace within {prefix} we're assigning to.
-   * @param {boolean} [overwrite=false]  Overwrite existing target namespace?
-   * @param {string} [prefix="Lum."]  Prefix for the namespace target.
+   * @param {object|function} obj - The library/function we're linking to.
+   * @param {string} target - The namespace within {prefix} we're assigning to.
+   * @param {boolean} [overwrite=false] Overwrite existing target namespace?
+   * @param {string} [prefix="Lum."] Prefix for the namespace target.
    *
    * @return Lum  The core Lum library is returned for chaining purposes.
    */
-  Lum.link = function (obj, target, overwrite=false, prefix="Lum.")
+  prop(Lum.ns, 'link', function (obj, target, overwrite=false, prefix="Lum.")
   {
-    this.registerNamespace(prefix+target, obj, overwrite);
-    return this;
-  }
+    Lum.ns.add(prefix+target, obj, overwrite);
+    return ourself();
+  });
+
+  /**
+   * Lum library manager.
+   *
+   * @namespace Lum.lib
+   */
+  prop(Lum, 'lib', {});
 
   /**
    * Mark a library as loaded.
    *
    * @param {string} lib  The name of the library we are marking as loaded.
    */
-  Lum.markLib = function (lib)
+  prop(Lum.lib, 'mark', function (lib)
   {
     loaded[lib] = true;
-    return this;
-  }
+    return ourself();
+  });
+
+  wrap.add('markLib', Lum.lib.mark);
 
   /**
    * See if a library is loaded.
    *
    * @param {string} lib  The name of the library we are looking for.
    */
-  Lum.hasLib = function (lib)
+  prop(Lum.lib, 'has', function (lib)
   {
     return loaded[lib];
-  }
+  });
+
+  wrap.add('hasLib', Lum.lib.has);
 
   /**
    * Check for loaded libraries. 
@@ -584,7 +1016,7 @@
    * Returns the name of the first missing library, or undefined if all
    * requested libraries are loaded.
    */
-  Lum.checkLibs = function ()
+  prop(Lum.lib, 'check', function ()
   {
     for (let l = 0; l < arguments.length; l++)
     {
@@ -594,42 +1026,56 @@
         return lib;
       }
     }
-  }
+  });
+
+  wrap.add('checkLibs', Lum.lib.check);
 
   /**
    * Run checkLibs; if it returns a string, throw a fatal error.
    */
-  Lum.needLibs = Lum.needLib = function ()
+  prop(Lum.lib, 'need', function ()
   {
-    const result = Lum.checkLibs.apply(this, arguments);
+    const result = Lum.lib.check.apply(Lum.lib, arguments);
     if (typeof result === S)
     {
       throw new Error("Missing required Lum library: "+result);
     }
-    return this;
-  }
+    return ourself();
+  });
+
+  wrap.add('needLibs', Lum.lib.need);
+  wrap.add('needLib', Lum.lib.need);
 
   /**
    * Run checkLibs; return false if the value was a string, or true otherwise.
    */
-  Lum.wantLibs = function ()
+  prop(Lum.lib, 'want', function ()
   {
-    const result = Lum.checkLibs.apply(this, arguments);
+    const result = Lum.lib.check.apply(Lum.lib, arguments);
     return (typeof result !== S);
-  }
+  });
+
+  wrap.add('wantLibs', Lum.lib.want);
 
   /**
    * Get a list of loaded libraries. The array returned is a copy.
    */
-  Lum.listLibs = function ()
+  prop(Lum.lib, 'list', function ()
   {
     return loaded.slice();
-  }
+  });
+
+  /**
+   * jQuery library helper.
+   *
+   * @namespace Lum.jq
+   */
+  prop(Lum, 'jq', {});
 
   /**
    * Check for needed jQuery plugins.
    */
-  Lum.checkJq = function ()
+  prop(Lum.jq, 'check', function ()
   {
     if (root.jQuery === undefined)
     {
@@ -646,14 +1092,16 @@
         return lib;
       }
     }
-  }
+  });
+
+  wrap.add('checkJq', Lum.jq.check);
 
   /**
    * Run checkJq; if it returns a string, throw a fatal error.
    */
-  Lum.needJq = function ()
+  prop(Lum.jq, 'need', function ()
   {
-    const result = Lum.checkJq.apply(this, arguments);
+    const result = Lum.jq.check.apply(Lum.jq, arguments);
     if (typeof result === S)
     {
       if (result === 'jQuery')
@@ -665,17 +1113,21 @@
         throw new Error("Missing required jQuery plugin: "+result);
       }
     }
-    return this;
-  }
+    return ourself();
+  });
+
+  wrap.add('needJq', Lum.jq.need);
 
   /**
    * Run checkJq; return false if the value was a string, or true otherwise.
    */
-  Lum.wantJq = function ()
+  prop(Lum.jq, 'want', function ()
   {
-    const result = Lum.checkJq.apply(this, arguments);
+    const result = Lum.jq.check.apply(Lum.jq, arguments);
     return (typeof result !== S);
-  }
+  });
+
+  wrap.add('wantJq', Lum.jq.want);
 
   /**
    * Mark a function/method/property as deprecated.
@@ -797,90 +1249,11 @@
     }
   }
 
-  /**
-   * TODO: document this. Not using it yet, but v5 likely will.
-   */
-  dep.wrap = function (obj, defs, opts={})
-  {
-    const hasValue = (prop) => 
-      typeof defs[prop] === O && defs[prop].value !== undefined;
-
-    const hasGetter = (prop) =>
-      typeof defs[prop] === O && typeof defs[prop].get === F; 
-
-    const hasSetter = (prop) =>
-      typeof defs[prop] === O && typeof defs[prop].set === F;
-
-    const useProxy = typeof opts.useProxy === B ? opts.useProxy : true;
-    const assignDirect 
-      = typeof opts.assignDirect === B ? opts.assignDirect : false;
-    
-    if (useProxy && root.Proxy !== undefined)
-    { // We have the Proxy object, hurray.
-      return new Proxy(obj, 
-      { 
-        // Getter trap.
-        get(target, prop, receiver)
-        {
-          if (prop in target)
-          { // It exists in the target.
-            return target[prop];
-          }
-          else if (hasValue(prop))
-          { // A static value, send it along.
-            return defs[prop].value;
-          }
-          else if (hasGetter(prop))
-          { // A getter method, pass through.
-            return defs[prop].get.call(target);
-          }
-        },
-        // Setter trap.
-        set(target, prop, value, receiver)
-        {
-          if (prop in target)
-          { // It exists in the target. Let's hope it's writable.
-            target[prop] = value;
-            return true;
-          }
-          else if (hasSetter(prop))
-          { // A setter method, pass through.
-            return defs[prop].set.call(target, value);
-          }
-          else
-          { // A final fallback to the target again.
-            target[prop] = value;
-            return true;
-          }
-        },
-      }); // new Proxy
-    }
-    else
-    { // We're going to assign the wrapper methods directly.
-      for (const prop in defs)
-      {
-        if (obj[prop] === undefined)
-        {
-          if (assignDirect && hasValue(prop))
-          { // We are going to use a cheap shortcut here.
-            obj[prop] = defs[prop].value;
-          }
-          else
-          { // Set up the property with a full descriptor.
-            Lum.prop(obj, prop, null, defs[prop]);
-          }
-        }
-      } // for prop
-      return obj;
-    }
-
-  } // dep.wrap()
-
-  // Now let's export Lum itself.
-  Lum.registerNamespace('Lum', dep.wrap(Lum, wrap_defs, wrap_opts));
+  // Now let's export Lum itself using the wrapper proxy if available.
+  Lum.ns.add('Lum', wrap.wrap());
 
   // As well as the Nano alias if applicable.
-  Lum.registerNamespace('Nano', root.Lum);
+  Lum.ns.add('Nano', root.Lum);
 
 })(self);
 

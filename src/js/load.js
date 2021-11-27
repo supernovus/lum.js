@@ -114,7 +114,7 @@
 
   Lum.load.js = function (url, func, loc=null)
   {
-    if (Lum.context.isBrowser())
+    if (Lum.context.isBrowser)
     {
       loc = loc || document.head;
       var script = document.createElement('script');
@@ -126,7 +126,7 @@
       }
       loc.appendChild(script);
     }
-    else if (Lum.context.isWorker())
+    else if (Lum.context.isWorker)
     {
       self.importScripts(url);
       func();
@@ -135,7 +135,7 @@
 
   Lum.load.css = function (url, loc=null)
   {
-    if (Lum.context.isBrowser())
+    if (Lum.context.isBrowser)
     {
       loc = loc || document.head;
       var link = document.createElement('link');
