@@ -1058,11 +1058,11 @@
   wrap.add('wantLibs', Lum.lib.want);
 
   /**
-   * Get a list of loaded libraries. The array returned is a copy.
+   * Get a list of loaded libraries.
    */
   prop(Lum.lib, 'list', function ()
   {
-    return loaded.slice();
+    return Object.keys(loaded);
   });
 
   /**
