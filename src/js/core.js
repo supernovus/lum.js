@@ -480,14 +480,9 @@
      * @param {object} obj - The object we want to wrap.
      * @param {object} opts - If creating a new one, options to set.
      */
-    static getWrapper(obj, opts={})
+    static getWrapper(obj=Lum, opts=Lum.Wrapper.getWrapperOpts)
     {
       //console.debug("Wrapper.getWrapper", obj, opts);
-      if (!is_complex(obj))
-      {
-        throw new Error("Wrapper.getWrapper() obj was not an object");
-      }
-
       const isProxy = (ctx.hasProxy && is_instance(obj, Proxy));
 
       for (let i = 0; i < wrappers.length; i++)
@@ -516,9 +511,13 @@
       return wrapper;
     }
 
-    constructor(obj, opts={})
+    constructor(obj, opts=Lum.Wrapper.constructorOpts)
     {
-      //console.debug("Wrapper.constructor()", obj, opts);
+      //console.debug("Wrapper~constructor()", obj, opts);
+      if (!is_complex(obj))
+      {
+        throw new Error("Wrapper~construtor: obj was not a valid object");
+      }
 
       this.obj = obj;
       this.defs = {};
@@ -527,6 +526,7 @@
       this.fatal    = typeof opts.fatal  === B ? opts.fatal  : false;
       this.warn     = typeof opts.warn   === B ? opts.warn   : true;
       this.useproxy = typeof opts.proxy  === B ? opts.proxy  : ctx.hasProxy;
+      this.ns       = typeof opts.ns     === S ? opts.ns     : '';
 
       this.proxy = null;
     }
@@ -646,11 +646,18 @@
 
     } // wrap()
 
-  }
+  } // Lum.Wrapper
+
+  // Default options for Wrapper.getWrapper() method.
+  // This is the recommended method to get a Wrapper library.
+  Lum.Wrapper.getWrapperOpts = {fatal: true};
+
+  // Default options for Wrapper() constructor.
+  // This is not recommended for direct use, use getWrapper() instead.
+  Lum.Wrapper.constructorOpts = {warn: true};
 
   // A wrapper instance for Lum itself.
-  const wrap = Lum.Wrapper.getWrapper(Lum, {fatal: true});
-    //new Lum.Wrapper(Lum, {fatal: true});
+  const wrap = Lum.Wrapper.getWrapper();
 
   /**
    * The Lum._ property is a (mostly) read-only collection of useful
@@ -692,7 +699,7 @@
         }
       }
       // Okay, now let's reassign '_' using the new value.
-      prop(Lum, '_', __.lock(), desc);
+      prop(Lum, '_', lock(__, false), desc);
     },
 
   }, false), DESC_CONF); // Lum._
@@ -705,7 +712,7 @@
    *
    * @namespace Lum.ns
    */
-  prop(Lum, 'ns', {});
+  prop(Lum, 'ns', {name: 'Lum'});
 
   /**
    * Register a global Namespace.
@@ -792,40 +799,47 @@
     let nscount = namespaces.length;
     let lastns = nscount - 1;
 
-//    console.debug("registerNamespace", namespaces, assign, overwrite, nscount, lastns);
+    let dbg = {namespaces, assign, overwrite, nscount, lastns, value, useprop};
+    console.debug("Lum.ns.add", dbg);
+
     for (let n = 0; n < nscount; n++)
     {
       let ns = namespaces[n];
 //      console.debug("Looking for namespace", n, ns, cns, cns[ns]);
+
       if (cns[ns] === undefined)
-      {
+      { // Nothing in this namespace yet.
         if (n == lastns && non_null(value))
-        {
+        { // We have a value to assign.
           assign(cns, ns, value);
 //          console.debug("Assigned", ns, cns[ns], assign);
         }
         else
-        {
+        { // Nothing to assign, create an empty object instead.
           assign(cns, ns);
         }
       }
-      else if (overwrite && n == lastns && non_null(assign))
+      else if (overwrite && n == lastns && non_null(value))
       {
         assign(cns, ns, value);
-      }  
+      }
+
       cns = cns[ns];
     }
 
     return cns;
-
   }); // Lum.ns.add()
+
+  wrap.add('registerNamespace', Lum.ns.add);
 
   // API to add new child namespaces, by default under the Lum prefix.
   prop(Lum.ns, 'new', function(namespaces, value, prefix='Lum', useprop=null)
   {
+    console.debug("Lum.ns.new", namespaces, value, prefix, useprop);
+
     if (typeof namespaces === S)
     {
-      namespaces = prefix + namespaces;
+      namespaces = `${prefix}.${namespaces}`;
     }
     else if (Array.isArray(namespaces) && namespaces.length > 0)
     {
@@ -838,9 +852,6 @@
 
     return Lum.ns.add(namespaces, value, false, useprop);
   });
-
-  wrap.add('registerNamespace', Lum.ns.add);
-  //Lum.registerNamespace = Lum.ns.add; 
 
   // Use prop() to register namespaces.
   Lum.ns.useProp = true;

@@ -1,44 +1,34 @@
-/*
- * Core utilities used by other Lum libraries.
- */
-
 (function (Lum)
 {
   "use strict";
 
-  if (Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  // TODO: Finish porting this to the new API.
-
   // Import certain constants.
   const {O,F,S,B,N,U,BI,SY,is_obj,clone,CLONE_JSON} = Lum._;
-  const prop = Lum.prop;
-  const dep = Lum.deprecated;
-  const wrap = dep.addWrapped;
+  const wrap = Lum.Wrapper.getWrapper();
 
-  // Setup our library namespace, and mark the 'helpers' library as loaded.
-  const lib = Lum.lib.mark('helpers').ns.new('obj');
+  /**
+   * @namespace Lum.obj
+   *
+   * Object helpers library.
+   */
+  const objlib = Lum.lib.mark('helpers').ns.new('obj');
 
   /**
    * A way to handle Mixins/Traits.
    *
-   * This is basically a magic wrapper around copyInto() which we use
-   * instead of Object.assign() as we don't want to overwrite properties
-   * by default. See {@link Lum.copyInto} for the valid parameters.
+   * This is basically a magic wrapper around {@link Lum.obj.into} which we 
+   * use instead of Object.assign() as we don't want to overwrite properties
+   * by default.
    *
-   * This does a bit of magic before passing it's parameters to copyInto().
    * As it's designed to extend the class prototype and only the prototype,
    * it will see if anything passed to it is a function/class and if so, it
    * will automatically use the prototype of the function/class. If you want
-   * to copy static class properties, use copyInto() directly instead of this.
+   * to copy static class properties, use {@link Lum.obj.into} instead of this.
    *
    * @param {object|function} target - The target we are copying into.
-   * @param {...*} sources - 
+   * @param {...*} sources - The source traits we want to mix in.
    */
-  Lum.addTraits = function (target, ...inSources)
+  objlib.mixin = function (target, ...inSources)
   {
     var outSources = [];
 
@@ -73,15 +63,24 @@
       }
     }
 
-    return Lum.copyInto(target, outSources);
+    return objlib.into(target, outSources);
   }
+
+  /**
+   * @method Lum.addTraits
+   *
+   * Alias for {@link Lum.obj.mixin}
+   *
+   * @deprecated Use the new name.
+   */
+  wrap.add('addTraits', objlib.mixin);
 
   /**
    * Copy properties between objects. Can be used for mixins/traits.
    *
    * For each of the sources specified, this will call:
    *
-   *  ```Lum.copyProperties(source, target, opts)```
+   *  ```Lum.obj.copy(source, target, opts)```
    *
    * The current `opts` can be changed dynamically using special statements.
    * See below for details on the statements to make that work.
@@ -106,18 +105,18 @@
    * the properties from the source will be copied as usual.
    *
    * If the source is any other object or function, it will be considered a
-   * valid source for copyProperties() to copy into the `target`.
+   * valid source to copy into the `target`.
    *
-   * Any other source will be invalid and will throw an Error.
+   * Anything else will be invalid and will throw an Error.
    *
    * @return {object|function}  The `target` will be returned.
    *
    */
-  Lum.copyInto = function (target, ...sources)
+  objlib.into = function (target, ...sources)
   {
     let opts = {default: true, overwrite: false}; // default opts.
 
-//    console.debug("Lum.copyInto()", target, sources);
+//    console.debug("Lum.obj.copyInto()", target, sources);
 
     for (let s in sources)
     {
@@ -155,7 +154,7 @@
         }
 
         // Copy the properties.
-        Lum.copyProperties(source, target, opts);
+        objlib.copy(source, target, opts);
       }
       else
       {
@@ -165,6 +164,15 @@
 
     return target;
   }
+
+  /**
+   * @method Lum.copyInto
+   *
+   * An alias to {@link Lum.obj.into}
+   *
+   * @deprecated Use the new name.
+   */
+  wrap.add('copyInto', objlib.into);
 
   /**
    * Copy properties from one object to another.
@@ -189,7 +197,7 @@
    *
    * @return void
    */
-  Lum.copyProperties = function (source, target, propOpts)
+  objlib.copy = function (source, target, propOpts)
   {
     if (propOpts === null || typeof propOpts !== 'object')
       propOpts = {default: true};
@@ -231,7 +239,7 @@
       if (exclude && exclude.indexOf(prop) !== -1)
         continue; // Excluded property.
       var def = Object.getOwnPropertyDescriptor(source, prop)
-      if (def === undefined) continue; // Invalid property.
+      if (typeof def === U) continue; // Invalid property.
       if (prop in defOverrides && typeof defOverrides[prop] === 'object')
       {
         for (var key in defOverrides[prop])
@@ -248,6 +256,15 @@
   }
 
   /**
+   * @method Lum.copyProperties
+   *
+   * An alias to {@link Lum.obj.copy}
+   *
+   * @deprecated Use the new name.
+   */
+  wrap.add('copyProperties', objlib.copy);
+
+  /**
    * A wrapper around Object.defineProperty() that assigns a value to
    * the property.
    *
@@ -262,8 +279,9 @@
    * @param {boolean} [opts.enumerable=false] Property is enumerable?
    * @param {boolean} [opts.writable=false] Property is writable?
    *
+   * @method Lum.addProperty
    */
-  Lum.addProperty = function (object, name, val, opts)
+  function addProperty (object, name, val, opts)
   {
     let msg = 'Lum.addProperty(object, name, val';
     let func;
@@ -296,6 +314,8 @@
     return Lum.deprecated(msg, func);
   }
 
+  wrap.add('addProperty', addProperty);
+
   /**
    * A wrapper around Object.defineProperty() that assigns an accessor to
    * the property.
@@ -311,8 +331,10 @@
    * @param {boolean} [opts.configurable=false] Property is configurable?
    * @param {boolean} [opts.enumerable=false] Property is enumerable?
    *
+   * @Lum.addAccessor
+   *
    */
-  Lum.addAccessor = function (object, name, getter, setter, opts)
+  function addAccessor (object, name, getter, setter, opts)
   {
     let msg = 'Lum.addAccessor(object, name, getter, setter';
     let func;
@@ -342,31 +364,34 @@
     return Lum.deprecated(msg, func);
   }
 
+  wrap.add('addAccessor', addAccessor);
+
   /**
    * Add 'addProperty' and 'addAccessor' helpers to the object directly.
    *
    * @deprecated See {@link Lum.prop} instead, it's just better.
+   *
+   * @method Lum.addMetaHelpers
    */
-  Lum.addMetaHelpers = function (object, configurable)
+  function addMetaHelpers (object, configurable)
   {
     Lum.deprecated('Lum.addMetaHelpers(object, configurable)',
       'Lum.prop(object, "prop"); // See Lum.prop() for details');
 
-    Lum.addProperty(object, 'addProperty', function (pn,pf,opts)
-    {
-      Lum.addProperty(this, pn, pf, opts);
-    }, configurable);
+    let conf = {};
+    if (typeof configurable === 'boolean')
+      conf.configurable = configurable;
 
-    Lum.addProperty(object, 'addAccessor', function (pn, gf, sf, opts)
-    {
-      Lum.addAccessor(this, pn, gf, sf, opts);
-    }, configurable);
+    Lum.prop(object, 'addProperty', addProperty.bind(Lum, object), conf);
+    Lum.prop(object, 'addAccessor', addAccessor.bind(Lum, object), conf);
   }
+
+  wrap.add('addMetaHelpers', addMetaHelpers);
 
   /**
    * Clone a simple object, using the {@link Lum._.clone} function.
    *
-   * By default it uses Lum._.CLONE_JSON mode for cloning, but this can
+   * By default it uses `Lum._.CLONE_JSON` mode for cloning, but this can
    * be adjusted as desired by passing a `cloneOpts.mode` option.
    *
    * Can also clone extended properties that aren't serialized in JSON.
@@ -376,11 +401,7 @@
    * @param {object} [copyProperties] Use {@link Lum.copyProperties} as well.
    *
    *   If copyProperties is defined, and is a non-false value, then we'll
-   *   call Lum.copyProperties(object, clone, copyProperties);
-   *
-   *   It's called after the regular cloning, so only properties that weren't
-   *   added during the cloning process will be added here. Useful for certain
-   *   special properties which might not otherwise get added.
+   *   call {@link Lum.obj.copy} after cloning to copy 'special' properties.
    *
    * @param {object} [cloneOpts] Options to send to {@link Lum._clone}
    *
@@ -389,7 +410,7 @@
    * @return {object}  A clone of the object.
    *
    */
-  Lum.clone = function(object, copyProperties, cloneOpts)
+  objlib.clone = function(object, copyProperties, cloneOpts)
   {
     if (!is_obj(cloneOpts))
     {
@@ -404,11 +425,27 @@
 
     if (copyProperties)
     {
-      Lum.copyProperties(object, copy, copyProperties);
+      objlib.copy(object, copy, copyProperties);
     }
 
     return copy;
   }
+
+  /**
+   * @method Lum.clone
+   *
+   * An alias to {@link Lum.obj.clone}
+   *
+   * @deprecated Use the new name; or use Lum._.clone directly.
+   */
+  wrap.add('clone', objlib.clone);
+
+  /**
+   * @namespace Lum.opt
+   *
+   * Helpers for getting options and default values.
+   */
+  const optlib = Lum.ns.new('opt');
 
   /**
    * See if a value is set, and if not, return a default value.
@@ -425,10 +462,10 @@
    *
    * @return {*} Either the specified `opt` value or the default value.
    */
-  Lum.getDef = function (opt, defvalue, allowNull=false, isLazy=false,
+  optlib.val = function (opt, defvalue, allowNull=false, isLazy=false,
     lazyThis=null)
   {
-    if (opt === undefined || (!allowNull && opt === null))
+    if (typeof opt === U || (!allowNull && opt === null))
     { // The defined value was not "set" as per our rules.
       if (isLazy && typeof defvalue === F)
       { // Get the default value from a passed in function.
@@ -440,7 +477,16 @@
     return opt;
   }
 
-  // TODO: document this.
+  /**
+   * @method Lum.getDef
+   *
+   * An alias to {@link Lum.opt.val}
+   *
+   * @deprecated Use the new name.
+   */
+  wrap.add('getDef', optlib.val);
+
+  // TODO: document
   function needObj (obj)
   {
     if (!is_obj(obj))
@@ -448,18 +494,19 @@
       throw new Error("Invalid object");
     }
   }
-  Lum.needObj = needObj;
+  optlib.needObj = needObj;
 
   const JS_TYPES = [O, B, N, BI, S, SY, F, U];
 
-  function needType (type, val, passObject=false)
+  // TODO: document
+  function needType (type, val, allowNull=false)
   {
     if (typeof type !== S || !JS_TYPES.includes(type))
     {
       throw new Error("Invalid type "+JSON.stringify(type)+" specified");
     }
     
-    if (passObject && type === O)
+    if (!allowNull && type === O)
     { // Pass it on to needObj() which rejects null.
       return needObj(val);
     }
@@ -469,32 +516,41 @@
       throw new Error(`Invalid ${type} value`);
     }
   }
-  Lum.needType = needType;
+  optlib.needType = needType;
 
   /**
    * See if a property in an object is set.
    *
    * If it is, return the property, otherwise return a default value.
-   * This uses the {Lum.getDef} method, and as such supports the same options.
+   * This uses the {Lum.opt.val} method, and as such supports the same options.
    * However read the parameters carefully, as the defaults may be different!
    *
    * @param {object} opts - An object to test for a property in.
    * @param {string} optname - The property name we're checking for.
    * @param {*} defvalue - The default value.
    *
-   * @param {bool} [allowNull=true] Same as getDef, but the default is true.
-   * @param {bool} [isLazy=false] Same as getDef.
-   * @param {object} [lazyThis=null] Same as getDef.
+   * @param {bool} [allowNull=true] Same as val(), but the default is `true`.
+   * @param {bool} [isLazy=false] Same as val().
+   * @param {object} [lazyThis=null] Same as val().
    *
    * @return {any}  Either the property value, or the default value.
    */
-  Lum.getOpt = function (opts, optname, defvalue, 
+  optlib.get = function (opts, optname, defvalue, 
     allowNull=true, isLazy=false, lazyThis=null)
   {
     needObj(opts);
     needType(S, optname);
-    return Lum.getDef(opts[optname], defvalue, allowNull, isLazy, lazyThis);
+    return optlib.val(opts[optname], defvalue, allowNull, isLazy, lazyThis);
   }
+
+  /**
+   * @method Lum.getOpt
+   *
+   * An alias to {@link Lum.opt.get}
+   *
+   * @deprecated Use the new name.
+   */
+  wrap.add('getOpt', optlib.get);
 
   /**
    * Get a property from a nested data structure.
@@ -502,12 +558,19 @@
    *
    * @todo document this
    */
-  Lum.getNested = function (obj, proppath)
+  optlib.getPath = function (obj, proppath)
   {
+    needObj(obj);
+
     if (typeof proppath === S)
     {
       proppath = proppath.split('.');
     }
+    else if (!Array.isArray(proppath))
+    {
+      throw new Error("getPath: proppath must be a string or array");
+    }
+
     for (var p = 0; p < proppath.length; p++)
     {
       var propname = proppath[p];
@@ -517,8 +580,18 @@
       }
       obj = obj[propname];
     }
+
     return obj;
   }
 
-})(window.Lum);
+  /**
+   * @method Lum.getNested
+   *
+   * An alias to {@link Lum.opt.getPath}
+   *
+   * @deprecated Use the new name.
+   */
+  wrap.add('getNested', optlib.getPath);
+
+})(self.Lum);
 
