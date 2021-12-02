@@ -285,35 +285,14 @@
    */
   function addProperty (object, name, val, opts)
   {
-    let msg = 'Lum.addProperty(object, name, val';
-    let func;
-
     if (opts === true)
     {
-      msg += ', true)';
-      func = function()
-      {
-        return Lum.prop(object, name, val, {configurable: true});
-      }
-    }
-    else if (typeof opts === 'object' && opts !== null)
-    { 
-      msg += ', opts)';
-      func = function()
-      {
-        return Lum.prop(object, name, val, opts);
-      }
+      return Lum.prop(object, name, val, {configurable: true});
     }
     else
-    {
-      msg += ')';
-      func = function() 
-      {
-        return Lum.prop(object, name, val);
-      }
+    { 
+      return Lum.prop(object, name, val, opts);
     }
-
-    return Lum.deprecated(msg, func);
   }
 
   wrap.add('addProperty', addProperty);
@@ -336,34 +315,16 @@
    * @Lum.addAccessor
    *
    */
-  function addAccessor (object, name, getter, setter, opts)
+  function addAccessor (object, name, getter, setter, opts={})
   {
-    let msg = 'Lum.addAccessor(object, name, getter, setter';
-    let func;
-
     if (opts === true)
     { 
-      msg += ', true)';
-      func = function() {
-        return Lum.prop(object, name, getter, setter, {configurable: true});
-      }
-    }
-    else if (is_obj(opts))
-    { 
-      msg += ', opts)';
-      func = function() {
-        return Lum.prop(object, name, getter, setter, opts);
-      }
+      return Lum.prop(object, name, getter, setter, {configurable: true});
     }
     else
     { 
-      msg += ')';
-      func = function() {
-        return Lum.prop(object, name, getter, setter);
-      }
+      return Lum.prop(object, name, getter, setter, opts);
     }
-
-    return Lum.deprecated(msg, func);
   }
 
   wrap.add('addAccessor', addAccessor);
@@ -375,14 +336,10 @@
    *
    * @method Lum.addMetaHelpers
    */
-  function addMetaHelpers (object, configurable)
+  function addMetaHelpers (object, conf={})
   {
-    Lum.deprecated('Lum.addMetaHelpers(object, configurable)',
-      'Lum.prop(object, "prop"); // See Lum.prop() for details');
-
-    let conf = {};
-    if (typeof configurable === 'boolean')
-      conf.configurable = configurable;
+    if (typeof conf === 'boolean')
+      conf = {configurable: conf};
 
     Lum.prop(object, 'addProperty', addProperty.bind(Lum, object), conf);
     Lum.prop(object, 'addAccessor', addAccessor.bind(Lum, object), conf);

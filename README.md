@@ -12,12 +12,28 @@ but the default global name that all libraries will be exported into is now
 'Lum'. If it's not in use, a global alias called 'Nano' will still be
 exported by default for at least some semblance of backwards compatibility.
 
-A new core.js MUST be loaded before any of the other libraries.
-It's a tiny core which defines the window.Lum object, as well as a few
-helper functions that can be used by any other libraries.
+A new core.js MUST be loaded before any of the other libraries, as it defines
+the _core_ APIs used by the rest.
 
-The rest of the object helpers have been moved into helpers.js, which is
+The rest of the older object helpers have been moved into helpers.js, which is
 required by a few of the more complex libraries.
+
+## Future Plans
+
+I've been using this collection of libraries for many years, holding out with
+the long-since frowned-upon way of loading/managing scripts in web apps.
+I think it's finally time to change things up, and move into a more modern
+development architecture.
+
+I'm going to finish the updates to v4 and the refactored core.js, then start
+a project to split up the codebase into a set of standalone JS modules which
+will be available in `npm` and can be used using a bundler like Webpack.
+
+A new v5 branch of this library collection will be released which will take
+the new standalone modules, and compile them into a form compatible with v4.
+The compatibility library set is for transitionary purposes only, with the
+eventual goal being this library set will be phased out with the new standalone
+libraries becoming the _standard_ way of using any of my JS functions.
 
 ## Requirements
 
