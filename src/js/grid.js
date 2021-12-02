@@ -1,13 +1,10 @@
-(function($)
+(function(Lum)
 {
   "use strict";
 
-  if (Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  Lum.markLib('grid');
+  Lum.lib.mark('grid');
 
   /**
    * Grid library.
@@ -1335,4 +1332,4 @@
   // Assign the UIGrid class to Lum.Grid.UI
   Lum.Grid.UI = UIGrid;
 
-})(window.jQuery);
+})(self.Lum);

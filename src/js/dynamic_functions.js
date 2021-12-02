@@ -1,30 +1,26 @@
-(function()
+(function(Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
+  if (Lum === undefined) throw new Error("Lum core not found");
+
+  Lum.lib.mark('dynamic_functions').ns.new('Function',
   {
-    throw new Error("Missing Lum core");
-  }
+    /**
+     * Constructor for dynamic generator functions.
+     */
+    Generator: Object.getPrototypeOf(function*(){}).constructor,
+  
+    /**
+     * Constructor for dynamic async functions.
+     */
+    Async: Object.getPrototypeOf(async function(){}).constructor,
+  
+    /**
+     * Constructor for dynamic async generator functions.
+     */
+    AsyncGenerator: Object.getPrototypeOf(async function*(){}).constructor,
+  
+  });
 
-  Lum.markLib('dynamic_functions');
-
-  /**
-   * Constructor for dynamic generator functions.
-   */
-  Lum.GeneratorFunction = 
-    Object.getPrototypeOf(function*(){}).constructor;
-
-  /**
-   * Constructor for dynamic async functions.
-   */
-  Lum.AsyncFunction = 
-    Object.getPrototypeOf(async function(){}).constructor;
-
-  /**
-   * Constructor for dynamic async generator functions.
-   */
-  Lum.AsyncGeneratorFunction = 
-    Object.getPrototypeOf(async function*(){}).constructor;
-
-})();
+})(self.Lum);

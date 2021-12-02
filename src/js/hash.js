@@ -1,13 +1,10 @@
-(function()
+(function(Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  Lum.markLib('hash');
+  Lum.lib.mark('hash');
 
   const JSON_ALL = /^(\[.*?\]|\{.*?\})$/;
   const JSON_ARR = /^\[.*?\]$/;
@@ -682,4 +679,5 @@
     }
 
   }
-})();
+
+})(self.Lum);

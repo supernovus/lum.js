@@ -5,33 +5,22 @@
  * Currently using Ace as it's backend component.
  */
 
-(function($, ace, CryptoJS, Nano)
+(function(Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not found");
 
-  if (ace === undefined )
-  {
-    throw new Error("Missing ace library");
-  }
+  Lum.ns.need('ace', 'CryptoJS').jq.need().lib.mark('editor');
 
-  if (CryptoJS === undefined)
-  {
-    throw new Error("Missing CryptoJS library");
-  }
-
-  Nano.markLib('editor');
+  const $ = Lum.jq.get();
 
   const BASE64 = 'base64';
 
   /**
    * Build an editor object.
    */ 
-  Nano.Editor = class 
+  Lum.Editor = class 
   {
     constructor (opts)
     {
@@ -188,4 +177,4 @@
     static get BASE64() { return BASE64; }
   }
 
-})(window.jQuery, window.ace, window.CryptoJS, window.Lum);
+})(self.Lum);

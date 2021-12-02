@@ -1,21 +1,19 @@
 /**
- * A quick Nano library for making Context menus.
+ * A quick Lum library for making Context menus.
  * Replaces the older menu.jq.js, this will override that if used.
  */
-(function($, Nano)
+(function(Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  Nano.markLib('contextmenu');
+  // TODO: make jQuery optional.
+  const $ = Lum.jq.need().jq.get();
 
-  var $registered = false; // Private storage for $register() static method.
+  let $registered = false; // Private storage for $register() static method.
 
-  var cmenu = Nano.ContextMenu = class
+  const cmenu = Lum.lib.mark('contextmenu').ns.new('ContextMenu', class
   {
     constructor (options={})
     {
@@ -63,7 +61,7 @@
           console.error("options.element is ignored with $.makeMenu");
           delete options.element;
         }
-        var menu = new Nano.ContextMenu(options);
+        var menu = new Lum.ContextMenu(options);
         menu.registerMenu(this, options);
       }
   
@@ -278,6 +276,6 @@
       this.close();
     }
 
-  } // class Nano.ContextMenu
+  }); // class Lum.ContextMenu
 
-})(window.jQuery, window.Lum);
+})(self.Lum);

@@ -5,9 +5,7 @@
 {
   "use strict";
 
-  Lum.markLib('arrayutils');
-
-  Lum.array = {};
+  const arr = Lum.lib.mark('arrayutils').ns.new('array');
 
   /**
    * Find the index of a value in an array.
@@ -20,7 +18,7 @@
    *
    * @return {number}  The index or -1 if the value was not found.
    */
-  Lum.array.indexOf = function (array, value)
+  arr.indexOf = function (array, value)
   {
     var index  = -1,
         length = array.length;
@@ -46,7 +44,7 @@
    *
    * @return {boolean}  Was the value in the array?
    */
-  Lum.array.contains = function (array, value)
+  arr.contains = function (array, value)
   {
     var index  = -1,
         length = array.length;
@@ -68,7 +66,7 @@
    *
    * @return {Array}  The powerset.
    */
-  Lum.array.powerset = function (array) 
+  arr.powerset = function (array) 
   {
     var ps = new Array(new Array());
     for (var i=0; i < array.length; i++) 
@@ -91,18 +89,18 @@
    *
    * @return {mixed}  The randomly selected item.
    */
-  Lum.array.random = function (array)
+  arr.random = function (array)
   {
     return array[Math.floor(Math.random()*array.length)];
   }
 
   /**
-   * Add a bound version of a Lum.array method to an array itself.
+   * Add a bound version of a arr method to an array itself.
    *
    * @param {Array} array  The array to add the method to.
-   * @param {string} method  The name of the Lum.array method to add.
+   * @param {string} method  The name of the arr method to add.
    */
-  Lum.array.extend = function (array, method)
+  arr.extend = function (array, method)
   {
     if (Array.isArray(array) && typeof method === 'string')
     { 
@@ -117,7 +115,7 @@
     }
     else
     {
-      throw new Error("Invalid parameters passed to Lum.array.extend()");
+      throw new Error("Invalid parameters passed to arr.extend()");
     }
   }
 

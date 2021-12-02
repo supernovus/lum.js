@@ -11,16 +11,15 @@
  *
  */
 
-(function ($)
+(function (Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not found");
 
-  Lum.markLib('debug');
+  const $ = Lum.jq.get();
+
+  Lum.lib.mark('debug');
 
   /**
    * A class to help with debugging.
@@ -433,5 +432,5 @@
   // Not guaranteed to stick around forever, but it's here for now.
   Lum.debug = Lum.Debug.Elements;
 
-})(window.jQuery);
+})(self.Lum);
 

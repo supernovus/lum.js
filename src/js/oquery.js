@@ -7,7 +7,11 @@
 {
   "use strict";
 
-  Lum.markLib('oquery');
+  if (Lum === undefined) throw new Error("Lum core not loaded");
+
+  Lum.lib.mark('oquery');
+
+  const {O,F,S,N} = Lum._;
 
 /**
  * Search through an array of objects.
@@ -27,24 +31,24 @@
  * @return Mixed    Either an array of matches, or a single matching object.
  *                  If single was true, and nothing matched, we return null.
  */
-var oq = Lum.oQuery = function (query, objarr, opts)
+const oq = Lum.oQuery = function (query, objarr, opts)
 {
 //  console.debug("we're in oQuery()");
 
-  var matched = [];
+  const matched = [];
 
   if (opts === undefined || opts === null)
   {
     opts = {};
   }
 
-  var qtype = typeof query;
-  if (qtype === 'string' || qtype === 'number')
+  const qtype = typeof query;
+  if (qtype === S || qtype === N)
   {
     query = { id: query };
     opts.single = true;
   }
-  else if (qtype !== 'object')
+  else if (qtype !== O)
   {
     console.error("Invalid query passed to oQuery()");
     if (opts.single === true)
@@ -60,7 +64,7 @@ var oq = Lum.oQuery = function (query, objarr, opts)
     let match = true;
     for (let key in query)
     {
-      if (typeof query[key] === 'object')
+      if (typeof query[key] === O)
       {
         let submatch = oq(query[key], objarr[key], opts);
         if (opts.single && submatch === null)
@@ -74,7 +78,7 @@ var oq = Lum.oQuery = function (query, objarr, opts)
           break;
         }
       }
-      else if (typeof query[key] === 'function')
+      else if (typeof query[key] === F)
       {
         match = query[key](objarr[key]);
         if (!match) break;
@@ -110,10 +114,10 @@ var oq = Lum.oQuery = function (query, objarr, opts)
     for (let key in query)
     {
 //      console.debug("checking value of ", key);
-      if (typeof query[key] === 'object')
+      if (typeof query[key] === O)
       {
 //        console.debug("a subquery", query[key], item[key]);
-        if (typeof item[key] !== 'object')
+        if (typeof item[key] !== O)
         { // Couldn't find the nested item.
 //          console.debug("the item didn't have a "+key+" property.");
           return null;
@@ -146,7 +150,7 @@ var oq = Lum.oQuery = function (query, objarr, opts)
           }
         }
       }
-      else if (typeof query[key] === 'function')
+      else if (typeof query[key] === F)
       { // Pass the item through the function, and see what it returns.
         if (!query[key](item[key]))
         {

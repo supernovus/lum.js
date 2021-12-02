@@ -21,16 +21,13 @@
  *
  * TODO: write tests for this.
  */
-(function(Lum, CryptoJS)
+(function(Lum)
 {
   "use strict";
 
-  if (Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  Lum.markLib('encode');
+  Lum.lib.mark('encode');
 
   /**
    * The 'ord' method from PHP.
@@ -329,4 +326,4 @@
 
   }
 
-})(window.Lum)
+})(self.Lum)

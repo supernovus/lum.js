@@ -1084,20 +1084,31 @@
   prop(Lum, 'jq', {});
 
   /**
+   * Get jQuery itself.
+   *
+   * If Lum.jq.$ is assigned, we return it.
+   * Otherwise we return root.jQuery.
+   */
+  prop(Lum.jq, 'get', function ()
+  {
+    return (typeof Lum.jq.$ === 'object') ? Lum.jq.$ : root.jQuery;
+  });
+
+  /**
    * Check for needed jQuery plugins.
    */
   prop(Lum.jq, 'check', function ()
   {
-    if (root.jQuery === undefined)
+    const $ = Lum.jq.get();
+
+    if (typeof $ === U)
     {
       return 'jQuery';
     }
 
-    let $ = root.jQuery;
-
     for (let l = 0; l < arguments.length; l++)
     {
-      let lib = arguments[l];
+      const lib = arguments[l];
       if ($.fn[lib] === undefined)
       {
         return lib;

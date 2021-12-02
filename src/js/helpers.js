@@ -2,6 +2,8 @@
 {
   "use strict";
 
+  if (Lum === undefined) throw new Error("Lum core not loaded");
+
   // Import certain constants.
   const {O,F,S,B,N,U,BI,SY,is_obj,clone,CLONE_JSON} = Lum._;
   const wrap = Lum.Wrapper.getWrapper();

@@ -1,22 +1,17 @@
-(function(Nano)
+(function(Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Missing Lum core");
 
-  Nano.needLibs('grid');
-
-  Nano.markLib('grid.shiftconflicts');
+  Lum.lib.need('grid').lib.mark('grid.shiftconflicts');
 
   /**
    * NOTE: this is currently broken, and needs rewriting.
    * Don't use it at this time.
    */
 
-  var rc = Nano.Grid.prototype.resolveConflicts;
+  var rc = Lum.Grid.prototype.resolveConflicts;
 
   rc.shiftDown = function (item, conflicts, opts)
   {

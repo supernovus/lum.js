@@ -1,15 +1,10 @@
-(function(Nano)
+(function(Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.markLib('css');
-
-  Nano.CSS = class
+  if (Lum === undefined) throw new Error("Lum core not found");
+  
+  Lum.markLib('css').ns.new('CSS', class
   {
     constructor (doc)
     {
@@ -59,6 +54,6 @@
   
       return matching;
     }
-  }
+  });
 
-})(window.Lum);
+})(self.Lum);

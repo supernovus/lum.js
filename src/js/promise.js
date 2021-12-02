@@ -5,19 +5,18 @@
  * for cases where existing apps/libraries expect done(), fail(), etc.
  */
 
-(function(Nano, jQuery)
+(function(Lum)
 { 
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  Nano.markLib('promise');
+  Lum.lib.mark('promise');
+
+  const $ = Lum.jq.get(); // Should return jQuery if it is loaded.
 
   /**
-   * @class Nano.Promise
+   * @class Lum.Promise
    *
    * Build the Promise object.
    *
@@ -30,7 +29,7 @@
    *   jquery: (boolean)  If true, run this._extendJQuery(options);
    *                      If false, run this._extendInternal(options);
    */
-  Nano.Promise = function (options)
+  Lum.Promise = function (options)
   {
     if (typeof options === 'boolean')
     { // Assume the 'jquery' option was passed implicitly.
@@ -38,7 +37,7 @@
     }
     else if (typeof options !== 'object' || options === null)
     { // Ensure options is an object, and auto-select jQuery if it's loaded.
-      options = {jquery: (jQuery !== undefined)};
+      options = {jquery: (typeof $ === 'object')};
     }
 
     if (options.jquery)
@@ -51,12 +50,14 @@
     }
   }
 
+  const lpp = Lum.Promise.prototype;
+
   /**
    * Add the methods from jQuery.Deferred to ourself.
    *
    * If jQuery is not loaded, this will throw an error.
    */
-  Nano.Promise.prototype._extendJQuery = function (options)
+  lpp._extendJQuery = function (options)
   {
     if (jQuery === undefined)
     {
@@ -79,7 +80,7 @@
    *  Info:                state()
    *
    */
-  Nano.Promise.prototype._extendInternal = function (options)
+  lpp._extendInternal = function (options)
   {
     // A copy of this for use in closures.
     var self = this;
@@ -286,7 +287,7 @@
 
     self.then = function (doneFilter, failFilter, progressFilter)
     {
-      var newPromise = new Nano.Promise(false);
+      var newPromise = new Lum.Promise(false);
 
       function make_callback (filterSpec)
       {
@@ -356,7 +357,7 @@
    * @param mixed  xhr      Object to use as XHR (default is this.)
    * @param int    timeout  The timeout (in ms) defaults to 5.
    */
-  Nano.Promise.prototype.deferDone = function (obj, ts, xhr, timeout)
+  lpp.deferDone = function (obj, ts, xhr, timeout)
   {
     var self = this;
     if (timeout === undefined)
@@ -377,7 +378,7 @@
    * @param mixed  xhr      Object to use as XHR (default is this.)
    * @param int    timeout  The timeout (in ms) defaults to 5.
    */
-  Nano.Promise.prototype.deferFail = function (error, ts, xhr, timeout)
+  lpp.deferFail = function (error, ts, xhr, timeout)
   {
     var self = this;
     if (timeout === undefined)
@@ -390,5 +391,5 @@
     }, timeout);
   }
 
-})(window.Lum, window.jQuery); 
+})(self.Lum); 
 

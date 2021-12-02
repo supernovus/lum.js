@@ -1,22 +1,21 @@
 /**
  * Expression Parser library.
  *
- * Fully compatible with Nano.php's implementation.
+ * Fully compatible with Lum.php's implementation.
  */
-(function(Nano)
+(function(Lum)
 {
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not found");
 
-  Nano.markLib('expression');
+  const {O,S,N,F} = Lum._;
 
-  var ns = Nano.Expression = {};
+  const ns = Lum.lib.mark('expression').ns.new('Expression');
 
-  ns.ASSOC_NONE  = 0;
-  ns.ASSOC_LEFT  = 1;
-  ns.ASSOC_RIGHT = 2;
+  const setprop = Lum.prop(ns);
+
+  setprop('ASSOC_NONE',  0);
+  setprop('ASSOC_LEFT',  1);
+  setprop('ASSOC_RIGHT', 2);
 
   ns.Parser = class 
   {
@@ -552,4 +551,4 @@
 
   }
 
-})(window.Lum);
+})(self.Lum);

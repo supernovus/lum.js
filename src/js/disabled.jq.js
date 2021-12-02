@@ -24,5 +24,5 @@
   {
     return this.prop('disabled');
   }
-})(jQuery);
+})(self.jQuery);
 

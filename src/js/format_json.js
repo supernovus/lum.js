@@ -2,20 +2,15 @@
  * A function and jQuery wrapper for formatting JSON text in a friendly way.
  */
 
-(function (jQuery)
+(function (Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Lum.markLib('format_json');
-  let format = Lum.registerNamespace('Lum.format');
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
   // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
-  format.json = function (val)
+
+  const format = Lum.lib.mark('format_json').ns.new('format.json',function (val)
   { 
     var retval = '';
     var str = val;
@@ -58,17 +53,20 @@
       }
     }
     return retval;
-  }
+
+  }); // Lum.format.json()
+
+  const $ = Lum.jq.get();
 
   // A quick jQuery wrapper by me. Expects JSON text to be in the field.
-  if (jQuery !== undefined)
+  if ($ !== undefined)
   {
-    jQuery.fn.formatJSON = function ()
+    $.fn.formatJSON = function ()
     {
       return this.each(function ()
       {
         var mytype = this.nodeName.toLowerCase(); // The element name.
-        var $this = jQuery(this); // A jQuery wrapper to the element.
+        var $this = $(this); // A jQuery wrapper to the element.
         var oldval = '';
         if (mytype == "textarea")
           oldval = $this.val();
@@ -87,5 +85,5 @@
     }
   }
 
-})(window.jQuery);
+})(self.Lum);
 

@@ -9,5 +9,5 @@
   {
     return this.length !== 0;
   };
-})(jQuery);
+})(self.jQuery);
 

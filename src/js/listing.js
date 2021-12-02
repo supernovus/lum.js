@@ -1,16 +1,11 @@
-(function($)
+(function(Lum)
 {
   "use strict";
 /* jshint asi: true, laxbreak: true */
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  Lum.needLibs('helpers','pager');
-
-  Lum.markLib('listing');
+  Lum.lib.need('helpers','pager').jq.need().lib.mark('listing');
 
 /**
  * A Listing component with advanced features such as sorting and searching.
@@ -58,11 +53,11 @@ Lum.Listing = class
       { // Render using: func(templateText, variables)
         this.renderer = options.renderer;
       }
-      else if (Lum.hasLib('render.riot2'))
+      else if (Lum.lib.has('render.riot2'))
       { // Use the riot2 rendering engine.
         this.renderer = Lum.render.riot2;
       }
-      else if (Lum.hasLib('render.riot1'))
+      else if (Lum.lib.has('render.riot1'))
       { // Use the riot1 rendering engine.
         this.renderer = Lum.render.riot1;
       }
@@ -983,5 +978,5 @@ Lum.Listing = class
 } // class Lum.Listing
 
 // End of module.
-})(window.jQuery);
+})(self.Lum);
 

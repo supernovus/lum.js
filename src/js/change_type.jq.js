@@ -15,4 +15,4 @@
             return $("<" + newType + "/>", attrs).append($(this).contents());
         });
     };
-})(jQuery);
+})(self.jQuery);

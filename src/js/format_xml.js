@@ -1,18 +1,13 @@
-(function (Nano, jQuery)
+(function (Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.markLib('format_xml');
-  let format = Nano.registerNamespace('Nano.format');
-
 // Based on a script from:
 // http://stackoverflow.com/questions/376373/pretty-printing-xml-with-javascript
-format.xml = function (xml) 
+
+  if (Lum === undefined) throw new Error("Lum core not loaded");
+
+  const format = Lum.lib.mark('format_xml').ns.new('format.xml', function (xml) 
 {
   var reg = /(>)(<)(\/*)/g;
   var wsexp = / *(.*) +\n/g;
@@ -72,17 +67,20 @@ format.xml = function (xml)
   }
 
   return formatted;
-};
 
-  if (jQuery !== undefined)
+}); // Lum.format.xml()
+
+  const $ = Lum.jq.get();
+
+  if ($ !== undefined)
   {
     // A quick jQuery wrapper by me. Expects XML text to be in the field.
-    jQuery.fn.formatXML = function ()
+    $.fn.formatXML = function ()
     { 
       return this.each(function ()
       { 
         var mytype = this.nodeName.toLowerCase(); // The element name.
-        var $this = jQuery(this); // A jQuery wrapper to the element.
+        var $this = $(this); // A jQuery wrapper to the element.
         var oldval = '';
         if (mytype == "textarea")
           oldval = $this.val();
@@ -101,5 +99,5 @@ format.xml = function (xml)
     }
   }
 
-})(window.Lum, window.jQuery);
+})(self.Lum);
 

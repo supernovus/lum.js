@@ -24,5 +24,5 @@
       return this.val(JSON.stringify(obj, rep, space));
     }
   };
-})(jQuery);
+})(self.jQuery);
 

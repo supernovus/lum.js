@@ -1,16 +1,13 @@
-(function($)
+(function(Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  Lum.needLibs('observable');
-  Lum.markLib('elementeditor');
+  Lum.lib.need('observable').jq.need().lib.mark('elementeditor');
 
   const isObs = Lum.observable.is; 
+  const $ = Lum.jq.get();
 
   const T_STR    = 0;
   const T_INT    = 1;
@@ -392,7 +389,7 @@
           {
             editBox.attr("list", this.dataList);
           }
-          else if (this.dataList instanceof jQuery)
+          else if (this.dataList instanceof $)
           {
             const listId = this.dataList.prop('id');
             if (listId)
@@ -642,4 +639,4 @@
 
   }
 
-})(jQuery);
+})(self.Lum);
