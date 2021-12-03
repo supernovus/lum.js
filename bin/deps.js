@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 
-// TODO: More error checking, validation, etc.
+// TODO: More refactoring and cleanup for upcoming v5 release which will
+// likely be the final version of the Lum.js library collection as I'm 
+// planning to move to using separate modules for the individual libraries.
+
+// If possible, replace this script with a set of gulp plugins and hooks in
+// the gulpfile.js as I'd originally planned (but at the time could not
+// figure out how to get http requests working from within gulp or grunt.)
 
 const VERSION = '4';
 
@@ -12,10 +18,10 @@ const VERBOSE_OPTION =
   default: false,
 }
 
-const TAG_META = "@metadata";
-const TAG_PARENT = "@parent";
+const TAG_META   = "@metadata";    // Suite metadata tag.
+const TAG_PARENT = "@parent";      // Dependency parent tag.
 
-const terser = require('terser');
+const {minify} = require('terser');
 const http = require('http-request');
 const fs = require('fs');
 const path = require('path');
@@ -38,19 +44,62 @@ const cssroot = styleroot+'ext/';
 // We'll record the versions in conf/installed_deps.json which will be in
 // the .gitignore file.
 
-const installed_conf = 'conf/installed_deps.json';
-const installed = {};
-try
-{
-  let stat = fs.lstatSync(installed_conf);
-  if (stat.isFile())
-  {
-    installed = require('../'+installed_conf);
-  }
-}
-catch (e) {}
+const PC = './';
+const PP = '../';
 
-const sourceCache = {};
+// Look for an include file, and try to load it with require().
+function try_include (file, defval)
+{
+  if (typeof file === 'string')
+  {
+    try
+    {
+      let stat = fs.lstatSync(PC+file);
+      if (stat.isFile())
+      {
+        return require(PP+file);
+      }
+    }
+    catch (e) {}
+  }
+  else if (typeof file === 'object' && Array.isArray(file))
+  { // Try multiple files, the first one to be found and load, wins.
+    for (let f of file)
+    {
+      let val = try_include(f, defval);
+      if (val !== defval)
+      { // Found something valid.
+        return val;
+      }
+    }
+  }
+
+  return defval;
+}
+
+const installed_conf = 'conf/installed_deps.json';
+const installed = try_include(installed_conf, {});
+
+/* TODO: use Lum for future code.
+
+const lum_core_files =
+[
+  'scripts/nano/core.js',
+  'src/js/core.js',
+];
+
+const Lum = try_include(lum_core_files);
+
+if (Lum === undefined)
+{ // That's unfortunate.
+  throw new Error("Could not load Lum core library");
+}
+
+***/
+
+//const deferredChildren = []; // Deps deferred until @parent processed.
+
+const sourceCache = {};      // Cache of sources from each suite.
 
 require('yargs')
   .version(VERSION)
@@ -148,6 +197,11 @@ require('yargs')
   .help()
   .argv;
 
+function setup_source (dep)
+{
+  
+}
+
 function get_sources (suite)
 {
   if (sourceCache[suite] === undefined)
@@ -170,20 +224,25 @@ function get_sources (suite)
         continue;
       } // if dep == @metadata
 
-      // We're going to mark the suite down in the dep for later reference.
+      // We're going to add 'name' and 'suite' properties for later reference.
+      dep.name  = depname;
       dep.suite = suite;
 
-      if (dep['@parent'] !== undefined)
-      { // This dependency has a parent object.
-        const parentName = dep['@parent'];
-        const parentDep = sourceCache[suite][parentName];
-        for (const prop in parentDep)
+      if (typeof dep[TAG_PARENT] !== 'string')
+      { // This dependency has a parent, expand the parent.
+        const parentName = dep[TAG_PARENT];
+        if (typeof sourceCache[suite][parentName] === 'object')
         {
-          if (dep[prop] === undefined)
-          {
-            dep[prop] = parentDep[prop];
+          const parentDep = sourceCache[suite][parentName];
+          dep[TAG_PARENT] = parentDep; // Replace the name with the object.
+          for (const prop in parentDep)
+          { // Copy non-existent properties from the parent.
+            if (dep[prop] === undefined)
+            {
+              dep[prop] = parentDep[prop];
+            }
           }
-        }
+        } // if parent found
       } // if dep.@parent
 
     } // for dep in deps
@@ -233,7 +292,7 @@ function try_save (processing)
   }
 }
 
-function make_json_ver_handler (finfo, processing, argv)
+function make_json_ver_handler (src, finfo, processing, argv)
 {
   return function (err, res)
   {
@@ -241,7 +300,11 @@ function make_json_ver_handler (finfo, processing, argv)
     var json = JSON.parse(string);
     if (json !== undefined && json.version !== undefined)
     {
-      finfo.version = json.version;
+      finfo.version = src.$ver = json.version;
+      if (src[TAG_PARENT] && !src[TAG_PARENT].$ver)
+      {
+        src[TAG_PARENT].$ver = json.version;
+      }
     }
     processing.count--;
     try_save(processing);
@@ -276,9 +339,20 @@ function make_handler (source, dest, finfo, processing, argv)
     }
     var string = res.buffer.toString();
     var deferredProcessing = false;
+
+    const srcParent = source[TAG_PARENT];
+
+    if (typeof source.$ver === 'string')
+    {
+      finfo.version = source.$ver;
+    }
     if (typeof source.version === 'string')
     {
       finfo.version = source.version;
+    }
+    else if (srcParent && typeof srcParent.$ver === 'string')
+    { // Cached version from parent.
+      finfo.version = source.$ver = srcParent.$ver;
     }
     else if (typeof source.version === 'object')
     {
@@ -299,7 +373,11 @@ function make_handler (source, dest, finfo, processing, argv)
           var version = matches[source.version.match];
           if (version !== undefined)
           { // We found a version, yay!
-            finfo.version = version;
+            finfo.version = source.$ver = version;
+            if (srcParent && !srcParent.$ver)
+            { // There is a parent, but no cached version.
+              srcParent.$ver = version;
+            }
           }
         }
       }
@@ -329,7 +407,7 @@ function make_handler (source, dest, finfo, processing, argv)
         : "\n";
 
       let func = "(function(l) {\nif (l !== undefined) {\n";
-      func += "l.link("+from+","+to+overwrite+");\n";
+      func += "l.ns.link("+from+","+to+overwrite+");\n";
       func += "}"+onError+"})(window.Lum)";
 
       // Okay, now append the generated function to the string.
@@ -337,10 +415,10 @@ function make_handler (source, dest, finfo, processing, argv)
     }
 
     var file = fs.createWriteStream(dest);
-    if (source.uglify)
+    if (false && source.uglify) // disabling minify for now.
     {
   //    console.log('string>>>'+string);
-      var output = terser.minify(string);
+      let output = minify(string);
       if (output && output.code)
       {
 //        console.log('minified>>>'+output.code);
@@ -377,7 +455,7 @@ function download_deps (sources, argv)
   mkdir(cssroot);
   
   const processing = {count: 0, upgrade: false};
-  for (var sfile in sources)
+  for (let sfile in sources)
   {
     if (sfile !== TAG_META)
     { // Anything other than the metadata should be a dependency file.
@@ -388,12 +466,14 @@ function download_deps (sources, argv)
 
 function download_dep (sfile, sources, argv, processing, finfo)
 {
+  const source = sources[sfile];
+
+  if (source[DOWNLOADED]);
+
   if (processing === undefined)
     processing = {count: 1, upgrade: false};
   else if (!processing.upgrade)
     processing.count++;
-
-  var source = sources[sfile];
 
   if (finfo === undefined)
   {
@@ -404,10 +484,14 @@ function download_dep (sfile, sources, argv, processing, finfo)
     else
     {
       finfo = installed[sfile];
+      if (typeof finfo.from !== source.suite)
+      { // The suite has changed, or the dep was installed prior to tracking.
+        finfo.suite = source.suite;
+      }
     }
   }
 
-  var dest;
+  let dest;
   if (source.css)
   {
     dest = cssroot+sfile;
@@ -418,7 +502,7 @@ function download_dep (sfile, sources, argv, processing, finfo)
   }
   console.log("Checking for "+dest);
 
-  var exists = false;
+  let exists = false;
   if (!argv.force && !processing.upgrade)
   {
     try

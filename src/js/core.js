@@ -1,15 +1,52 @@
 /*
- * Lum Core: The engine for the Lum.js library set.
+ * Lum Core: The engine that powers the Lum.js library set.
+ *
+ * Supports browser (Window or Worker contexts) via regular script tag with a 
+ * global Lum variable containing the core, or AMD loader such as RequireJS.
+ *
+ * Also supports CommonJS environments that allow assigning module.exports,
+ * such as Node.js and Electron.js; does NOT support engines that only allow
+ * you to export individual properties to the `exports` global.
+ *
+ * This is currently the only one of the libraries that can be loaded in
+ * AMD and CommonJS environments easily. The rest were designed with just the
+ * browser in mind, and require a global 'Lum' variable. At least for now.
+ *
+ * If you really want to use one of them, use `Lum.ns.$self()` to register
+ * a global 'Lum' variable which they can find in the self/this global context.
+ *
  */
-(function (root)
-{
+((function (root, factory)
+{ // The bootstrap function.
   "use strict";
 
-  if (root.Lum !== undefined)
-  {
-    console.warn("Lum already loaded.");
-    return;
+  // Create an init object we'll pass to the factory.
+  const init = {root};
+
+  if (typeof define === 'function' && define.amd)
+  { // AMD in use, register as anonymous module. No globals will be exported.
+    init.AMD = true;
+    init.node = false;
+    define([], function () { return factory(init); });
   }
+  else if (typeof module === 'object' && module.exports)
+  { // Node.js or something similar with module.exports in use. No globals.
+    init.node = true;
+    init.AMD = false;
+    module.exports = factory(init);
+  }
+  else
+  { // Assume it's a browser, and then register browser globals.
+    init.AMD = false;
+    init.node = false;
+    factory(init).ns.$self('Lum', 'Nano');
+  }
+
+})(typeof self !== 'undefined' ? self : this, function (init)
+{ // Welcome to the factory.
+  "use strict";
+
+  const root = init.root;
 
   // A few quick private constants for tests.
   const O='object', F='function', S='string', B='boolean', N='number',
@@ -61,7 +98,7 @@
    *   For any mode that doesn't saay "Arrays included", Array objects will
    *   use a shortcut technique of `obj.slice()` to create the clone.
    *
-   * @param {boolean} [opts.addClone=false] Call {@link Lum._.addClone] on the cloned object.
+   * @param {boolean} [opts.addClone=false] Call {@link Lum._.addClone} on the cloned object.
    *
    *   The options sent to this function will be used as the defaults in
    *   the clone() method added to the object.
@@ -259,8 +296,16 @@
         DESC_DEF   = lock({configurable:true,enumerable:true}),
         DESC_OPEN  = lock({configurable:true,enumerable:true,writable:true});
 
-  // The core namespace.
-  const Lum = {$useSelf: true};
+  /**
+   * @namespace Lum
+   *
+   * The core Lum namespace.
+   */
+  const Lum = 
+  {
+    $ourselfUnwrapped: true,
+    $nsSelfUnwrapped:  init.node,
+  };
 
   // Store loaded libraries in a private object.
   const loaded = {};
@@ -381,24 +426,8 @@
     return Object.defineProperty(obj, name, desc);
   }
 
-  // Internal function to return either the global Lum, or local Lum depending
-  // on the Lum.$useSelf property, which defaults to true.
-  // The global Lum will likely be a Proxy object on any modern browser,
-  // whereas the local Lum is the raw object defined in this closure,
-  // and also exposed as Lum.self for things outside here.
-  function ourself()
-  {
-    return Lum.$useSelf ? Lum : root.Lum; // Yes, there is a difference.
-  }
-
   // The very first use of prop() is to add it to Lum as a method.
   prop(Lum, 'prop', prop);
-
-  /**
-   * @namespace Lum
-   * @property {Lum} self - The 'raw' Lum object, not the global Proxy.
-   */
-  prop(Lum, 'self', Lum);
 
   /**
    * Build a lazy initializer property.
@@ -409,14 +438,14 @@
    *
    * @param {object} obj - The object to add the property to.
    * @param {string} prop - The name of the property to add.
-   * @param {function} init - The function to initialize the property.
+   * @param {function} initfunc - The function to initialize the property.
    * @param {object} [desc=DESC_CONF] The descriptor for the property.
    *
    * @return {object} The object we defined the property on.
    *
    * @method Lum.prop.lazy
    */
-  function lazy(obj, name, init, desc=DESC_CONF)
+  function lazy(obj, name, initfunc, desc=DESC_CONF)
   {
     if (!is_complex(obj))
     {
@@ -426,9 +455,9 @@
     {
       throw new Error("prop.lazy() name parameter was not a string");
     }
-    if (typeof init !== F)
+    if (typeof initfunc !== F)
     {
-      throw new Error("prop.lazy() init parameter was not a function");
+      throw new Error("prop.lazy() initfunc parameter was not a function");
     }
 
     let value;
@@ -437,7 +466,7 @@
     {
       if (value === undefined)
       {
-        value = init();
+        value = initfunc();
       }
       return value;
     }
@@ -453,7 +482,7 @@
    *
    * @namespace Lum.context
    */
-  prop(Lum, 'context', {root: root});
+  prop(Lum, 'context', init);
   const ctx = Lum.context;
   lazy(ctx, 'isWindow', () => root.window !== undefined);
   lazy(ctx, 'isWorker', () => root.WorkerGlobalScope !== undefined);
@@ -555,22 +584,22 @@
       { // No proxy, we'll add the method to the object itself.
         if (this.obj[prop] === undefined)
         { // We will only add a wrapped property if it does not exist alreaday.
-          if (assign && def.value !== undefined)
+          if (this.assign && item.value !== undefined)
           { // Use direct assignment. Only works with descriptors with a 'value'.
-            obj[prop] = def.value;
+            this.obj[prop] = item.value;
           }
           else
           { // Set up the property with a full descriptor.
-            Lum.prop(obj, prop, null, def);
+            Lum.prop(this.obj, prop, null, item);
           }
         }
-        else if (fatal)
+        else if (this.fatal)
         {
           throw new Error(`Cannot overwrite existing property ${prop}`);
         }
-        else if (warn)
+        else if (this.warn)
         {
-          console.warn("Cannot overwrite existing property", prop, def, opts);
+          console.warn("Cannot overwrite existing property", prop, item);
         }
       }
 
@@ -662,6 +691,29 @@
   const wrap = Lum.Wrapper.getWrapper();
 
   /**
+   * Return the Lum object itself.
+   *
+   * @param {boolean} [raw=Lum.$ourselfUnwrapped] Use the unwrapped Lum object?
+   *
+   * If false, this will return the Proxy wrapped object.
+   *
+   * @return object  Either the Lum object, or a Proxy of the Lum object.
+   *
+   * @method Lum._.ourself
+   */
+  function ourself(raw=Lum.$ourselfUnwrapped)
+  {
+    return raw ? Lum : wrap.wrap();
+  }
+
+  /**
+   * @property Lum.self
+   *
+   * A read-only accessor that returns the output of {@link Lum._.ourself}
+   */
+  prop(Lum, 'self', ourself, null, DESC_CONF);
+
+  /**
    * The Lum._ property is a (mostly) read-only collection of useful
    * constants and functions which can be imported into libraries.
    *
@@ -708,7 +760,7 @@
 
   //console.debug("TESTING clone == _.clone", 
   //  clone, Lum._.clone, (clone === Lum._.clone));
-
+  
   /**
    * Namespace management object.
    *
@@ -987,6 +1039,21 @@
     return ourself();
   });
 
+  // Register a global variable (or multiple) for Lum itself.
+  prop(Lum.ns, '$self', function ()
+  {
+    const self = wrap.wrap(Lum.$nsSelfUnwrapped);
+    const args = Array.prototype.slice.call(arguments);
+
+    if (args.length === 0) args[0] = 'Lum'; // Default name.
+    
+    for (let i = 0; i < args.length; i++)
+    {
+      Lum.ns.add(args[i], self);
+    }
+
+  });
+
   /**
    * Lum library manager.
    *
@@ -1153,11 +1220,8 @@
 
   wrap.add('wantJq', Lum.jq.want);
 
-  // Now let's export Lum itself using the wrapper proxy if available.
-  Lum.ns.add('Lum', wrap.wrap());
+  // Return the wrapped object.
+  return wrap.wrap();
 
-  // As well as the Nano alias if applicable.
-  Lum.ns.add('Nano', root.Lum);
-
-})(self);
+}));
 
