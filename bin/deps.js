@@ -80,8 +80,6 @@ function try_include (file, defval)
 const installed_conf = 'conf/installed_deps.json';
 const installed = try_include(installed_conf, {});
 
-/* TODO: use Lum for future code.
-
 const lum_core_files =
 [
   'scripts/nano/core.js',
@@ -94,10 +92,6 @@ if (Lum === undefined)
 { // That's unfortunate.
   throw new Error("Could not load Lum core library");
 }
-
-***/
-
-//const deferredChildren = []; // Deps deferred until @parent processed.
 
 const sourceCache = {};      // Cache of sources from each suite.
 
@@ -199,7 +193,9 @@ require('yargs')
 
 function setup_source (dep)
 {
-  
+  //let ap = Lum.prop(dep);
+  // Eventually do something here.
+  return dep;
 }
 
 function get_sources (suite)
@@ -227,6 +223,9 @@ function get_sources (suite)
       // We're going to add 'name' and 'suite' properties for later reference.
       dep.name  = depname;
       dep.suite = suite;
+
+      // Add any extra methods.
+      setup_source(dep);
 
       if (typeof dep[TAG_PARENT] !== 'string')
       { // This dependency has a parent, expand the parent.
@@ -467,8 +466,6 @@ function download_deps (sources, argv)
 function download_dep (sfile, sources, argv, processing, finfo)
 {
   const source = sources[sfile];
-
-  if (source[DOWNLOADED]);
 
   if (processing === undefined)
     processing = {count: 1, upgrade: false};
