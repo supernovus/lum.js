@@ -89,7 +89,7 @@
         else
           return; // We don't support anything but <textarea/> and <pre/>.
   
-        var newval = format.xml(oldval);
+        var newval = format(oldval);
   
         if (mytype == "textarea")
           $this.val(newval);

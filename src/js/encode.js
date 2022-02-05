@@ -118,12 +118,15 @@
     },
   };
 
+  function NYI() { throw new Error("Not yet implemented"); }
 
   /**
-   * A static object offering functions for encoding/decoding
-   * URL-safe variants of the Base64 algorithm. 
+   * URL-safe variants of the Base64 algorithm.
+   *
+   * TODO: fully implement the V3 headers, and Data extension with
+   * support for at least JSON serialization and UBJSON if possible.
    */
-  Lum.Safe64 =
+  Lum.Safe64 = class
   {
     /**
      * Encode data to Safe64 format.
@@ -136,12 +139,12 @@
      *
      * @return string  The encoded string.
      */
-    encode(rawdata, fromString=false, useTildes=false, 
+    static encode(rawdata, fromString=false, useTildes=false, 
       stringFormat=CryptoJS.enc.Utf8)
     {
       let base64data = Lum.Base64.encode(rawdata, fromString, stringFormat);
       return this.urlize(base64data, useTildes);
-    },
+    }
 
     /**
      * Convert a Base64 string into a Safe64 string.
@@ -153,13 +156,13 @@
      *
      * @return {string}  The Safe64 string.
      */
-    urlize(string, useTildes=false)
+    static urlize(string, useTildes=false)
     {
       string = string.replace(/\+/g, '-');
       string = string.replace(/\//g, '_');
       string = string.replace(/=/g,  useTildes ? '~' : '');
       return string;
-    },
+    }
 
     /**
      * Convert a Safe64 string back into a Base64 string.
@@ -168,13 +171,13 @@
      *
      * @return {string}  The Base64 string.
      */
-    deurlize(string)
+    static deurlize(string)
     {
       string = string.replace(/\-/g, '+');
       string = string.replace(/_/g, '/');
       string = string.replace(/\~/g, '=');
       string = string.substring("===", ((string.length+3)%4));
-    },
+    }
 
     /**
      * Decode a Sase64 string.
@@ -185,13 +188,13 @@
      *
      * @return {mixed}  The decoded output.
      */
-    decode(string, toString=false, stringFormat=CrytoJS.enc.Utf8)
+    static decode(string, toString=false, stringFormat=CrytoJS.enc.Utf8)
     {
       return Lum.Base64.decode(this.deurlize(string), toString, stringFormat);
-    },
-  };
+    }
 
-  
+  };
+ 
   Lum.Hashifier = class
   {
     /**
@@ -287,6 +290,23 @@
     {
       let hash = this.hash(input);
       if (this.valid(hash)) return hash.toString(CryptoJS.enc.Base64);
+    }
+
+    /**
+     * Hash some data and return it as a Safe64-encoded string.
+     *
+     * TODO: When Safe64 supports the V3 headers, add a useHeader option.
+     *
+     * See hash() for how parameters are handled.
+     */
+    safe64(input, opts)
+    {
+      let useTildes
+        = (typeof opts === 'object' && typeof opts.useTildes === 'boolean') 
+        ? opts.useTildes
+        : false;
+      let base64 = this.base64(input); 
+      return Lum.Safe64.urlize(base64, useTildes);
     }
 
     /**

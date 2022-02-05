@@ -75,7 +75,7 @@
         else
           return; // We currently only support <textarea/> and <pre/>.
   
-        var newval = format.json(oldval);
+        var newval = format(oldval);
   
         if (mytype == "textarea")
           $this.val(newval);

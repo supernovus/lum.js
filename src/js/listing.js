@@ -29,9 +29,9 @@ Lum.Listing = class
       return false;
     }
 
-    if (options.listTemplate === 'function')
+    if (typeof options.listTemplate === 'function')
     { // Render using: template(data);
-      this.template = options.ListTemplate;
+      this.template = options.listTemplate;
     }
     else
     { // We're going to assume the template is an HTML element.
@@ -115,8 +115,14 @@ Lum.Listing = class
       this.element = $('.listing').first();
     }
   
-    // Save the initial content.
-    this.empty_list = this.element.html();
+    if ('emptyList' in options)
+    { // Specific empty list content specified.
+      this.empty_list = options.emptyList;
+    }
+    else
+    { // Save the initial content as the empty list.
+      this.empty_list = this.element.html();
+    }
    
     if ('preRender' in options)
     {
@@ -287,6 +293,11 @@ Lum.Listing = class
   
     // Build our pager option.
     this.pager = new Lum.Pager(pagerOpts);
+
+    if (options.deferInitialRender)
+    { // We're done here.
+      return;
+    }
   
     // Display the first page. This will render the pager.
     this.refresh();
@@ -595,7 +606,6 @@ Lum.Listing = class
   //    console.log("adding");
       this.searches[col] = find;
     }
-  
     this.refresh();
   }
   
@@ -959,6 +969,7 @@ Lum.Listing = class
   // Internal method to render.
   _render(obj)
   {
+    console.log("listing._render()", obj, this.template, this);
     if (typeof this.template === 'function')
     { // Using a template function
       return this.template(obj);
