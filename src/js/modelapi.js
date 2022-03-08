@@ -1,15 +1,12 @@
-(function($)
+(function(Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not found");
 
-  Lum.needLibs('helpers');
+  Lum.lib.need('helpers').lib.mark('modelapi');
 
-  Lum.markLib('modelapi');
+  // TODO: Lum._ stuff.
  
   /**
    * A Model API base core. Use this as the foundation for your API objects.
@@ -527,11 +524,15 @@
      * @param {string} name     The name of the web service we're adding.
      * @param {string} baseUrl  The base URL of the web service.
      * @param {object} methods  Methods we're adding to the web service.
+     * @param {object} wsOpts   (Optional) Extra options for the webservice.
+     *
+     *  Any constructor options other than `url` and `methods` can be set
+     *  in the `wsOpts` and will be passed to the constructor.
      *
      */
-    static addWS(name, baseUrl, methods)
+    static addWS(name, baseUrl, methods, wsOpts)
     {
-      //console.debug("addWS", name, baseUrl, methods);
+      //console.debug("addWS", name, baseUrl, methods, wsOpts);
       if (typeof methods !== 'object')
       {
         throw new Error(`Invalid methods passed to addWS(${name})`);
@@ -549,35 +550,34 @@
           throw new Error(`Web service ${name} already defined`);
         }
 
+        wsOpts = wsOpts || {};
+        wsOpts.url = baseUrl;
+        wsOpts.methods = methods;
+
         conf.sources[name] =
         {
           type: 'ws',
-          opts:
-          {
-            url: baseUrl,
-            methods: methods,
-          }
+          opts: wsOpts,
         }
       });
     } // addWS
 
     /**
      * A static wrapper around onInit() designed to extend a web service
-     * previously added with addWS(). This allows us to have admin-specific
+     * previously added with addWS(). This allows us to have extension-specific
      * methods that aren't in the base web service model.
      *
      * @param {string} wsName    The name of the web service we're extending.
      * @param {string} extName   A name for this specific extension set.
-     * @param {object} methods   Methods we're adding to the web service.
+     * @param {object} methods   (Optional) Methods to add to the web service.
+     * @param {object} addOpts   (Optional) More options to add.
+     *
+     *  You can add any options other than `url` and `methods`.
      *
      */
-    static extendWS(wsName, extName, methods)
+    static extendWS(wsName, extName, methods, addOpts)
     {
-      //console.debug("extendWS", wsName, extName, methods);
-      if (typeof methods !== 'object')
-      {
-        throw new Error(`Invalid methods passed to extendWS(${wsName})`);
-      }
+      //console.debug("extendWS", wsName, extName, methods, addOpts);
 
       this.onInit(wsName+'_'+extName, 'pre_init', function (conf)
       { // Let's do this.
@@ -591,10 +591,25 @@
           throw new Error(`Web service ${wsName} was not defined before ${extName} tried to extend it`);
         }
 
-        const wsMeths = conf.sources[wsName].opts.methods;
-        for (const meth in methods)
-        { // Let's add the new methods to the existing ones.
-          wsMeths[meth] = methods[meth];
+        const wsOpts = conf.sources[wsName].opts;
+
+        if (typeof addOpts === 'object')
+        {
+          for (const opt in addOpts)
+          {
+            if (opt === 'url' || opt === 'methods') continue;
+            wsOpts[opt] = addOpts[opt];
+          }
+        }
+
+        if (typeof methods === 'object')
+        {
+          const wsMeths = wsOpts.methods;
+
+          for (const meth in methods)
+          { // Let's add the new methods to the existing ones.
+            wsMeths[meth] = methods[meth];
+          }
         }
       });
     } // extendWS
@@ -843,5 +858,5 @@
    */
   Lum.ModelAPI.prototype._default_observable = {addme: 'make_observable'};
 
-})(window.jQuery);
+})(self.Lum);
 

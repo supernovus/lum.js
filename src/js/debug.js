@@ -17,9 +17,9 @@
 
   if (Lum === undefined) throw new Error("Lum core not found");
 
-  const $ = Lum.jq.get();
+  Lum.jq.need().lib.mark('debug');
 
-  Lum.lib.mark('debug');
+  const $ = Lum.jq.get();
 
   /**
    * A class to help with debugging.

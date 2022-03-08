@@ -7,6 +7,8 @@
 
   Lum.lib.need('helpers','pager').jq.need().lib.mark('listing');
 
+  const {F,O,S,N,B,U} = Lum._;
+
 /**
  * A Listing component with advanced features such as sorting and searching.
  *
@@ -23,13 +25,13 @@ Lum.Listing = class
   
   //  console.log("Building Listing item", options);
   
-    if (options === undefined || typeof options.getData !== 'function')
+    if (options === undefined || typeof options.getData !== F)
     {
       console.log("Invalid or missing 'getData' parameter, cannot continue.");
       return false;
     }
 
-    if (typeof options.listTemplate === 'function')
+    if (typeof options.listTemplate === F)
     { // Render using: template(data);
       this.template = options.listTemplate;
     }
@@ -39,7 +41,7 @@ Lum.Listing = class
       { // It's already a jQuery instance.
         this.template = options.listTemplate;
       }
-      else if (typeof options.listTemplate === 'string'
+      else if (typeof options.listTemplate === S
         || options.listTemplate instanceof Element)
       { // It's a selector string or DOM Element.
         this.template = $(options.listTemplate);
@@ -49,7 +51,7 @@ Lum.Listing = class
         this.template = $('script.list_item').first();
       }
 
-      if (typeof options.renderer === 'function')
+      if (typeof options.renderer === F)
       { // Render using: func(templateText, variables)
         this.renderer = options.renderer;
       }
@@ -104,6 +106,9 @@ Lum.Listing = class
   
     // Are we searching in a specific column?
     this.searches = {};
+
+    // Are we using regexp search mode?
+    this.useReg = options.useReg ?? false;
   
     if ('listElement' in options)
     {
@@ -140,7 +145,7 @@ Lum.Listing = class
     }
     else
     {
-      this.sortAttr = 'nano:sort';
+      this.sortAttr = 'lum:sort';
     }
   
     if ('sortCol' in options)
@@ -158,7 +163,19 @@ Lum.Listing = class
     }
     else
     {
-      this.searchAttr = 'nano:search';
+      this.searchAttr = 'lum:search';
+    }
+
+    if (typeof options.getSearchColumn === F)
+    { // A custom column was passed.
+      this.getSearchColumn = options.getSearchColumn;
+    }
+    else
+    { // Use the original implementation.
+      this.getSearchColumn = function (e)
+      { // Remember the element will be `this`.
+        return $(this).parent().attr(self.searchAttr);
+      }
     }
   
     if ('searchCol' in options)
@@ -199,20 +216,18 @@ Lum.Listing = class
     if ('searchSelector' in options)
     {
       // TODO: support unified search with list-style searches.
-      var unified = 'unifiedSearch' in options ? options.unifiedSearch : false;
+      var unified = options.unifiedSearch ?? false;
       this.registerSearch(options.searchSelector, unified, false);
       if (unified)
       { // Save the search selector.
         this.searchSelector = options.searchSelector;
         if ('searchColSelector' in options)
         {
-          var evname = 'searchColEvent' in options 
-            ? options.searchColEvent
-            : 'contextmenu';
+          var evname = options.searchColEvent ?? 'contextmenu';
           this.registerSearchToggle(options.searchColSelector, evname);
         }
-        else
-        {
+        else if (options.searchToggleLabels)
+        { // Ye-old behaviour. Not automatic anymore.
           if ($('.listing_header label').exists())
           {
             this.registerSearchToggle('.listing_header label');
@@ -275,7 +290,7 @@ Lum.Listing = class
       pagerOpts.useHash = true;
       pagerOpts.hash = hash;
       var pagenum = hash.getOpt('page');
-      if (typeof pagenum === 'string')
+      if (typeof pagenum === S)
       {
         pagenum = parseInt(pagenum);
         if (!isNaN(pagenum))
@@ -286,9 +301,9 @@ Lum.Listing = class
     }
   
   //  console.log({pagerOpts: pagerOpts});
-    if (typeof this.reloadSort === 'function')
+    if (typeof this.reloadSort === F)
       this.reloadSort();
-    if (typeof this.reloadSearch === 'function')
+    if (typeof this.reloadSearch === F)
       this.reloadSearch();
   
     // Build our pager option.
@@ -335,13 +350,13 @@ Lum.Listing = class
    */
   setNS (namespace, options)
   {
-    if (typeof namespace === 'object' && options === undefined)
+    if (typeof namespace === O && options === undefined)
     {
       options = namespace;
       namespace = options.value;
     }
     
-    if (typeof namespace !== 'string')
+    if (typeof namespace !== S)
     {
       namespace = '';
     }
@@ -391,7 +406,7 @@ Lum.Listing = class
   // Get the memory cache.
   getMemory ()
   {
-    if (typeof(Storage) === undefined)
+    if (typeof(Storage) === U)
     {
       console.error("No web storage available");
       return;
@@ -409,7 +424,7 @@ Lum.Listing = class
   // Save the memory cache.
   saveMemory (page)
   {
-    if (typeof(Storage) === undefined)
+    if (typeof(Storage) === U)
     {
       console.error("No web storage available");
       return;
@@ -561,15 +576,20 @@ Lum.Listing = class
   }
   
   // Register changing the search toggle. Only used in unified searching.
-  registerSearchToggle (selector, evname)
+  registerSearchToggle (selector, evname, getcol)
   {
-  //  console.log("registerSearchToggle("+selector+")");
+    //console.log("registerSearchToggle", selector, evname, getcol);
     var self = this;
+
+    if (typeof getcol !== F)
+    { // Use the default function.
+      getcol = self.getSearchColumn;
+    }
+
     $(selector).on(evname, function (e)
     {
       e.preventDefault();
-      var $this = $(this);
-      var searchcol = $this.parent().attr(self.searchAttr);
+      var searchcol = getcol.call(this, e);
   //    console.log("searchcol", searchcol);
       if (searchcol)
       {
@@ -582,6 +602,8 @@ Lum.Listing = class
       }
     });
   }
+
+
   
   reset (all)
   {
@@ -623,12 +645,12 @@ Lum.Listing = class
   refresh ()
   {
     var ourdata = this.getData();
-    if (this.asyncData && typeof ourdata.then === 'function')
+    if (this.asyncData && typeof ourdata.then === F)
     {
       var self = this;
       ourdata.then(function(data)
       {
-        if (typeof self.filterData === 'function')
+        if (typeof self.filterData === F)
         {
           self.filter_data(data);
         }
@@ -640,7 +662,7 @@ Lum.Listing = class
     }
     else
     {
-      if (typeof this.filterData === 'function')
+      if (typeof this.filterData === F)
       {
         this.filter_data(ourdata);
       }
@@ -654,7 +676,7 @@ Lum.Listing = class
   filter_data (rawdata)
   {
     var filterdata = this.filterData(rawdata);
-    if (this.asyncData && typeof filterdata.then === 'function')
+    if (this.asyncData && typeof filterdata.then === F)
     {
       var self = this;
       filterdata.then(function(data)
@@ -683,10 +705,20 @@ Lum.Listing = class
       { // Only include the matching items.
         var searchdata1 = rawdata;
         var searchdata2 = [];
+        function escapeRegex(string) {
+          return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        }
         for (col in this.searches)
         {
-          var find = new RegExp(this.searches[col], "i");
-          var colspec;
+          let search = this.searches[col];
+
+          if (!this.useReg)
+          { // Escape it first.
+            search = escapeRegex(search);
+          }
+
+          let find = new RegExp(search, "i");
+          let colspec;
           if (col.indexOf('.') !== -1)
           { // Looking for a nested property.
             colspec = col.split('.');
@@ -694,13 +726,13 @@ Lum.Listing = class
           }
           for (i in searchdata1)
           {
-            var curitem = searchdata1[i];
-            var curcol  = curitem[col];
-            if (typeof this.searchCol[col] === 'function')
+            let curitem = searchdata1[i];
+            let curcol  = curitem[col];
+            if (typeof this.searchCol[col] === F)
             {
               this.searchCol[col](curitem, find, searchdata2);
             }
-            else if (typeof curcol === 'string')
+            else if (typeof curcol === S)
             {
               if (curcol.search(find) !== -1)
               {
@@ -709,9 +741,9 @@ Lum.Listing = class
             }
             else if ($.isArray(curcol))
             {
-              for (var j in curcol)
+              for (let j in curcol)
               {
-                var subcol = curcol[j];
+                let subcol = curcol[j];
                 if (subcol.search(find) !== -1)
                 {
                   searchdata2.push(curitem);
@@ -719,10 +751,10 @@ Lum.Listing = class
                 }
               }
             }
-            else if (typeof curcol === 'object' && colspec !== undefined)
+            else if (typeof curcol === O && colspec !== undefined)
             { // We need to use the nested search.
-              var subcol = Lum.getNested(curcol, colspec);
-              if (typeof subcol === 'string')
+              let subcol = Lum.getNested(curcol, colspec);
+              if (typeof subcol === S)
               { // We can only search strings at this point.
                 if (subcol.search(find) !== -1)
                 {
@@ -740,7 +772,7 @@ Lum.Listing = class
       { // Copy all raw data items into the sorted data.
         for (i in rawdata)
         {
-          var rawitem = rawdata[i];
+          let rawitem = rawdata[i];
           sortdata.push(rawitem);
         }
       }
@@ -748,8 +780,8 @@ Lum.Listing = class
       { // Sort by a column.
   //      console.log("sorting by",this.sortBy);
         col = this.sortBy;
-        var desc = this.sortDesc;
-        if (typeof this.sortCol[col] === 'function')
+        let desc = this.sortDesc;
+        if (typeof this.sortCol[col] === F)
         {
           this.sortCol[col](sortdata, desc);
         }
@@ -860,7 +892,7 @@ Lum.Listing = class
           var coldata = get_col(sortdata[0], col);
           var whatisit = typeof coldata;
     //      console.log("it is a ",whatisit, col, desc);
-          if (whatisit === 'string')
+          if (whatisit === S)
           {
             if (desc)
             {
@@ -871,7 +903,7 @@ Lum.Listing = class
               sortdata.sort(sort_str_asc);
             }
           }
-          else if (whatisit === 'number')
+          else if (whatisit === N)
           {
             if (desc)
             {
@@ -886,7 +918,7 @@ Lum.Listing = class
           }
           else if ($.isArray(coldata))
           {
-            if (typeof coldata[0] === 'string')
+            if (typeof coldata[0] === S)
             {
               if (desc)
               {
@@ -970,7 +1002,7 @@ Lum.Listing = class
   _render(obj)
   {
     console.log("listing._render()", obj, this.template, this);
-    if (typeof this.template === 'function')
+    if (typeof this.template === F)
     { // Using a template function
       return this.template(obj);
     }

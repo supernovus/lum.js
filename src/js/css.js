@@ -4,13 +4,12 @@
 
   if (Lum === undefined) throw new Error("Lum core not found");
   
-  Lum.markLib('css').ns.new('CSS', class
+  Lum.lib.mark('css').ns.new('CSS', class
   {
     constructor (doc)
     {
       this.doc = doc || document;
       this.sheets = this.doc.styleSheets;
-      this.hasjQuery = window.jQuery !== undefined;
     }
 
     /**
@@ -20,7 +19,7 @@
     {
       var i, len, matching = [], sheets = this.sheets;
   
-      if (this.hasjQuery && element instanceof jQuery)
+      if (Lum.jq.is(element))
       { // A jQuery object, we only use the first item.
         element = element[0];
       }

@@ -62,10 +62,10 @@
   function non_null(v) { return (v !== undefined && v !== null); }
 
   // See if an object is an instance.
-  function is_instance(v, what) 
+  function is_instance(v, what, needProto=false) 
   {
     if (!is_obj(v)) return false;
-    if (typeof v.prototype !== 'object' || v.prototype === null)
+    if (needProto && (typeof v.prototype !== 'object' || v.prototype === null))
     { // Has no prototype.
       return false;
     }
@@ -88,12 +88,12 @@
    * @param {object|function} obj - The object we want to clone.
    * @param {object} [opts={}] Options for the cloning process.
    * 
-   * @param {number} [opts.mode=CLONE_DEF] One of the Lum._.CLONE_* constants:
+   * @param {number} [opts.mode=CLONE_DEF] One of the `Lum._.CLONE_*` constants.
    *
-   *   CLONE_DEF    Shallow clone of enumerable properties for most objects.
-   *   CLONE_JSON   Deep clone using JSON serialization (Arrays included.)
-   *   CLONE_FULL   Shallow clone of all object properties.
-   *   CLONE_ALL    Shallow clone of all properties (Arrays included.)
+   *   `CLONE_DEF`    - Shallow clone of enumerable properties for most objects.
+   *   `CLONE_JSON`   - Deep clone using JSON serialization (Arrays included.)
+   *   `CLONE_FULL`   - Shallow clone of all object properties.
+   *   `CLONE_ALL`    - Shallow clone of all properties (Arrays included.)
    *
    *   For any mode that doesn't saay "Arrays included", Array objects will
    *   use a shortcut technique of `obj.slice()` to create the clone.
@@ -287,7 +287,6 @@
     return Object.defineProperty(obj, 'lock', lock.bind(null, obj));
   }
 
-  // Constants for all common descriptor configs.
   const DESC_RO    = lock({}),
         DESC_CONF  = lock({configurable:true}),
         DESC_ENUM  = lock({enumerabe:true}),
@@ -297,9 +296,21 @@
         DESC_OPEN  = lock({configurable:true,enumerable:true,writable:true});
 
   /**
+   * The core Lum namespace.
+   *
    * @namespace Lum
    *
-   * The core Lum namespace.
+   * Has a bunch of properties defined to be used with the various methods.
+   *
+   * @property {boolean} $ourselfUnwrapped - Whether `ourself()` returns the
+   *                                         raw `Lum` object, or the wrapped
+   *                                         `Proxy` instance. Default: `true`;
+   *
+   * @property {boolean} $nsSelfUnwrapped - Whether `Lum.ns.$self()` uses the
+   *                                        raw or wrapped `Lum` object when
+   *                                        exporting global variables.
+   *                                        Default is `true` on Node.js and
+   *                                        `false` anywhere else.
    */
   const Lum = 
   {
@@ -338,7 +349,7 @@
    *
    * `Lum.prop(object, string, function, function, object)`
    *
-   *   Add a getter and setter property with specified descriptor options.
+   *   Add a getter and setter property with specified Descriptor options.
    *   Do not use `get`, `set`, or `value` in the descriptor options.
    *
    * `Lum.prop(object, string, function, null, object)`
@@ -514,7 +525,7 @@
     static getWrapper(obj=Lum, opts=Lum.Wrapper.getWrapperOpts)
     {
       //console.debug("Wrapper.getWrapper", obj, opts);
-      const isProxy = (ctx.hasProxy && is_instance(obj, Proxy));
+      const isProxy = (ctx.hasProxy && is_instance(obj, Proxy, true));
 
       for (let i = 0; i < wrappers.length; i++)
       {
@@ -723,11 +734,37 @@
    * existing properties. Once a property is added to '_', it cannot be
    * removed or replaced. This is for mostly indomitable constants only.
    *
-   * A few constants that might be useful:
+   * A few constants and functions that might be useful:
    *
    * `O, F, S, B, N, U, SY, BI` - the Javascript type names as strings.
+   * `is_obj, non_null, is_complex, is_instance` - type checking methods.
+   * `clone, lock, addClone, addLock, cloneIfLocked` - cloning/locking methods.
+   * `ourself` - the `ourself()` function.
+   * `DESC_*` - all of the descriptor constants.
+   * `CLONE_*` - all of the cloning constants, see {@link Lum._.clone}.
+   *
+   * The use of object destructuring is recommended for importing, like:
+   *
+   * ```
+   *  const {O,F,is_obj,clone} = Lum._;
+   * ```
    *
    * @namespace Lum._
+   *
+   * All of the `DESC_*` properties are locked Descriptor options for use with
+   * the `prop()` function. There's also a few extra properties used to change
+   * the default behaviours of certain methods and functions.
+   *
+   * @property {object} DESC_RO       - Indomitable Descriptor.
+   * @property {object} DESC_CONF     - Configurable Descriptor.
+   * @property {object} DESC_ENUM     - Enumerable Descriptor.
+   * @property {object} DESC_WRITE    - Writable Descriptor.
+   * @property {object} DESC_RW       - Configurable, writable Descriptor.
+   * @property {object} DESC_DEF      - Configurable, enumerable Descriptor.
+   * @property {object} DESC_OPEN     - Fully changeable Descriptor.
+   *
+   * @see Lum._.clone
+   * @see Lum.prop
    */
   prop(Lum, '_', lock(
   {
@@ -911,7 +948,7 @@
   Lum.ns.useProp = true;
 
   // The descriptor used by default to register namespaces.
-  Lum.ns.defaultDescriptor = DESC_ENUM;
+  Lum.ns.defaultDescriptor = DESC_DEF;
 
   /**
    * Get a namespace.
@@ -970,7 +1007,7 @@
    *
    * @param {...string} Any arguments are the names of namespaces we need.
    *
-   * @return {Lum} - The 
+   * @return {Lum} - The Lum core object.
    *
    * @throw Error - If a required namespace is missing, an error is thrown.
    *
@@ -1042,7 +1079,7 @@
   // Register a global variable (or multiple) for Lum itself.
   prop(Lum.ns, '$self', function ()
   {
-    const self = wrap.wrap(Lum.$nsSelfUnwrapped);
+    const self = Lum.$nsSelfUnwrapped ? Lum : wrap.wrap();
     const args = Array.prototype.slice.call(arguments);
 
     if (args.length === 0) args[0] = 'Lum'; // Default name.
@@ -1051,7 +1088,6 @@
     {
       Lum.ns.add(args[i], self);
     }
-
   });
 
   /**
@@ -1219,6 +1255,95 @@
   });
 
   wrap.add('wantJq', Lum.jq.want);
+
+  /**
+   * See if a passed object is a jQuery instance.
+   */
+  prop(Lum.jq, 'is', function (obj)
+  {
+    const $ = Lum.jq.get();
+    return is_instance(obj, $);
+  });
+
+  /**
+   * Get jQuery wrapped element(s).
+   *
+   * @param {mixed} el  The element or jQuery selector.
+   *
+   *  If an `object` may be either a jQuery object (in which case it's returned
+   *  as is, as it's already in the appropriate format), or a DOM Element, in
+   *  which case we wrap the element with jQuery.
+   *
+   *  If a `string` it's assumed to be a jQuery selector statement, or raw
+   *  HTML that will be converted into a jQuery wrapped element.
+   *
+   * @return {jQuery|null}  Will be `null` if `el` was not a valid value.
+   *
+   * Will also be `null` is jQuery is not found.
+   *
+   */
+  prop(Lum.jq, 'wrap', function (el)
+  {
+    const $ = Lum.jq.get();
+    if (!$) return null; // No jQuery, cannot continue.
+
+    if (typeof el === S)
+    { // A string is easy.
+      return $(el);
+    }
+    else if (Lum.jq.is(el))
+    { // It's already a jQuery object, return it as is.
+      return el;
+    }
+    else if (is_instance(el, root.Element))
+    { // It's a DOM Element, wrap it.
+      return $(el);
+    }
+    else
+    { // Sorry, we don't know how to handle this.
+      return null;
+    }
+  });
+
+  /**
+   * Get a jQuery event property with transparent `originalEvent` handling.
+   */
+  prop(Lum.jq, 'eventProp', function (ev, prop, oeFirst=false)
+  {
+    const hasOE = is_obj(ev.originalEvent);
+
+    if (hasOE && oeFirst)
+    {
+      const oeVal = ev.originalEvent[prop];
+      if (non_null(oeVal))
+      {
+        return oeVal;
+      }
+    }
+
+    const evVal = ev[prop];
+    if (non_null(evVal))
+    {
+      return evVal;
+    }
+
+    if (hasOE && !oeFirst)
+    {
+      const oeVal = ev.originalEvent[prop];
+      if (non_null(oeVal))
+      {
+        return oeVal;
+      }
+    }
+  });
+
+  /**
+   * Look for the `dataTransfer` event property.
+   */
+  prop(Lum.jq, 'dataTransfer', function (ev)
+  {
+    return Lum.jq.eventProp(ev, 'dataTransfer', true);
+  });
 
   // Return the wrapped object.
   return wrap.wrap();

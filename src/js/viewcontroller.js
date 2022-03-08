@@ -1,13 +1,13 @@
-(function($)
+(function(Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not found");
 
-  Lum.markLib('viewcontroller');
+  Lum.jq.need().lib.mark('viewcontroller');
+
+  const {O,F,S,B,is_obj} = Lum._;
+  const $ = Lum.jq.get();
 
   /**
    * A class to represent a View Controller in a GUI.
@@ -52,11 +52,11 @@
       $(function()
       {
         var api;
-        if (typeof modelclass === 'function')
+        if (typeof modelclass === F)
         {
           api = new modelclass(conf);
         }
-        else if (typeof modelclass === 'object')
+        else if (is_obj(modelclass))
         {
           api = modelclass;
         }
@@ -80,11 +80,11 @@
         }
   
         // Once we've triggered all of our handlers, tell the API.
-        if (typeof api.trigger === 'function')
+        if (typeof api.trigger === F)
         {
           api.trigger("ready", self);
         }
-        else if (typeof api.ready === 'function')
+        else if (typeof api.ready === F)
         {
           api.ready(self);
         }
@@ -111,9 +111,9 @@
     {
       if (opts === undefined)
         opts = {};
-      else if (typeof opts === 'function')
+      else if (typeof opts === F)
         opts = {each: opts};
-      else if (typeof opts === 'string')
+      else if (typeof opts === S)
         opts = {ns: opts};
   
       var ns = 'ns' in opts ? opts.ns : this.defaultAttrNamespace;
@@ -123,7 +123,7 @@
         return $(this).attr(ns+':'+aname) == aval;
       });
   
-      if (typeof opts.each === 'function')
+      if (typeof opts.each === F)
       {
         matching.each(opts.each);
       }
@@ -138,24 +138,24 @@
         def = name;
         register = false;
       }
-      else if (typeof name !== 'string')
+      else if (typeof name !== S)
       {
         console.error("Invalid template name", name, def);
         return;
       }
   
-      if (typeof def === 'string')
+      if (typeof def === S)
       {
         def = {html: def};
       }
-      else if (typeof def !== 'object')
+      else if (!is_obj(def))
       {
         console.error("Invalid template definition", name, def);
         return;
       }
   
       var render;
-      if (typeof def.render === 'function')
+      if (typeof def.render === F)
       { // A custom render function, cool.
         render = def.render;
       }
@@ -230,21 +230,21 @@
   
     formChanged (options)
     {
-      if (typeof options === 'boolean')
+      if (typeof options === B)
       {
         options = {toggle: options};
       }
-      else if (typeof options !== 'object' || options === null)
+      else if (!is_obj(options))
       {
         options = {};
       }
   
       var toggle = true;
-      if (typeof options.toggle === 'boolean')
+      if (typeof options.toggle === B)
       {
         toggle = options.toggle;
       }
-      else if (typeof options.toggle === 'function')
+      else if (typeof options.toggle === F)
       {
         toggle = options.toggle.call(this, options);
       }
@@ -269,7 +269,7 @@
         }
       }
   
-      if (typeof this.trigger === 'function')
+      if (typeof this.trigger === F)
       {
         this.trigger('formChanged', toggle);
       }
@@ -278,11 +278,11 @@
     watchChanges (options)
     {
       options = options || {};
-      var formEl = 'form' in options ? options.form : 'form';
-      var eventName = 'event' in options ? options.event : 'change';
-      var childSelector = 'selector' in options ? options.selector
-        : 'input,select,textarea';
+      const formEl = options.form ?? 'form';
+      const eventName = options.event ?? 'change';
+      var childSelector = options.selector ?? 'input,select,textarea';
       var self = this;
+
       $(formEl).on(eventName, childSelector, function (e)
       {
         self.formChanged(true);
@@ -291,43 +291,69 @@
   
     selectFile (opts)
     {
-      var self = this;
       opts = opts || {};
-      var fileBox;
-      if (typeof opts.fileSelector === 'string')
-      {
+
+      const self = this;
+
+      let fileBox;
+      let removeFromDOM = false;
+
+      if (typeof opts.fileSelector === S)
+      { // A string selector.
         fileBox = $(opts.fileSelector);
       }
-      else if (typeof opts.fileElement === 'object')
-      {
-        fileBox = opts.fileElement;
+      else if (is_obj(opts.fileElement))
+      { // A jQuery instance, or a DOM Element.
+        fileBox = Lum.jq.wrap(opts.fileElement);
+        if (fileBox === null)
+        {
+          console.error("Invalid 'fileElement' option", opts);
+          return;
+        }
       }
       else
       {
         fileBox = $('<input type="file">');
-        if (typeof opts.multiple === 'boolean')
+
+        if (typeof opts.multiple === B)
         {
           fileBox.prop('multiple', opts.multiple);
         }
-        if (typeof opts.accept === 'string')
+        if (typeof opts.accept === S)
         {
           fileBox.prop('accept', opts.accept);
         }
+
+        const addToDOM = opts.addToDOM ?? true;
+        if (addToDOM)
+        { // Add the element to the body, needed for some browsers.
+          $('body').append(fileBox);
+          removeFromDOM = true; // Remove when done with it.
+        }
       }
   
-      var clickNow = opts.clickNow;
-  
-      var callback = opts.onSelect;
-      if (typeof callback === 'function')
+      let clickNow = opts.clickNow;
+      const callback = opts.onSelect;
+
+      if (typeof callback === F)
       {
         fileBox.on('change', function (e)
         {
+          let retval = undefined;
           if (e.target && e.target.files)
           { // One or more files found.
-            callback.call(self, e.target.files, e);
+            const files = e.target.files;
+            retval = callback.call(self, files, e);
           }
+
+          if (removeFromDOM)
+          { // The temporary element needs to be removed.
+            fileBox.remove();
+          }
+          return retval;
         });
-        if (typeof clickNow !== 'boolean')
+
+        if (typeof clickNow !== B)
         { // If a callback is specified, but clickNow isn't, default to true.
           clickNow = true;
         }
@@ -340,6 +366,98 @@
   
       return fileBox;
     }
+
+    dropTarget (opts)
+    {
+      if (typeof opts === S)
+      { // Assume it's a selector.
+        opts = {element: opts};
+      }
+      else if (!is_obj(opts))
+      {
+        console.error("Invalid options passed to dropTarget()", opts);
+        return;
+      }
+
+      let element;
+
+      if ('element' in opts)
+      { // Looks like a regular options object.
+        element = Lum.jq.wrap(opts.element);
+      }
+      else
+      { // May be that the element object itself was passed, do some magic.
+        element = Lum.jq.wrap(opts);
+        opts = {element: element}; 
+      }
+
+      if (element === null)
+      {
+        console.error("Could not find valid dropTarget element", opts);
+        return;
+      }
+
+      function assignHandler(ev, handler)
+      {
+        if (typeof handler !== F)
+        { // Do nothing.
+          return;
+        }
+
+        if (typeof opts.target === S)
+        { // We're using a target delegate.
+          element.on(ev, opts.target, handler);
+        }
+        else
+        { // Direct element handler with no delegation.
+          element.on(ev, handler);
+        }
+      }
+
+      function assignEvent (ev, defaultHandler)
+      {
+        return assignHandler(ev, (opts[ev] ?? defaultHandler));
+      }
+
+      const defaultDrag = function (e)
+      {
+        e.stopPropagation();
+        e.preventDefault();
+        return false;
+      }
+
+      assignEvent('dragenter', defaultDrag);
+      assignEvent('dragover',  defaultDrag);
+
+      if (typeof opts.onFiles === F)
+      { // The drop area can accept files.
+        const self = this;
+        assignHandler('drop', function(e)
+        {
+          const data = Lum.jq.dataTransfer(e); 
+          if (is_obj(data) && is_obj(data.files) && data.files.length > 0)
+          { // We have files, let's do this!
+            const files = data.files;
+            const callback = opts.onFiles;
+            const elThis = opts.elThis ?? false;
+            const cbThis = elThis ? this : self;
+            const cbLast = elThis ? self : this;
+            const retval = callback.call(cbThis, files, e, cbLast);
+            return ((typeof retval === B) ? retval : false);
+          }
+          else if (typeof opts.drop === F)
+          { // No files, but there is a drop event, so proxy to it.
+            const handler = opts.drop;
+            return handler.call(this, e);
+          }
+        });
+      }
+      else
+      { // No file callback, okay, let's just try assigning the 'drop' event.
+        assignEvent('drop'); // No default handler for drop.
+      }
+
+    }
   
     static makeGUI ()
     { // In a static method, 'this' refers to the class not the instance.
@@ -349,5 +467,5 @@
 
   } // class Lum.ViewController
 
-})(window.jQuery);
+})(self.Lum);
 

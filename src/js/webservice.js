@@ -1,5 +1,5 @@
 /*
- * Nano Webservice Framework v4.
+ * Lum Webservice Framework v4.
  *
  * A modular client library for working with web services.
  *
@@ -15,23 +15,20 @@
  *       toggleDebug() method in ModelAPI when you do this.
  */
 
-(function (Nano)
+(function (Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not found");
 
-  Nano.needLibs('helpers');
+  Lum.lib.need('helpers').lib.mark('webservice');
 
-  Nano.markLib('webservice');
+  // TODO: Lum._ stuff;
 
   /**
    * Build a WebService instance.
    */  
-  Nano.WebService = class 
+  Lum.WebService = class 
   {
     constructor (options)
     {
@@ -359,9 +356,9 @@
       return path1.replace(/\/+$/, '') + '/' + path2.replace(/^\/+/,'');
     }
 
-  } // class Nano.WebService
+  } // class Lum.WebService
 
-  var wsp = Nano.WebService.prototype;
+  var wsp = Lum.WebService.prototype;
 
   /**
    * A dataType to MIME-type map. Feel free to populate with more values.
@@ -411,7 +408,7 @@
 
   }
 
-  let join_path = Nano.WebService.join_path;
+  let join_path = Lum.WebService.join_path;
 
   /**
    * An object representing a request.
@@ -419,7 +416,7 @@
    * @param object request_opts  An object with a few properties (see below.)
    * @param object webservice  The Webservice instance that spawned us.
    */
-  Nano.WebService.Request = class
+  Lum.WebService.Request = class
   {
     constructor (request_opts, webservice)
     {
@@ -548,7 +545,7 @@
     {
       if (this.cloneData)
       {
-        data = Nano.clone(data, this.preserveClone);
+        data = Lum.clone(data, this.preserveClone);
       }
       this.data = data;
     }
@@ -937,9 +934,9 @@
       }
     }
 
-  } // class Nano.WebService.Request
+  } // class Lum.WebService.Request
 
-  Nano.WebService.jQueryTransport = class
+  Lum.WebService.jQueryTransport = class
   {
     constructor (ws)
     {
@@ -963,7 +960,7 @@
   
     _build_request_opts (request)
     {
-      var reqopts = Nano.clone(request.opts);
+      var reqopts = Lum.clone(request.opts);
   
       reqopts.type = request.http;
   
@@ -1012,22 +1009,22 @@
       return reqopts;
     }
 
-  } // class Nano.WebService.jQueryTransport
+  } // class Lum.WebService.jQueryTransport
 
-  // TODO: Add transport for 'fetch' using Nano.Promise for Deferred object.
+  // TODO: Add transport for 'fetch' using Lum.Promise for Deferred object.
   // TODO: Add transports for other common transports in plugin files.
 
   /**
-   * Here we set the default 'requestClass' to Nano.WebService.Request
+   * Here we set the default 'requestClass' to Lum.WebService.Request
    */
-  wsp._optionDefaults.requestClass = Nano.WebService.Request;
+  wsp._optionDefaults.requestClass = Lum.WebService.Request;
 
   /**
-   * And we set the default 'transportClass' to Nano.WebService.jQueryTransport
+   * And we set the default 'transportClass' to Lum.WebService.jQueryTransport
    *
    * In the future we should detect what features are available and auto-select
    * an appropriate transport based on that. Users can always override it.
    */
-  wsp._optionDefaults.transportClass = Nano.WebService.jQueryTransport;
+  wsp._optionDefaults.transportClass = Lum.WebService.jQueryTransport;
 
-})(window.Lum);
+})(self.Lum);
