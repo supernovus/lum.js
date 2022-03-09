@@ -10,7 +10,7 @@
 
   // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
 
-  const format = Lum.lib.mark('format_json').ns.new('format.json',function (val)
+  function format (val)
   { 
     var retval = '';
     var str = val;
@@ -53,8 +53,9 @@
       }
     }
     return retval;
+  }
 
-  }); // Lum.format.json()
+  Lum.lib.mark('format_json').ns.new('format.json', format);
 
   const $ = Lum.jq.get();
 
