@@ -23,8 +23,8 @@
 
   Lum.lib.need('helpers').lib.mark('webservice');
 
-  // TODO: Lum._ stuff;
-
+  const {F,O,N,S,B,is_obj} = Lum._;
+  
   /**
    * Build a WebService instance.
    */  
@@ -354,6 +354,10 @@
     static join_path (path1, path2)
     {
       return path1.replace(/\/+$/, '') + '/' + path2.replace(/^\/+/,'');
+    }
+
+    static builder()
+    {
     }
 
   } // class Lum.WebService
@@ -1026,5 +1030,180 @@
    * an appropriate transport based on that. Users can always override it.
    */
   wsp._optionDefaults.transportClass = Lum.WebService.jQueryTransport;
+
+  /**
+   * A class to build a WebService instance using a Builder pattern.
+   */
+  Lum.WebService.Builder = class
+  {
+    constructor(opts={})
+    {
+      this.opts = opts;
+
+      if (!is_obj(this.opts.methods))
+        this.opts.methods = {};
+
+      // Now add methods like get(), post(), etc.
+      for (let meth of wsp._known_http_methods)
+      {
+        this.http(meth);
+      }
+    }
+
+    /**
+     * Set the base URL.
+     */
+    url(url)
+    {
+      this.opts.url = url;
+      return this;
+    }
+
+    /**
+     * Add a new web service method.
+     *
+     * We also add friendly wrappers like get(), post(), etc.
+     */
+    add(name, path, http)
+    {
+      //console.debug("WSB.add", arguments, this);
+
+      if (typeof name !== S)
+      { // Uh...
+        throw new Error("The 'name' parameter must be a string");
+      }
+
+      const NO_PATH = "Must specify a 'path' parameter";
+      const NO_HTTP = "Must specify a 'http' parameter";
+
+      if (is_obj(path))
+      { // Adding a complex rule.
+        if (typeof path.path !== S)
+        { // Didn't specify a path.
+          throw new Error(NO_PATH);
+        }
+
+        if (typeof http === S)
+        { // The HTTP method was specified.
+          path.http = http;
+        }
+        else if (typeof path.http !== S)
+        { // Uh...
+          throw new Error(NO_HTTP);
+        }
+
+        this.opts.methods[name] = path;
+      }
+      else if (is_obj(http))
+      { // Ditto, but this time with the path specified separately.
+        if (typeof http.http !== S)
+        { 
+          throw new Error(NO_HTTP);
+        }
+
+        if (typeof path === S)
+        { // This is the expected usage.
+          http.path = path;
+        }
+        else
+        { // Uh...
+          throw new Error(NO_PATH);
+        }
+
+        this.opts.methods[name] = http;
+      }
+      else if (typeof path === S && typeof http === S)
+      { // Probably the most comon form of method definition.
+        this.opts.methods[name] = [path, http];
+      }
+      else
+      { // Anything else is not valid.
+        throw new Error("Invalid parameters");
+      }
+
+      return this;
+    } // add()
+
+    /**
+     * Add a method that uses the FormData API (usually for uploading.)
+     */
+    addForm(name, def, http='POST')
+    {
+      if (typeof def === S)
+      { // The path parameter was passed.
+        def = {path: def, formData: true, cloneData: false};
+      }
+      else if (is_obj(def))
+      { // Some rules were passed.
+        def.formData = true;
+        def.cloneData = false;
+        if (typeof def.http === S)
+        { // If the 'http' is passed in here, we ignore the parameter.
+          http = undefined;
+        }
+      }
+
+      return this.add(name, def, http);
+    } // addForm()
+
+    /**
+     * Add an HTTP Method
+     */
+    http(meth, options)
+    {
+      //console.debug("WSB.http", arguments, this);
+      const httpMeth = meth.toUpperCase();
+      if (!wsp._known_http_methods.includes(httpMeth))
+      { // It's a custom HTTP Method, let's add a definition for it.
+        if (!is_obj(this.opts.customHTTP))
+          this.opts.customHTTP = {};
+        if (options === true)
+        { // Boolean true is a shortcut for useQueryString
+          options = {useQueryString: true};
+        }
+        this.opts.customHTTP[httpMeth] = options;
+      }
+
+      // Okay, now add an instance method for quickly adding new WS methods.
+      const addMeth = meth.toLowerCase();
+      if (typeof this[addMeth] !== F)
+      { 
+        const self = this;
+        this[addMeth] = function (name, url)
+        {
+          return self.add(name, url, httpMeth);
+        }
+      }
+
+      return this;
+    } // http()
+
+    setOpt(opt, value)
+    {
+      if (typeof opt !== S)
+      {
+        throw new Error("The 'opt' parameter must be a string");
+      }
+
+      const PROTECTED_OPTIONS = ['methods','customHTTP'];
+
+      if (PROTECTED_OPTIONS.includes(opt))
+      {
+        throw new Error(`Cannot set the '${opt}' option directly`);
+      }
+
+      this.opts[opt] = value;
+      return this;
+    }
+
+    /**
+     * Build a new `Lum.WebService` instance using this as the options.
+     */
+    build()
+    {
+      return new Lum.WebService(this.opts);
+    }
+
+  } // Lum.WebService.Builder
 
 })(self.Lum);

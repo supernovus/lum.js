@@ -138,6 +138,11 @@ Lum.Listing = class
     {
       this.postRender = options.postRender;
     }
+
+    if ('postShowPage' in options)
+    {
+      this.postShowPage = options.postShowPage;
+    }
   
     if ('sortAttr' in options)
     {
@@ -693,6 +698,7 @@ Lum.Listing = class
   refresh_data (rawdata)
   {
   //  console.log(rawdata, this.sortBy, this.searches);
+    this.rawData = rawdata;
     if (this.sortBy === null && Object.keys(this.searches).length === 0)
     {
       this.displayData = rawdata;
@@ -979,6 +985,9 @@ Lum.Listing = class
     var start = (page - 1) * show;
     var end   = start + show;
   
+    if (start < 0) start = 0;
+    if (end > dlen) end = dlen;
+
   //  console.log("sse:", show, start, end);
   //  console.log({tmpl: tmpl, list: list});
   
@@ -988,13 +997,19 @@ Lum.Listing = class
       if (i >= dlen) break; // Partial page.
       var obj  = data[i];
   //    console.log("  == ", obj);
-      if ('preRender' in this)
+      if (typeof this.preRender === F)
         this.preRender(obj);
       var item = this._render(obj);
-      if ('postRender' in this)
+      if (typeof this.postRender === F)
         this.postRender(item, obj);
       list.append(item);
     }
+
+    if (typeof this.postShowPage === F)
+    {
+      this.postShowPage({start, end, displayData: data, rawData: this.rawData});
+    }
+
     return true;
   }
 

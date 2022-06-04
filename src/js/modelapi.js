@@ -6,7 +6,7 @@
 
   Lum.lib.need('helpers').lib.mark('modelapi');
 
-  // TODO: Lum._ stuff.
+  const {F,O,N,S,B,is_obj} = Lum._;
  
   /**
    * A Model API base core. Use this as the foundation for your API objects.
@@ -44,7 +44,7 @@
      */
     constructor (conf={})
     {
-      if (conf === null || typeof conf !== 'object')
+      if (conf === null || typeof conf !== O)
       { // Sorry, that's not valid.
         throw new Error("ModelAPI constructor only accepts an object");
       }
@@ -82,7 +82,7 @@
       { // Set up the debugging.
 
         let dbgopts = {};
-        if (typeof conf.debug === 'object' && conf.debug !== null)
+        if (typeof conf.debug === O && conf.debug !== null)
         { // Let's see if it's the debug conf, or the list of flags.
           if (conf.debug.flags === undefined 
             && conf.debug.showFlag === undefined)
@@ -95,7 +95,7 @@
           }
         }
 
-        if (typeof conf.hash === 'object' && dbgopts.hash === undefined)
+        if (typeof conf.hash === O && dbgopts.hash === undefined)
         { // A shortcut.
           dbgopts.hash = conf.hash;
         }
@@ -116,7 +116,7 @@
   
       // See if there's any init groups registered, and make sure they have
       // the proper 'api' property set.
-      if (typeof this._initGroups === 'object')
+      if (typeof this._initGroups === O)
       {
         for (let groupName in this._initGroups)
         {
@@ -162,23 +162,23 @@
       /**
        * Before we do any further initialization, load extensions.
        */
-      if (typeof this.constructor._extensions === 'object'
+      if (typeof this.constructor._extensions === O
         && this.constructor._extensions.length)
       {
         let extClasses = this.constructor._extensions;
         for (let i = 0; i < extClasses.length; i++)
         {
           let extClass = extClasses[i];
-          if (typeof extClass === 'function')
+          if (typeof extClass === F)
           {
             let extInstance = new extClass(this);
             this._exts.push(extInstance);
             let name = null;
-            if (typeof extInstance.name === 'string')
+            if (typeof extInstance.name === S)
             { // There was a name provided as a property.
               name = extInstance.name;
             }
-            else if (typeof extInstance.getExtensionName === 'function')
+            else if (typeof extInstance.getExtensionName === F)
             { // There's a function to return the name.
               name = extInstance.getExtensionName();
             }
@@ -186,7 +186,7 @@
             {
               this.ext[name] = extInstance;
             }
-            if (typeof extInstance.preInit === 'function')
+            if (typeof extInstance.preInit === F)
             { // Pre-initialization methods.
               extInstance.preInit(conf);
             }
@@ -223,7 +223,7 @@
         for (let i = 0; i < this._exts.length; i++)
         {
           let ext = this._exts[i];
-          if (typeof ext.postInit === 'function')
+          if (typeof ext.postInit === F)
           {
             ext.postInit(conf);
           }
@@ -237,13 +237,13 @@
      */
     need (group, func, conf)
     {
-      if (typeof group === 'object' && typeof group['@init@'] === 'object')
+      if (typeof group === O && typeof group['@init@'] === O)
       { // It's a legacy group.
         console.warn("Deprecated use of ModelAPI.need()", group, func, conf);
         return group['@init@'].need(func, conf);
       }
-      else if (typeof group === 'string' 
-        && typeof this._initGroups[group] === 'object')
+      else if (typeof group === S 
+        && typeof this._initGroups[group] === O)
       { // The modern groups are easy as pie.
         return this._initGroups[group].need(func, conf);
       }
@@ -255,7 +255,7 @@
      */
     _init (group, conf)
     {
-      if (typeof this._initGroups[group] === 'object')
+      if (typeof this._initGroups[group] === O)
       {
         return this._initGroups[group].run(conf);
       }
@@ -341,18 +341,18 @@
      */
     static onInit (name, func, group='init')
     {
-      if (typeof name !== 'string')
+      if (typeof name !== S)
       {
         throw new Error("onInit() function name must be a string");
       }
 
-      if (typeof func === 'string' && typeof group === 'function')
+      if (typeof func === S && typeof group === F)
       { // Reversed order of parameters.
         let temp = group;
         group = func;
         func = temp;
       }
-      else if (typeof func !== 'function')
+      else if (typeof func !== F)
       {
         throw new Error("onInit() passed non-function");
       }
@@ -416,7 +416,7 @@
   
       this.onDebug('loadModel', ' -- Calling', loader);
   
-      if (typeof this[loader] === 'function')
+      if (typeof this[loader] === F)
       {
         this[loader](name, source);
       }
@@ -486,11 +486,11 @@
           if (!target)
             target = elname;
           $(target).JSON(this);
-          if (typeof changeHandler === 'string')
+          if (typeof changeHandler === S)
           {
             $(changeHandler).val(1);
           }
-          else if (typeof changeHandler === 'function')
+          else if (typeof changeHandler === F)
           {
             changeHandler(this, target, element);
           }
@@ -501,7 +501,7 @@
         Lum.addProperty(jsondata, 'json', function (format)
         {
           var json = JSON.stringify(this);
-          if (format && typeof Lum.format_json === 'function')
+          if (format && typeof Lum.format_json === F)
             return Lum.format_json(json);
           else
             return json;
@@ -522,20 +522,19 @@
      * automatically. 
      *
      * @param {string} name     The name of the web service we're adding.
-     * @param {string} baseUrl  The base URL of the web service.
-     * @param {object} methods  Methods we're adding to the web service.
+     * @param {string} baseUrl  (Optional) The base URL of the web service.
+     * @param {object} methods  (Optional) Method definitions.
      * @param {object} wsOpts   (Optional) Extra options for the webservice.
-     *
-     *  Any constructor options other than `url` and `methods` can be set
-     *  in the `wsOpts` and will be passed to the constructor.
-     *
+     * 
+     * If you don't specify the `methods` 
      */
-    static addWS(name, baseUrl, methods, wsOpts)
+    static addWS(name, baseUrl, methods, wsOpts={})
     {
-      //console.debug("addWS", name, baseUrl, methods, wsOpts);
-      if (typeof methods !== 'object')
+      //console.debug("addWS", name, baseUrl, methods, wsOpts, arguments);
+      
+      if (!is_obj(wsOpts))
       {
-        throw new Error(`Invalid methods passed to addWS(${name})`);
+        throw new Error("The 'wsOpts' parameter must be an object");
       }
 
       this.onInit(name, 'pre_init', function (conf)
@@ -550,9 +549,10 @@
           throw new Error(`Web service ${name} already defined`);
         }
 
-        wsOpts = wsOpts || {};
-        wsOpts.url = baseUrl;
-        wsOpts.methods = methods;
+        if (typeof baseUrl === S)
+          wsOpts.url = baseUrl;
+        if (is_obj(methods))
+          wsOpts.methods = methods;
 
         conf.sources[name] =
         {
@@ -560,6 +560,13 @@
           opts: wsOpts,
         }
       });
+
+      if (!is_obj(methods))
+      { // No methods off the bat? That's okay, we'll use a builder.
+        // Just call methods on the builder to populate the WS definition.
+        return new Lum.WebService.Builder(wsOpts);
+      }
+
     } // addWS
 
     /**
@@ -586,23 +593,28 @@
         this.need(wsName, conf);
 
         if (conf.sources === undefined 
-          || typeof conf.sources[wsName].opts.methods !== 'object')
+          || typeof conf.sources[wsName].opts.methods !== O)
         { // No such source.
           throw new Error(`Web service ${wsName} was not defined before ${extName} tried to extend it`);
         }
 
         const wsOpts = conf.sources[wsName].opts;
 
-        if (typeof addOpts === 'object')
+        if (typeof addOpts === O)
         {
           for (const opt in addOpts)
           {
             if (opt === 'url' || opt === 'methods') continue;
             wsOpts[opt] = addOpts[opt];
           }
+
+          if (!is_obj(methods) && is_obj(addOpts.methods))
+          { // Using the methods from the addOpts.
+            methods = addOpts.methods;
+          }
         }
 
-        if (typeof methods === 'object')
+        if (is_obj(methods))
         {
           const wsMeths = wsOpts.methods;
 
@@ -611,7 +623,14 @@
             wsMeths[meth] = methods[meth];
           }
         }
-      });
+      }); // this.onInit() 
+
+      if (!is_obj(methods) && !is_obj(addOpts))
+      { // Let's use a builder like we do in `addWS()`
+        addOpts = {};
+        return new Lum.WebService.Builder(addOpts);
+      }
+
     } // extendWS
   
     static makeAPI ()
@@ -653,7 +672,7 @@
 
       this.parent = apiInstance;
 
-      if (typeof this.setup === 'function')
+      if (typeof this.setup === F)
       {
         this.setup(apiInstance);
       }
@@ -681,7 +700,7 @@
     {
       destName = destName || srcName;
 
-      if (typeof this[srcName] === 'function')
+      if (typeof this[srcName] === F)
       {
         if (canReplace || this.parent[destName] === undefined)
         {
@@ -732,7 +751,7 @@
      */
     addHandledMethods(methodsToAdd)
     {
-      if (typeof methodsToAdd === 'object')
+      if (typeof methodsToAdd === O)
       {
         if (Array.isArray(methodsToAdd))
         { // An array of source names.
@@ -747,15 +766,15 @@
           for (var srcName in methodsToAdd)
           {
             var methSpec = methodsToAdd[srcName];
-            if (typeof methSpec === 'string')
+            if (typeof methSpec === S)
             {
               this.addHandledMethod(srcName, methSpec);
             }
-            else if (typeof methSpec === 'boolean')
+            else if (typeof methSpec === B)
             {
               this.addHandledMethod(srcName, null, methSpec);
             }
-            else if (typeof methSpec === 'object')
+            else if (typeof methSpec === O)
             {
               this.addHandledMethod(
                 srcName,
@@ -786,7 +805,7 @@
 
     add(name, method, apiIsThis=false)
     {
-      if (typeof name === 'string' && typeof method === 'function')
+      if (typeof name === S && typeof method === F)
       {
         if (this.methods[name] === undefined)
         {
@@ -814,7 +833,7 @@
     {
       const meth = this.methods[name];
 
-      if (typeof meth !== 'function')
+      if (typeof meth !== F)
       {
         console.error("invalid init method requested", name, this, conf);
         return false;

@@ -104,5 +104,14 @@
   {
     "@parent": "idb.js",
     "url": "https://cdn.jsdelivr.net/npm/idb/build/umd-with-async-ittr.js"
+  },
+  "stacktrace.js":
+  {
+    "uglify": false,
+    "url": "https://raw.githubusercontent.com/stacktracejs/stacktrace.js/master/dist/stacktrace.min.js",
+    "version":
+    {
+      "json": "https://raw.githubusercontent.com/stacktracejs/stacktrace.js/master/package.json"
+    }
   }
 }

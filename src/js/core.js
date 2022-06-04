@@ -249,6 +249,7 @@
    * @param {object} obj - The object we want to lock.
    * @param {boolean} [clonable=true] Pass to {@link Lum._.addClone} first?
    * @param {object} [cloneOpts=null] Options for addClone.
+   * @param {boolean} [useSeal=false] Use Object.seal() instead of freeze.
    *
    * If cloneOpts is `null` then we will use the following:
    *
@@ -258,7 +259,7 @@
    *
    * @method Lum._.lock
    */
-  function lock(obj, clonable=true, cloneOpts=null)
+  function lock(obj, clonable=true, cloneOpts=null, useSeal=false)
   {
     if (clonable)
     { // Add the clone method before freezing.
@@ -269,8 +270,8 @@
       addClone(obj, cloneOpts);
     }
 
-    // Now freeze the object.
-    return Object.freeze(obj);
+    // Now freeze (or seal) the object.
+    return (useSeal ? Object.seal(obj) : Object.freeze(obj));
   }
 
   /**
@@ -484,6 +485,60 @@
 
     prop(obj, name, func, null, desc);
   }
+
+  function makeEnum (obj, useSymbols=false, globalSymbol=false)
+  {
+    if (!is_obj(obj))
+    {
+      throw new Error("Non-object passed to Lum.makeEnum");
+    }
+
+    const anEnum = {};
+
+    function getVal (name, def)
+    {
+      if (useSymbols)
+      { // We want to use symbols.
+        if (globalSymbol)
+        {
+          return Symbol.for(name);
+        }
+        else
+        {
+          return Symbol(name);
+        }
+      }
+      else
+      { // Just gonna use simple auto-incrementing integers.
+        return def;
+      }
+    }
+
+    if (Array.isArray(obj))
+    { // An array of strings is expected.
+      for (let i = 0; i < obj.length; i++)
+      {
+        const prop = obj[i];
+        if (typeof prop !== S)
+        {
+          throw new Error("Non-string passed in Lum.makeEnum object");
+        }
+        anEnum[prop] = getVal(prop, i);
+      }
+    }
+    else
+    { // An object mapping of property name to value.
+      for (let prop in obj)
+      {
+        const val = obj[prop];
+        anEnum[prop] = getVal(val, val);
+      }
+    }
+
+    return anEnum;
+  }
+
+  prop(Lum, 'makeEnum', makeEnum);
 
   /**
    * Context object.
@@ -1343,6 +1398,39 @@
   prop(Lum.jq, 'dataTransfer', function (ev)
   {
     return Lum.jq.eventProp(ev, 'dataTransfer', true);
+  });
+
+  /**
+   * Get a stacktrace. Differs from browser to browser.
+   * 
+   */
+  prop(Lum, 'stacktrace', function (msg)
+  {
+    return (new Error(msg)).stack.split("\n");
+  });
+
+  /**
+   * Abstract classes for Javascript.
+   */
+  prop(Lum, 'AbstractClass', class
+  {
+    /**
+     * You must override the constructor.
+     */
+    constructor()
+    {
+      const name = this.constructor.name;
+      throw new Error(`Cannot create instance of abstract class ${name}`);
+    }
+
+    /**
+     * If you want to mark a method as abstract use this.
+     */
+    $abstract(name)
+    {
+      throw new Error(`Abstract method ${name}() was not implemented`);
+    }
+
   });
 
   // Return the wrapped object.
