@@ -5,23 +5,22 @@
 {
   "use strict";
 
-  if (Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
+  if (Lum === undefined) throw new Error("Lum core not found");
 
-  Lum.markLib('load');
+  Lum.lib.mark('load');
+
+  const {O,F,S} = Lum._;
 
   Lum.load = function (options)
   {
-    if (typeof options !== 'object')
+    if (typeof options !== O)
     {
       throw new Error("Lum.load() had no options passed");
     }
     
     let defloc = ('loc' in options) ? options.loc : null;
 
-    if (typeof options.js === 'object' && options.js !== null)
+    if (typeof options.js === O && options.js !== null)
     { // Some JS files to load.
       for (let o in options.js)
       {
@@ -29,34 +28,34 @@
         let url = undefined;
         let func = undefined;
         let loc = defloc;
-        if (typeof js === 'string')
+        if (typeof js === S)
         { // A string is assumed to be just a URL.
           url = js;
         }
-        else if (typeof js === 'object')
+        else if (typeof js === O)
         { // This can take two forms.
-          if (typeof js[0] === 'string')
+          if (typeof js[0] === S)
           { // Array style definition.
             url = js[0];
 
-            if (typeof js[1] === 'function')
+            if (typeof js[1] === F)
             {
               func = js[1];
             }
-            if (typeof js[2] === 'object')
+            if (typeof js[2] === O)
             {
               loc = js[2];
             }
           }
-          else if (typeof js.url === 'string')
+          else if (typeof js.url === S)
           { // Object style definition.
             url = js.url;
 
-            if (typeof js.func === 'function')
+            if (typeof js.func === F)
             {
               func = js.func;
             }
-            if (typeof js.loc === 'object')
+            if (typeof js.loc === O)
             {
               loc = js.loc;
             }
@@ -70,33 +69,33 @@
       } // for options.js
     } // if options.js
 
-    if (typeof options.css === 'object' && options.css !== null)
+    if (typeof options.css === O && options.css !== null)
     { // Some CSS files to load.
       for (let o in options.css)
       {
         let css = options.css[o];
         let url = undefined;
         let loc = defloc;
-        if (typeof css === 'string')
+        if (typeof css === S)
         { // A string is assumed to be just a URL.
           url = css;
         }
-        else if (typeof css === 'object')
+        else if (typeof css === O)
         { // This can take two forms.
-          if (typeof css[0] === 'string')
+          if (typeof css[0] === S)
           { // Array style definition.
             url = css[0];
 
-            if (typeof css[1] === 'object')
+            if (typeof css[1] === O)
             {
               loc = css[1];
             }
           }
-          else if (typeof css.url === 'string')
+          else if (typeof css.url === S)
           { // Object style definition.
             url = css.url;
 
-            if (typeof css.loc === 'object')
+            if (typeof css.loc === O)
             {
               loc = css.loc;
             }
@@ -119,7 +118,7 @@
       loc = loc || document.head;
       var script = document.createElement('script');
       script.src = url;
-      if (typeof func === 'function')
+      if (typeof func === F)
       {
         script.onload = func;
         script.onreadystatechange = func;

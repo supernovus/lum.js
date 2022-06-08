@@ -556,7 +556,7 @@
     () => root.ServiceWorkerGlobalScope !== undefined);
   lazy(ctx, 'hasProxy', () => root.Proxy !== undefined);
 
-  console.debug("Lum.context", ctx, ctx.hasProxy);
+  //console.debug("Lum.context", ctx, ctx.hasProxy);
 
   // A private cache of wrapper objects.
   const wrappers = [];
@@ -946,7 +946,7 @@
     let lastns = nscount - 1;
 
     let dbg = {namespaces, assign, overwrite, nscount, lastns, value, useprop};
-    console.debug("Lum.ns.add", dbg);
+    //console.debug("Lum.ns.add", dbg);
 
     for (let n = 0; n < nscount; n++)
     {
@@ -981,7 +981,7 @@
   // API to add new child namespaces, by default under the Lum prefix.
   prop(Lum.ns, 'new', function(namespaces, value, prefix='Lum', useprop=null)
   {
-    console.debug("Lum.ns.new", namespaces, value, prefix, useprop);
+    //console.debug("Lum.ns.new", namespaces, value, prefix, useprop);
 
     if (typeof namespaces === S)
     {

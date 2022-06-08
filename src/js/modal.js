@@ -2,16 +2,18 @@
  * Modal dialog boxes, and UI masks made easy.
  */
 
-(function ($)
+(function (Lum)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
 
-  Lum.markLib('modal');
+  if (Lum === undefined) throw new Error("Lum core not found");
+
+  Lum.jq.need().lib.mark('modal');
+
+  const $ = Lum.jq.get();
+
+  const {F,O,N,B,S} = Lum._;
 
   /**
    * Quick class to represent a Mask to cover the UI when a Modal is open.
@@ -54,9 +56,9 @@
       {
         if (fade === undefined)
           fade = this.autoFade;
-        if (typeof fade === 'number')
+        if (typeof fade === N)
           $(this.element).fadeIn(fade);
-        else if (typeof fade === 'boolean' && fade && this.fadeIn)
+        else if (typeof fade === B && fade && this.fadeIn)
           $(this.element).fadeIn(this.fadeIn);
         else
           $(this.element).show();
@@ -81,14 +83,33 @@
       {
         if (fade === undefined)
           fade = this.autoFade;
-        if (typeof fade === 'number')
+        if (typeof fade === N)
           $(this.element).fadeOut(fade);
-        else if (typeof fade === 'boolean' && fade && this.fadeOut)
+        else if (typeof fade === B && fade && this.fadeOut)
           $(this.element).fadeOut(this.fadeOut);
         else
           $(this.element).hide();    
       }
     }
+
+    /**
+     * Set an event handler on our element.
+     */
+    on ()
+    {
+      const elem = this.element;
+      return elem.on.apply(elem, arguments);
+    }
+
+    /**
+     * Remove an event handler on our element.
+     */
+    off ()
+    {
+      const elem = this.element;
+      return elem.off.apply(elem, arguments);
+    }
+
   } // class Lum.Mask
 
   /**
@@ -125,9 +146,9 @@
       }
   
       // Process any mask related options.
-      if (typeof options.mask === 'object')
+      if (typeof options.mask === O)
       {
-        if (typeof options.mask.show === 'function')
+        if (typeof options.mask.show === F)
         { // It's already an initialized Mask object. Set it directly.
           this.mask = options.mask;
         }
@@ -135,6 +156,7 @@
         { // It's a set of options to build a new Mask object.
           this.mask = new Lum.Mask(options.mask);
         }
+        this.hideOnMask = options.hideOnMask ?? false;
       }
       else
       { // No mask being used.
@@ -162,6 +184,26 @@
     }
 
     /**
+     * Remove an event handler on our content element.
+     */
+    off ()
+    {
+      if (!this.content) { return; }
+      const elem = this.content.element;
+      return elem.off.apply(elem, arguments);
+    }
+
+    /**
+     * Find another element in our content element.
+     */
+    find ()
+    {
+      if (!this.content) { return; }
+      const elem = this.content.element;
+      return elem.find.apply(elem, arguments);
+    }
+
+    /**
      * Show the dialog, at a specific position relative to a passed element.
      */
     show (posElement='body')
@@ -174,7 +216,7 @@
       }
 
       if (posElement === null
-        || (typeof posElement !== 'string' && typeof posElement !== 'object'))
+        || (typeof posElement !== S && typeof posElement !== O))
       {
         console.error("Invalid posElement", posElement, this);
         return;
@@ -184,7 +226,7 @@
       const content = this.content.element;
   
       const before = this.events.beforeShow;
-      if (typeof before === 'function')
+      if (typeof before === F)
       {
         const ret = before.call(this, pos, content);
         if (ret === false)
@@ -198,12 +240,12 @@
 
       let display = this.content.display;
 
-      if (typeof display === 'string' && display in dt)
+      if (typeof display === S && display in dt)
       {
         display = dt[display];
       }
 
-      if (typeof display === 'function')
+      if (typeof display === F)
       {
         let sbf = display.showBeforeFade;
         if (!fade || sbf)
@@ -238,10 +280,19 @@
       if (this.mask)
       {
         this.mask.show(true);
-      }   
+        if (this.hideOnMask)
+        {
+          let modal = this;
+          this.$maskFunc = function(e)
+          {
+            modal.hide();
+          }
+          this.mask.on('click', this.$maskFunc);
+        }
+      }
   
       const after = this.events.afterShow;
-      if (typeof after === 'function')
+      if (typeof after === F)
       {
         const ret = after.call(this, pos, content);
         if (ret !== undefined)
@@ -268,7 +319,7 @@
       const content = this.content.element;
 
       const before = this.events.beforeHide;
-      if (typeof before === 'function')
+      if (typeof before === F)
       {
         const ret = before.call(this, content);
         if (ret === false)
@@ -292,6 +343,11 @@
       if (this.mask)
       {
         this.mask.hide(true);
+        if (typeof this.$maskFunc === F)
+        {
+          this.mask.off('click', this.$maskFunc);
+          this.$maskFunc = null;
+        }
       }
   
       var after = this.events.afterHide;
@@ -408,5 +464,5 @@
   // The new default is uiWindowCenter.
   dt.default = dt.uiWindowCenter;
 
-})(window.jQuery);
+})(self.Lum);
 
