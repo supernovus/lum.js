@@ -64,13 +64,13 @@
   // See if an object is an instance.
   function is_instance(v, what, needProto=false) 
   {
-    if (!is_obj(v)) return false;
+    if (!is_obj(v)) return false; // Not an object.
     if (needProto && (typeof v.prototype !== 'object' || v.prototype === null))
     { // Has no prototype.
       return false;
     }
 
-    if (typeof what === F && !(v instanceof what)) return false;
+    if (typeof what !== F || !(v instanceof what)) return false;
 
     // Everything passed.
     return true;
@@ -486,11 +486,43 @@
     prop(obj, name, func, null, desc);
   }
 
-  function makeEnum (obj, useSymbols=false, globalSymbol=false)
+  prop(Lum, 'lazy', lazy);
+
+  function makeEnum (obj, opts={})
   {
     if (!is_obj(obj))
     {
       throw new Error("Non-object passed to Lum.makeEnum");
+    }
+
+    let useSymbols     = false, 
+        globalSymbol   = false, 
+        useNameAsValue = false, 
+        useValueAsName = false,
+        lockEnum       = true;
+
+    if (typeof opts.globals === B)
+    { // Use of globals automatically assumes use of symbols.
+      useSymbols = globalSymbol = opts.globals;
+    }
+
+    if (typeof opts.symbols === B)
+    { // We can use symbols without globals.
+      useSymbols = opts.symbols;
+    }
+    else if (typeof opts.symbols === S && opts.symbols[0].toUpperCase() === 'G')
+    { // Another way to set both useSymbols and globalSymbol all at once.
+      useSymbols = globalSymbol = true;
+    }
+
+    if (typeof opts.strings === B)
+    {
+      useNameAsValue = opts.strings;
+    }
+
+    if (typeof opts.values === B)
+    {
+      useValueAsName = opts.values;
     }
 
     const anEnum = {};
@@ -523,7 +555,8 @@
         {
           throw new Error("Non-string passed in Lum.makeEnum object");
         }
-        anEnum[prop] = getVal(prop, i);
+        const val = useNameAsValue ? prop : i;
+        anEnum[prop] = getVal(prop, val);
       }
     }
     else
@@ -531,11 +564,12 @@
       for (let prop in obj)
       {
         const val = obj[prop];
-        anEnum[prop] = getVal(val, val);
+        const name = useValueAsName ? val : prop;
+        anEnum[prop] = getVal(name, val);
       }
     }
 
-    return anEnum;
+    return lockEnum ? lock(anEnum) : anEnum;
   }
 
   prop(Lum, 'makeEnum', makeEnum);
@@ -550,11 +584,10 @@
    */
   prop(Lum, 'context', init);
   const ctx = Lum.context;
-  lazy(ctx, 'isWindow', () => root.window !== undefined);
-  lazy(ctx, 'isWorker', () => root.WorkerGlobalScope !== undefined);
-  lazy(ctx, 'isServiceWorker', 
-    () => root.ServiceWorkerGlobalScope !== undefined);
-  lazy(ctx, 'hasProxy', () => root.Proxy !== undefined);
+  prop(ctx, 'isWindow', root.window !== undefined);
+  prop(ctx, 'isWorker', root.WorkerGlobalScope !== undefined);
+  prop(ctx, 'isServiceWorker', root.ServiceWorkerGlobalScope !== undefined);
+  prop(ctx, 'hasProxy', root.Proxy !== undefined);
 
   //console.debug("Lum.context", ctx, ctx.hasProxy);
 
@@ -1400,9 +1433,491 @@
     return Lum.jq.eventProp(ev, 'dataTransfer', true);
   });
 
+  // A list of valid Lum.load modes.
+  const LUM_LOAD_MODES = ['auto','data','js'];
+  if (ctx.isBrowser) 
+    LUM_LOAD_MODES.push('css');
+
+  // Default Lum.load settings.
+  const LUM_LOAD_DEFAULTS =
+  {
+    mode: 'auto',
+    func: null,
+    loc:  (ctx.isBrowser ? document.head : null),
+    validate: true,
+    scriptAttrs: {},
+    linkAttrs: {},
+  }
+
+  // Validators when setting values.
+  const LUM_LOAD_VALID =
+  {
+    mode: (val) => (typeof val === S && LUM_LOAD_MODES.includes(val)),
+    func: (val) => (typeof val === F || val === null),
+    loc:  function(val)
+    {
+      if (ctx.isBrowser)
+      {
+        if (val instanceof Element)
+        { // We're good.
+          return true;
+        }
+        else if (Lum.jq.is(val) && val.length > 0)
+        { // It's a jQuery selector.
+          return val[0];
+        }
+      }
+      else
+      { // In any other context, 'loc' is not used.
+        return false;
+      }
+    },
+    validate: (val) => (typeof val === B),
+    scriptAttrs: is_obj,
+    linkAttrs: is_obj,
+  }
+
+  // Error information when validation fails.
+  const LUM_LOAD_INVALID =
+  {
+    mode: ["Must be one of: ", LUM_LOAD_MODES],
+    func: ["Must be a function or null"],
+    loc:  [(ctx.isBrowser 
+      ? "Must be an Element object instance, or a jQuery result with a single matching element" 
+      : "Is not supported in this context")],
+    validate: ["Must be a boolean value"],
+  }
+
+  { // Now we'll assign some extra settings for prefixes and suffixes.
+    const IS_STRING = (val) => (typeof val === S);
+    const IS_STRING_HELP = ["Must be a string"];
+    const LUM_LOAD_PATH_OPTS = ['Prefix', 'Suffix'];
+
+    for (const mode of LUM_LOAD_MODES)
+    {
+      if (mode === 'auto') continue; // Skip 'auto' mode.
+      for (const optType of LUM_LOAD_PATH_OPTS)
+      {
+        const opt = mode + optType;
+        LUM_LOAD_DEFAULTS[opt] = '';
+        LUM_LOAD_VALID[opt] = IS_STRING;
+        LUM_LOAD_INVALID[opt] = IS_STRING_HELP;
+      }
+    }
+  }
+  
+  // The function that does the validation.
+  function validateLoadSetting(prop, value, reportInvalid, reportUnknown)
+  {
+    if (typeof LUM_LOAD_VALID[prop] === F)
+    { // Call the validator, which will return `true`, `false`, or in some cases, a new valid value.
+      const isValid = LUM_LOAD_VALID[prop].call(Lum.load, value)
+      if (reportInvalid && isValid === false)
+      { // Did not pass the test.
+        const help = LUM_LOAD_INVALID[prop];
+        console.error("Invalid value for setting", prop, value, ...help);
+      }
+      return isValid;
+    }
+    else if (reportUnknown)
+    {
+      console.error("Unknown setting");
+    }
+    return false;
+  }
+
+  /**
+   * A simple resource loader.
+   * 
+   * In any context it can load JS files and data files.
+   * In a browser context it can also load CSS stylesheets, and HTML fragments.
+   * Replaces the old 'load.js' library which is now empty.
+   */
+  prop(Lum, 'load', function()
+  {
+    return Lum.load.globalContext.load(...arguments);
+  });
+
+  // Used by the loader functions to determine how to get secondary arguments.
+  prop(Lum.load, 'isLoadSettings', false);
+
+  // Make a new clone, and pass all arguments to it's `loadUsing()` method.
+  function loadFromSetting ()
+  {
+    return this.clone().loadUsing(...arguments);
+  }
+
+  // Look for resources to load using the current settings.
+  function loadUsingSetting ()
+  {
+    for (const a=0; a < arguments.length; a++)
+    {
+      const arg = arguments[a];
+
+      if (arg === null || arg === undefined) continue; // These are invalid values for the loader.
+
+      let url = null;
+
+      // See if the argument is one of detectable option values.
+      const foundSetting = this.setValue(arg);
+      if (foundSetting)
+      { // Settings were found and changed, time to move on.
+        continue;
+      }
+
+      if (is_obj(arg))
+      { 
+        if (Array.isArray(arg))
+        { // An array of sub-arguments will get its own settings context.
+          this.loadFrom(...arg);
+          continue; // Now we're done.
+        }
+
+        // Check for settings we can set.
+        this.set(arg, this.validate, false);
+
+        // Look for mode-specific things.
+        for (const mode of LUM_LOAD_MODES)
+        {
+          if (mode === 'auto') continue; // Nothing applicable to 'auto' mode here.
+
+          if (Array.isArray(arg[mode]))
+          { // An array of further options applicable to that mode.
+            const subLoader = this.clone();
+            const subArgs = arg[mode];
+            subLoader.set({mode}, false);
+            subLoader.loadUsing(...subArgs)
+          }
+        }
+
+        // Finally, if there is a 'url' property, set our URL.
+        if (typeof arg.url === S)
+        {
+          url = arg;
+        }
+
+      }
+      else if (typeof arg === S)
+      { // This is the only valid argument type left.
+        url = arg;
+      }
+      
+      if (typeof url === S)
+      { // Okay, time to pass it on to a loader method.
+        let loaderFunc;
+        if (this.mode === 'auto')
+        { // Determine the loader to use based on the extension.
+          if (url.endsWith('.js'))
+          {
+            loaderFunc = Lum.load.js;
+          }
+          else if (ctx.isBrowser && url.endsWith('.css'))
+          {
+            loaderFunc = Lum.load.css;
+          }
+          else
+          {
+            loaderFunc = Lum.load.data;
+          }
+        } 
+        else
+        { // Use a directly specified loading mode.
+          loaderFunc = Lum.load[this.mode];
+        }
+        loaderFunc.call(this, url);
+      }
+
+    }
+  }
+
+  // The `settings.set()` method, assigned by the `setupSettings()` function.
+  // Allows us to set a bunch options all at once, and validate the values.
+  function changeSettings (opts, validate, reportUnknown=true)
+  {
+    if (!is_obj(opts))
+    {
+      throw new Error("set opts must be an object");
+    }
+
+    if (typeof validate !== B)
+    {
+      validate = this.validate;
+    }
+
+    for (const prop in opts)
+    {
+      if (LUM_LOAD_MODES.includes(prop)) continue; // Skip mode properties.
+
+      let val = opts[prop];
+      let okay = true;
+
+      if (validate)
+      { // Let's get the value.
+        okay = validateLoadSetting(prop, val, true, reportUnknown);
+        if (typeof okay !== B)
+        { // A replacement value was passed.
+          val = okay;
+          okay = true;
+        }
+      }
+
+      if (okay)
+      { // Assign the setting.
+        this[prop] = val;
+      }
+    }
+  } // changeSettings()
+
+  // The `settings.setValue()` method, assigned by the `setupSettings()` function.
+  // Will return the name of a matching setting if one was found, or `null` otherwise.
+  function updateMatchingSetting(value)
+  {
+    const DETECT_SETTINGS = ['mode', 'func', 'loc'];
+    for (const prop in DETECT_SETTINGS)
+    {
+      const okay = validateLoadSetting(prop, value, false, false);
+      if (okay !== false)
+      { // Something other than false means a setting was found.
+        if (okay !== true)
+        { // Something other than true means a custom value was returned.
+          value = okay;
+        }
+        this[prop] = value;
+        return prop;
+      }
+    }
+
+    // If we made it here, nothing matched.
+    return null;
+  }
+
+  // The function to initialize a `Lum.load()` *settings object*.
+  function setupSettings (settings)
+  {
+    if (!is_obj(settings))
+    {
+      throw new Error("Settings must be an object");
+    }
+
+    // Yee haa.
+    prop(settings, 'isLoadSettings', true);
+
+    // Clone this *settings object* and run `setupSettings()` on the clone.
+    prop(settings, 'clone', function()
+    {      
+      return setupSettings(clone(settings));;
+    });
+
+    // Add a `set()` method that handles validation automatically.
+    prop(settings, 'set', changeSettings);
+
+    // Add a `setValue()` method that detects the type of value and sets an appropriate setting.
+    prop(settings, 'setValue', updateMatchingSetting);
+
+    // Load resources from a clone of these settings.
+    prop(settings, 'loadFrom', loadFromSetting);
+
+    // Load resources using these settings.
+    prop(settings, 'loadUsing', loadUsingSetting);
+
+    // Return the settings object.
+    return settings;
+  }
+
+  // Global load defaults. Should only be changed via `Lum.load.set()`
+  prop(Lum.load, 'globalContext', setupSettings({}));
+
+  /**
+   * Update global settings for the `Lum.load()` method.
+   */
+  prop(Lum.load, 'set', function (opts, validate)
+  {
+    return Lum.load.globalContext.set(opts, validate);
+  });
+
+  /**
+   * Reset the global settings for the `Lum.load()` method.
+   */
+  prop(Lum.load, 'reset', function()
+  {
+    Lum.load.set(LUM_LOAD_DEFAULTS, false);
+  });
+
+  Lum.load.reset(); // Set the defaults now.
+
+  function getLoaderOpts(caller, args, objAttr)
+  {
+    let opts;
+    if (typeof args[0] === O && typeof args[0].url === S)
+    { // Named options can be passed directly.
+      opts = args[0];
+    }
+    else if (caller.isLoadSettings && typeof args[0] === S)
+    { // We get all our options from the current settings object.
+      opts = caller;
+      opts.url = args[0];
+    }
+    else
+    { // Loop the arguments to look for more options.
+      opts = {};
+      for (const arg of args)
+      {
+        if (opts.url === undefined && typeof arg === S)
+        {
+          opts.url = arg;
+        }
+        else if (opts.func === undefined && typeof arg === F)
+        {
+          opts.func = arg;
+        }
+        else if (opts.loc === undefined && arg instanceof Element)
+        {
+          opts.loc = arg;
+        }
+        else if (opts.loc === undefined && Lum.jq.is(arg) && arg.length > 0)
+        {
+          opts.loc = arg[0];
+        }
+        else if (opts[objAttr] === undefined && is_obj(arg))
+        {
+          opts[objAttr] = arg;
+        }
+        else
+        {
+          console.error("Unknown or invalid parameter", arg, caller, args, objAttr);
+        }
+      }
+    }
+
+    if (!(typeof opts.url === S))
+    {
+      throw new Error("Could not find a valid 'url' parameter");
+    }
+
+    if (ctx.isBrowser && !is_instance(opts.loc, Element))
+    { // Let's add the default loc.
+      opts.loc = document.head;
+    }
+
+    return opts;
+  }
+
+  /**
+   * Load JS
+   */
+  prop(Lum.load, 'js', function ()
+  { 
+    const opts = getLoaderOpts(this, arguments, 'scriptAttrs');
+
+    const prefix = opts.jsPrefix || '';
+    const suffix = opts.jsSuffix || '';
+
+    const url = prefix + opts.url + suffix;
+
+    if (ctx.isBrowser)
+    {
+      const script = document.createElement('script');
+      if (typeof opts.scriptAttrs === O)
+      {
+        for (const attr in opts.scriptAttrs)
+        {
+          script[attr] = opts.scriptAttrs[attr];
+        }
+      }
+      script.src = url;
+      if (typeof opts.func === F)
+      {
+        script.onload = opts.func;
+        script.onreadystatechange = opts.func;
+      }
+      opts.loc.appendChild(script);
+    }
+    else if (Lum.context.isWorker)
+    { // A Worker or ServiceWorker.
+      self.importScripts(url);
+      if (typeof opts.func === F)
+      {
+        opts.func.call(opts);
+      }
+    }
+  });
+
+  /**
+   * Load CSS
+   */
+  prop(Lum.load, 'css', function ()
+  {
+    if (ctx.isBrowser)
+    {
+      const opts = getLoaderOpts(this, arguments, 'linkAttrs');
+
+      const prefix = opts.cssPrefix || '';
+      const suffix = opts.cssSuffix || '';
+
+      const url = prefix + opts.url + suffix;
+
+      const link = document.createElement('link');
+      if (typeof opts.linkAttrs === 0)
+      {
+        for (const attr in opts.linkAttrs)
+        {
+          link[attr] = opts.linkAttrs[attr];
+        }
+      }
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = url;
+      loc.appendChild(link);
+      if (typeof opts.func === F)
+      {
+        opts.func.call(opts, link);
+      }
+    }
+    else 
+    {
+      console.error("Lum.load.css() is not applicable to this context, use Lum.load.data() instead", arguments, this);
+    }
+  });
+
+  /**
+   * Load arbitrary data, uses the Fetch API.
+   */
+  prop(Lum.load, 'data', function ()
+  {
+    if (typeof root.fetch !== F)
+    {
+      throw new Error("The Fetch API is not supported, cannot continue");
+    }
+
+    const opts = getLoaderOpts(this, arguments, 'fetch');
+
+    const prefix = opts.dataPrefix || '';
+    const suffix = opts.dataSuffix || '';
+
+    const url = prefix + opts.url + suffix;
+
+    const init = opts.fetch ?? {};
+
+    const promise = fetch(url, init);
+    if (typeof opts.func === F)
+    { // The function handles both success and failure.
+      return promise.then(function(response)
+      {
+        return opts.func.call(opts, response, true);
+      }, 
+      function(err)
+      {
+        return opts.func.call(opts, err, false);
+      });
+    }
+    else 
+    { // Return the fetch promise.
+      return promise;
+    }
+  });
+
   /**
    * Get a stacktrace. Differs from browser to browser.
-   * 
    */
   prop(Lum, 'stacktrace', function (msg)
   {
