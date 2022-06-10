@@ -39,7 +39,7 @@
 
   if (Lum === undefined) throw new Error("Lum core not found");
 
-  const {O,F,S,DESC_CONF,is_obj} = Lum._;
+  const {O,F,S,DESC,is_obj} = Lum._;
 
   function urlBase64ToUint8Array(base64String) 
   {
@@ -73,6 +73,9 @@
       {
         this.cacheSeparator = CACHE_SEP;
 
+        Lum.prop(this, '$eventHandlers', {});
+        Lum.prop(this, '$modules', {});
+
         Lum.prop(this, 'caches', {});
 
         const cprop = Lum.prop(this.caches);
@@ -80,7 +83,7 @@
         cprop('add', function(key, cmod)
         {
           this[key] = new CC(key,cmod, this);
-        }, DESC_CONF);
+        }, DESC.CONF);
 
         cprop('addAll', function(cacheDefs)
         {
@@ -95,22 +98,22 @@
           {
             console.error("Invalid cache definitions", cacheDefs);
           }
-        }, DESC_CONF);
+        }, DESC.CONF);
       
         cprop('keys', function()
         {
           return Object.keys(this);
-        }, null, DESC_CONF);
+        }, null, DESC.CONF);
       
         cprop('values', function()
         {
           return Object.values(this);
-        }, null, DESC_CONF);
+        }, null, DESC.CONF);
 
         cprop('length', function()
         {
           return Object.keys(this).length;
-        }, null, DESC_CONF);
+        }, null, DESC.CONF);
       
         cprop('has', function(name)
         {
@@ -124,7 +127,7 @@
           }
           // No matching cache found.
           return false;
-        }, DESC_CONF);
+        }, DESC.CONF);
       
         cprop('installCaches', function()
         {
@@ -146,7 +149,7 @@
               }
             })
           )
-        }, DESC_CONF); // installCaches()
+        }, DESC.CONF); // installCaches()
       
         cprop('match', function(event, response)
         {
@@ -162,7 +165,7 @@
               break;
             }
           } // for this.values 
-        }, DESC_CONF); // match()
+        }, DESC.CONF); // match()
 
       } // Lum.ServiceWorker::construct();
 

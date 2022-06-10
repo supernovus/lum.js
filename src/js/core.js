@@ -82,28 +82,127 @@
         CLONE_FULL = 2,
         CLONE_ALL  = 3;
 
+  // Create a magic Descriptor object used by our internal functions.
+  function descriptor(desc, accessorSafe)
+  {
+    if (!is_obj(desc)) 
+      throw new Error("First parameter (desc) must be a descriptor template object");
+
+    if (!Object.isExtensible(desc))
+      throw new Error("First parameter (desc) must not be locked, sealed, frozen, etc.");
+
+    if (typeof accessorSafe !== B)
+    { // Auto-detect accessorSafe value based on the existence of 'writable' property.
+      accessorSafe = (desc.writable === undefined);
+    }
+    
+    function add(name, val)
+    {
+      Object.defineProperty(desc, name, {value: val});
+    }
+
+    add('accessorSafe', accessorSafe);
+
+    add('setValue', function (val)
+    {
+      if (this.get !== undefined || this.set !== undefined)
+      {
+        console.error("Accessor properties already defined", this);
+        //throw new Error("Accessor properties already defined, cannot set value");
+      }
+
+      this.value = val;
+      return this;
+    });
+
+    if (accessorSafe)
+    {
+      function validate ()
+      {
+        if (this.value !== undefined)
+        { 
+          console.error("Data 'value' property defined", this);
+          //throw new Error("Data value property already defined, cannot set accessors");
+        }
+
+        for (const arg of arguments)
+        { // All accessor arguments must be functions.
+          if (typeof arg !== F) throw new Error("Parameter must be a function");
+        }
+      }
+
+      add('setGetter', function(func)
+      {
+        validate.call(this, func);
+        this.get = func;
+        return this;
+      });
+
+      add('setSetter', function(func)
+      {
+        validate.call(this, func);
+        this.set = func;
+        return this;    
+      });
+
+      add('setAccessor', function(getter, setter)
+      {
+        validate.call(this, getter, setter);
+        this.get = getter;
+        this.set = setter;
+        return this;
+      });
+
+    } // accessorSafe
+
+    return desc;
+  }
+
+  // A function to test for a descriptor, and yes we're using duck typing.
+  function isDescriptor(desc)
+  {
+    return (typeof desc === O && typeof desc.accessorSafe === B && typeof desc.setValue === F);
+  }
+
+  function getDescriptor(desc)
+  {
+    return isDescriptor(desc) ? desc : descriptor(desc);
+  }
+
+  // A factory for building descriptor rules.
+  const DESC =
+  {
+    get RO()    { return descriptor({},                                                     true)  },
+    get CONF()  { return descriptor({configurable: true},                                   true)  },
+    get ENUM()  { return descriptor({enumerable: true},                                     true)  },
+    get WRITE() { return descriptor({writable: true},                                       false) },
+    get RW()    { return descriptor({configurable: true, writable: true},                   false) },
+    get DEF()   { return descriptor({configurable: true, enumerable: true},                 true)  },
+    get OPEN()  { return descriptor({configurable: true, enumerable: true, writable: true}, false) },
+  }
+
   /**
    * Clone an object or function.
    *
    * @param {object|function} obj - The object we want to clone.
-   * @param {object} [opts={}] Options for the cloning process.
+   * @param {object} [opts={}] - Options for the cloning process.
    * 
-   * @param {number} [opts.mode=CLONE_DEF] One of the `Lum._.CLONE_*` constants.
+   * @param {number} [opts.mode=MODE_DEFAULT] - One of the `Lum._.clone.MODE_*` constants.
    *
-   *   `CLONE_DEF`    - Shallow clone of enumerable properties for most objects.
-   *   `CLONE_JSON`   - Deep clone using JSON serialization (Arrays included.)
-   *   `CLONE_FULL`   - Shallow clone of all object properties.
-   *   `CLONE_ALL`    - Shallow clone of all properties (Arrays included.)
+   *   `MODE_DEFAULT`    - Shallow clone of enumerable properties for most objects.
+   *   `MODE_JSON`       - Deep clone using JSON serialization (Arrays included.)
+   *   `MODE_FULL`       - Shallow clone of all object properties.
+   *   `MODE_ALL`        - Shallow clone of all properties (Arrays included.)
    *
    *   For any mode that doesn't saay "Arrays included", Array objects will
    *   use a shortcut technique of `obj.slice()` to create the clone.
    *
-   * @param {boolean} [opts.addClone=false] Call {@link Lum._.addClone} on the cloned object.
+   * @param {boolean} [opts.addClone=false] - Call {@link Lum._.addClone} on the cloned object.
    *
    *   The options sent to this function will be used as the defaults in
    *   the clone() method added to the object.
    *
-   * @param {boolean} [opts.addLock=false] Call {@link Lum._.addLock} on the cloned object.
+   * @param {boolean} [opts.addLock=false] - Call {@link Lum._.addLock} on the cloned object.
    *
    *   No further options for this, just add a lock() method to the clone.
    *
@@ -126,9 +225,9 @@
       opts = {};
     }
 
-    const mode    = typeof opts.mode     === N  ? opts.mode : CLONE_DEF;
-    const reclone = typeof opts.addClone === B ? opts.addClone : false;
-    const relock  = typeof opts.addLock  === B ? opts.addLock  : false;
+    const mode    = typeof opts.mode      === N ? opts.mode      : CLONE_DEF;
+    const reclone = typeof opts.addClone  === B ? opts.addClone  : false;
+    const relock  = typeof opts.addLock   === B ? opts.addLock   : false;
 
     let copy;
 
@@ -177,7 +276,7 @@
 
     if (relock)
     { // Add the lock() method to the clone.
-      addLock(copy);
+      addLock(copy, opts);
     }
 
     return copy;
@@ -202,13 +301,16 @@
       defOpts = {mode: CLONE_DEF, addClone: true, addLock: false};
     }
 
-    return Object.defineProperty(obj, 'clone',
+    const defDesc = getDescriptor(defOpts.cloneDesc ?? DESC.CONF);
+
+    defDesc.setValue(function (opts)
     {
-      value: function (opts=defOpts)
-      {
-        return clone(obj, opts);
-      }
+      if (!is_obj(opts)) 
+        opts = defOpts;
+      return clone(obj, opts);
     });
+
+    return Object.defineProperty(obj, 'clone', defDesc);
   }
 
   /**
@@ -216,26 +318,27 @@
    *
    * If the object is extensible, it's returned as is.
    *
-   * If not, if the object has a clone() method it will be used.
-   * Otherwise use the {@link Lum._.clone} method with default options.
+   * If not, if the object has a `clone()` method it will be used.
+   * Otherwise use the {@link Lum._.clone} method.
    *
    * @param {object} obj - The object to clone if needed.
+   * @param {object} [opts] - Options to pass to `clone()` method.
    *
-   * @return {object} Either the original object, or an extensible clone.
+   * @return {object} - Either the original object, or an extensible clone.
    *
    * @method Lum._.cloneIfLocked
    */
-  function cloneIfLocked(obj)
+  function cloneIfLocked(obj, opts)
   {
     if (!Object.isExtensible(obj))
     {
       if (typeof obj.clone === F)
       { // Use the object's clone() method.
-        return obj.clone();
+        return obj.clone(opts);
       }
       else
       { // Use our own clone method.
-        return clone(obj);
+        return clone(obj, opts);
       }
     }
 
@@ -277,24 +380,25 @@
   /**
    * Add a lock() method to an object.
    *
-   * Adds a bound version of {@link Lum._.lock} to the object as a method.
+   * Adds a wrapper version of {@link Lum._.lock} to the object as a method.
    *
-   * @param {object} - The object we're adding lock() to.
+   * @param {object} obj - The object we're adding lock() to.
+   * @param {object} opts - Options (TODO: document this).
    *
    * @method Lum._.addLock
    */
-  function addLock(obj)
+  function addLock(obj, opts)
   {
-    return Object.defineProperty(obj, 'lock', lock.bind(null, obj));
+    const defDesc = getDescriptor(opts.lockDesc ?? DESC.CONF);
+    defDesc.setValue(function(obj, cloneable, cloneOpts, useSeal)
+    {
+      if (typeof cloneable !== B) clonable = opts.addClone ?? true;
+      if (!is_obj(cloneOpts)) cloneOpts = opts; // Yup, just a raw copy.
+      if (typeof useSeal !== B) useSeal = opts.useSeal ?? false;
+      return lock(obj, cloneable, cloneOpts, useSeal);
+    });
+    return Object.defineProperty(obj, 'lock', defDesc);
   }
-
-  const DESC_RO    = lock({}),
-        DESC_CONF  = lock({configurable:true}),
-        DESC_ENUM  = lock({enumerabe:true}),
-        DESC_WRITE = lock({writable:true}),
-        DESC_RW    = lock({configurable:true,writable:true}),
-        DESC_DEF   = lock({configurable:true,enumerable:true}),
-        DESC_OPEN  = lock({configurable:true,enumerable:true,writable:true});
 
   /**
    * The core Lum namespace.
@@ -322,6 +426,17 @@
   // Store loaded libraries in a private object.
   const loaded = {};
 
+  // Pass `this` here to see if it's considered unbound.
+  function unbound(whatIsThis, lumIsUnbound=false, rootIsUnbound=true)
+  {
+    if (whatIsThis === undefined || whatIsThis === null) return true;
+    if (rootIsUnbound && whatIsThis === root) return true;
+    if (lumIsUnbound && whatIsThis === Lum) return true;
+
+    // Nothing considered unbound was `this` so we're good.
+    return false;
+  }
+
   /**
    * A magic wrapper for Object.defineProperty()
    *
@@ -333,48 +448,60 @@
    *
    * Rather than documenting the arguments in the usual manner, I'm
    * going to simply show all of the ways this method can be called.
+   * 
+   * Anywhere the `target` parameter is shown, this parameter can be an `object` or `function`.
+   * It's the target to which we're adding new properties.
+   * 
+   * Anywhere the `property` parameter is shown, this parameter can be specified in two different
+   * forms. The first and simplest is as a `string` in which case it's simply the name of the property we're adding.
+   * The second more advanced form is as an `object`. If it is specified as an object, then it is a set of special options.
+   * In this case, a property of that `property` object called `name` will be used as the name of the property.
+   * If the `name` property is absent or `undefined`, it's the same as not passing the `property` parameter at all, 
+   * and a *bound* function will be returned, using the custom options as its bound defaults.
+   * 
+   * See below the usage 
    *
    * `Lum.prop(object)`
    *
    *   Return a function that is a bound copy of this function with
    *   the object as it's first parameter.
    *
-   * `Lum.prop(object, string)`
+   * `Lum.prop(object, property)`
    *
    *   Add a property to the object which is mapped to a bound copy of
    *   this function with the object as it's first parameter.
    *
-   * `Lum.prop(object, string, function, function)`
+   * `Lum.prop(object, property, function, function)`
    *
    *   Add a getter and setter property with the default descriptor.
    *
-   * `Lum.prop(object, string, function, function, object)`
+   * `Lum.prop(object, property, function, function, object)`
    *
    *   Add a getter and setter property with specified Descriptor options.
    *   Do not use `get`, `set`, or `value` in the descriptor options.
    *
-   * `Lum.prop(object, string, function, null, object)`
+   * `Lum.prop(object, property, function, null, object)`
    *
    *   Add a getter only with specified descriptor options.
    *   Same restrictions to the descriptor options as above.
    *   You can specify `{}` as the descriptor options to use the defaults.
    *
-   * `Lum.prop(object, string, null, function, object)`
+   * `Lum.prop(object, property, null, function, object)`
    *
    *   Add a setter only with specified descriptor options.
    *   Same restrictions as above, and again you can use `{}` for defaults.
    *
-   * `Lum.prop(object, string, !null)`
+   * `Lum.prop(object, property, !null)`
    *
    *   Add a property with the specified non-null value.
    *   This uses the default descriptor.
    *
-   * `Lum.prop(object, string, !null, object)`
+   * `Lum.prop(object, property, !null, object)`
    *
    *   Add a property value with the specified descriptor options.
    *   Has the same restrictions to the descriptor options as above.
    *
-   * `Lum.prop(object, string, null, object)`
+   * `Lum.prop(object, property, null, object)`
    *
    *   Add a property using the descriptor object alone.
    *   This has no restrictions to the descriptor object except those
@@ -385,52 +512,65 @@
    */
   function prop(obj, name, arg1, arg2, arg3)
   {
+    let opts;
+
+    if (typeof name === O)
+    { // A way to set some special options.
+      opts = name;
+      name = opts.name;
+    }
+    else if (unbound(this, true, true))
+    { // Use the default options.
+      opts = is_obj(prop.options) ? prop.options : {};
+    }
+    else if (typeof this === O)
+    { // This is already a bound copy, so `this` is the options.
+      opts = this;
+    }
+    else 
+    { // Something weird is going on here...
+      throw new Error("Invalid `this` in a prop() function call");
+    }
+
     if (name === undefined)
     { // A special case, returns a copy of this function bound to the object.
-      return prop.bind(Lum, obj);
+      return prop.bind(opts, obj);
     }
     else if (typeof name !== S)
     { // The property must in every other case be a string.
-      throw new Error("Non-string property passed to Lum.prop()");
+      throw new Error("Non-string property name passed to Lum.prop()");
     }
 
-    let desc = {};
+    let desc;
 
     if (arg1 === undefined && arg2 === undefined)
     { // Another special case, the property is a bound version of this.
-      return prop(obj, name, prop(obj));
+      return prop(obj, name, prop.bind(opts, obj));
     }
     else if (typeof arg1 === F && typeof arg2 === F)
     { // A getter and setter were specified.
-      if (is_obj(arg3))
-      { // A custom descriptor.
-        desc = cloneIfLocked(arg3);
-      }
-      desc.get = arg1;
-      desc.set = arg2;
+      desc = getDescriptor(is_obj(arg3) ? cloneIfLocked(arg3) : DESC.CONF);
+      desc.setAccessor(arg1, arg2);
     }
     else if (is_obj(arg3))
     { // A custom descriptor for an accessor, find the accessor.
-      desc = cloneIfLocked(arg3);
+      desc = getDescriptor(cloneIfLocked(arg3));
       if (typeof arg1 === F)
       { // A getter-only accessor.
-        desc.get = arg1;
+        desc.setGetter(arg1);
       }
       else if (typeof arg2 === F)
       { // A setter-only accessor.
-        desc.set = arg2;
+        desc.setSetter(arg2);
       }
     }
     else
     { // Not a getter/setter, likely a standard value.
-      if (is_obj(arg2))
-      { // A set of options to replace the descriptor.
-        desc = cloneIfLocked(arg2);
-      }
+      desc = getDescriptor(is_obj(arg2) ? cloneIfLocked(arg2) : DESC.CONF);
       
       if (non_null(arg1))
       { // If you really want a null 'value', use a custom descriptor.
-        desc.value = arg1;
+        desc.setValue(arg1);
       }
     }
 
@@ -440,6 +580,11 @@
 
   // The very first use of prop() is to add it to Lum as a method.
   prop(Lum, 'prop', prop);
+
+  // Now we wrap up the descriptor related methods for use outside here.
+  prop(DESC, 'make', descriptor);
+  prop(DESC, 'is', isDescriptor);
+  prop(DESC, 'get', getDescriptor);
 
   /**
    * Build a lazy initializer property.
@@ -451,13 +596,13 @@
    * @param {object} obj - The object to add the property to.
    * @param {string} prop - The name of the property to add.
    * @param {function} initfunc - The function to initialize the property.
-   * @param {object} [desc=DESC_CONF] The descriptor for the property.
+   * @param {object} [desc=DESC.CONF] The descriptor for the property.
    *
    * @return {object} The object we defined the property on.
    *
    * @method Lum.prop.lazy
    */
-  function lazy(obj, name, initfunc, desc=DESC_CONF)
+  function lazy(obj, name, initfunc, desc=DESC.CONF)
   {
     if (!is_complex(obj))
     {
@@ -582,8 +727,8 @@
    *
    * @namespace Lum.context
    */
-  prop(Lum, 'context', init);
-  const ctx = Lum.context;
+  const ctx = prop(Lum, 'context', init).context;
+  //const ctx = Lum.context;
   prop(ctx, 'isWindow', root.window !== undefined);
   prop(ctx, 'isWorker', root.WorkerGlobalScope !== undefined);
   prop(ctx, 'isServiceWorker', root.ServiceWorkerGlobalScope !== undefined);
@@ -810,7 +955,26 @@
    *
    * A read-only accessor that returns the output of {@link Lum._.ourself}
    */
-  prop(Lum, 'self', ourself, null, DESC_CONF);
+  prop(Lum, 'self', ourself, null, DESC.CONF);
+
+  // Internal method for adding backwards compatibility to the Lum._ property.
+  function COMPAT(_)
+  {
+    // First lets make compatibility wrappers for each of the old DESC_* properties.
+    const DESCS = ['RO','CONF','ENUM','WRITE','RW','DEF','OPEN'];
+    for (const desc of DESCS)
+    {
+      const getter = function()
+      {
+        console.warn(`The DESC_${desc} constant is deprecated; use DESC.${desc} instead.`);
+        return lock(DESC[desc]);
+      }
+      prop(_, 'DESC_'+desc, getter, null, DESC.CONF);
+    }
+
+    // When all compatibility is done, return the object.
+    return _;
+  }
 
   /**
    * The Lum._ property is a (mostly) read-only collection of useful
@@ -828,7 +992,8 @@
    * `is_obj, non_null, is_complex, is_instance` - type checking methods.
    * `clone, lock, addClone, addLock, cloneIfLocked` - cloning/locking methods.
    * `ourself` - the `ourself()` function.
-   * `DESC_*` - all of the descriptor constants.
+   * `DESC` - The Descriptor Factory object.
+   * `DESC_*` - The old Descriptor constants (now deprecated.)
    * `CLONE_*` - all of the cloning constants, see {@link Lum._.clone}.
    *
    * The use of object destructuring is recommended for importing, like:
@@ -839,29 +1004,33 @@
    *
    * @namespace Lum._
    *
-   * All of the `DESC_*` properties are locked Descriptor options for use with
+   * All of the `DESC_*` properties are magic Descriptor objects for use with
    * the `prop()` function. There's also a few extra properties used to change
    * the default behaviours of certain methods and functions.
    *
-   * @property {object} DESC_RO       - Indomitable Descriptor.
-   * @property {object} DESC_CONF     - Configurable Descriptor.
-   * @property {object} DESC_ENUM     - Enumerable Descriptor.
-   * @property {object} DESC_WRITE    - Writable Descriptor.
-   * @property {object} DESC_RW       - Configurable, writable Descriptor.
-   * @property {object} DESC_DEF      - Configurable, enumerable Descriptor.
-   * @property {object} DESC_OPEN     - Fully changeable Descriptor.
+   * @property {object} DESC          - Descriptor Factory.
+   * @property {object} DESC.RO       - Indomitable Descriptor.
+   * @property {object} DESC.CONF     - Configurable Descriptor.
+   * @property {object} DESC.ENUM     - Enumerable Descriptor.
+   * @property {object} DESC.WRITE    - Writable Descriptor.
+   * @property {object} DESC.RW       - Configurable, writable Descriptor.
+   * @property {object} DESC.DEF      - Configurable, enumerable Descriptor.
+   * @property {object} DESC.OPEN     - Fully changeable Descriptor.
+   * @property {function} DESC.is     - Is the passed object a magic Descriptor.
+   * @property {function} DESC.make   - Make a magic Descriptor object.
+   * @property {function} DESC.get    - Shortcut: `(obj) => DESC.is(obj) ? obj : DESC.make(obj)`
    *
    * @see Lum._.clone
    * @see Lum.prop
    */
-  prop(Lum, '_', lock(
+  prop(Lum, '_', lock(COMPAT(
   {
     // Type checking constants and functions.
     O, F, S, B, N, U, SY, BI, is_obj, non_null, is_complex, is_instance,
     // Low-level object utilities.
     clone, lock, addClone, addLock, cloneIfLocked, ourself,
-    // Descriptor constants.
-    DESC_RO, DESC_CONF, DESC_ENUM, DESC_WRITE, DESC_RW, DESC_DEF, DESC_OPEN,
+    // The new DESC object, replaces the old contants.
+    DESC, 
     // Cloning constants.
     CLONE_DEF, CLONE_JSON, CLONE_FULL, CLONE_ALL,
 
@@ -881,7 +1050,7 @@
       prop(Lum, '_', lock(__, false), desc);
     },
 
-  }, false), DESC_CONF); // Lum._
+  }), false), DESC.CONF); // Lum._
 
   //console.debug("TESTING clone == _.clone", 
   //  clone, Lum._.clone, (clone === Lum._.clone));
@@ -1036,7 +1205,7 @@
   Lum.ns.useProp = true;
 
   // The descriptor used by default to register namespaces.
-  Lum.ns.defaultDescriptor = DESC_DEF;
+  Lum.ns.defaultDescriptor = DESC.DEF;
 
   /**
    * Get a namespace.
