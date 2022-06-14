@@ -43,13 +43,15 @@ gulp.task('clean-es5', function ()
   return del([destes5,es5cfile]);
 });
 
-gulp.task('clean-es6', function ()
+function clean_es6 ()
 {
   es6cache.clear();
   return del([destes6, es6cfile]);
-});
+}
+gulp.task('clean-es6', clean_es6);
+gulp.task('clean-js',  clean_es6);
 
-gulp.task('clean-js', gulp.parallel('clean-es5','clean-es6'));
+gulp.task('clean-all-js', gulp.parallel('clean-es5','clean-es6'));
 
 gulp.task('clean-css', function ()
 {
@@ -77,7 +79,7 @@ gulp.task('clean', gulp.parallel(clean_tasks));
 
 const clean_all_tasks =
 [
-  'clean-js',
+  'clean-all-js',
   'clean-css',
   'clean-tests',
   'clean-docs',
@@ -114,6 +116,7 @@ gulp.task('build-es6', function ()
     .pipe(gulp.dest(destes6))
     .pipe(connect.reload());
 });
+gulp.task('build-js', gulp.series('build-es6'));
 
 gulp.task('build-es5', function ()
 {
@@ -128,7 +131,7 @@ gulp.task('build-es5', function ()
     .pipe(connect.reload());
 });
 
-gulp.task('build-js', gulp.parallel('build-es6', 'build-es5'));
+gulp.task('build-all-js', gulp.parallel('build-es6', 'build-es5'));
 
 gulp.task('build-css', function ()
 {
@@ -200,7 +203,7 @@ gulp.task('build', gulp.parallel(build_tasks));
 
 const build_all_tasks =
 [
-  'build-js',
+  'build-all-js',
   'build-css',
   'build-tests',
   'build-docs',
@@ -225,6 +228,11 @@ gulp.task('webserver', function ()
 gulp.task('watch-js', function ()
 {
   return gulp.watch(srcjs, gulp.series('build-js'));
+});
+
+gulp.task('watch-all-js', function ()
+{
+  return gulp.watch(srcjs, gulp.series('build-all-js'));
 });
 
 gulp.task('watch-css', function ()

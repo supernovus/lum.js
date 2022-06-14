@@ -13,7 +13,7 @@
 
 (function($) 
 {
-  $.fn.JSON = function (obj, rep, space)
+  $.fn.JSON = $.fn.json = function (obj, rep, space)
   {
     if (obj === undefined)
     {

@@ -33,11 +33,13 @@
  * ```
  *
  */
-(function(Lum)
+Lum.lib('service_worker',
+{},
+function(Lum)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not found");
+  //if (Lum === undefined) throw new Error("Lum core not found");
 
   const {O,F,S,DESC,is_obj} = Lum._;
 
@@ -657,4 +659,4 @@
   // Static reference to the helper function.
   Lum.ServiceWorker.urlBase64ToUint8Array = urlBase64ToUint8Array;
 
-})(self.Lum);
+}); //(self.Lum);

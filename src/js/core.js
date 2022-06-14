@@ -53,19 +53,28 @@
         U='undefined', SY='symbol', BI='bigint';
 
   // Check for non-null objects (i.e. not null).
-  function is_obj(v) { return (typeof v === O && v !== null); }
+  function isObj(v) { return (typeof v === O && v !== null); }
 
   // Check for a "complex" value (i.e. object or function).
-  function is_complex(v) { return (typeof v === F || is_obj(v)); }
+  function isComplex(v) { return (typeof v === F || isObj(v)); }
+
+  // A function to check if a value is undefined or null.
+  function isNil(v) { return (v === undefined || v === null); }
 
   // A function to check for any non-null, non-undefined value.
-  function non_null(v) { return (v !== undefined && v !== null); }
+  function notNil(v) { return (v !== undefined && v !== null); }
+
+  // A function to check if passed object is an Arguments object.
+  function isArguments(item) 
+  {
+    return Object.prototype.toString.call(item) === '[object Arguments]';
+  }
 
   // See if an object is an instance.
-  function is_instance(v, what, needProto=false) 
+  function isInstance(v, what, needProto=false) 
   {
-    if (!is_obj(v)) return false; // Not an object.
-    if (needProto && (typeof v.prototype !== 'object' || v.prototype === null))
+    if (!isObj(v)) return false; // Not an object.
+    if (needProto && (typeof v.prototype !== O || v.prototype === null))
     { // Has no prototype.
       return false;
     }
@@ -76,16 +85,113 @@
     return true;
   }
 
-  // Constants for the clone() method.
-  const CLONE_DEF  = 0,
-        CLONE_JSON = 1,
-        CLONE_FULL = 2,
-        CLONE_ALL  = 3;
+  function Enum (obj, opts={})
+  {
+    if (!isObj(obj))
+    {
+      throw new Error("Non-object passed to Lum.Enum");
+    }
+
+    let useSymbols     = false, 
+        globalSymbol   = false, 
+        useNameAsValue = false, 
+        lockEnum       = true,
+        useLock        = false;
+
+    if (typeof opts.globals === B)
+    { // Use of globals automatically assumes use of symbols.
+      useSymbols = globalSymbol = opts.globals;
+    }
+    
+    if (typeof opts.symbols === B)
+    { // We can use symbols without globals.
+      useSymbols = opts.symbols;
+    }
+    else if (typeof opts.symbols === S && opts.symbols[0].toUpperCase() === 'G')
+    { // Another way to set both useSymbols and globalSymbol all at once.
+      useSymbols = globalSymbol = true;
+    }
+
+    if (typeof opts.strings === B)
+    {
+      useNameAsValue = opts.strings;
+    }
+
+    if (opts.lock === true)
+    { 
+      useLock = true;
+    }
+    else if (opts.lock === false)
+    {
+      lockEnum = false;
+    }
+
+    const anEnum = {};
+
+    function getVal (name, def)
+    {
+      if (useSymbols)
+      { // We want to use symbols.
+        if (globalSymbol)
+        {
+          return Symbol.for(name);
+        }
+        else
+        {
+          return Symbol(name);
+        }
+      }
+      else
+      { // Just gonna use simple auto-incrementing integers.
+        return def;
+      }
+    }
+
+    if (Array.isArray(obj))
+    { // An array of strings is expected.
+      for (let i = 0; i < obj.length; i++)
+      {
+        const prop = obj[i];
+        if (typeof prop !== S)
+        {
+          throw new Error("Non-string passed in Lum.Enum object");
+        }
+        const val = useNameAsValue ? prop : i;
+        anEnum[prop] = getVal(prop, val);
+      }
+    }
+    else
+    { // An object mapping of property name to value.
+      for (let prop in obj)
+      {
+        const val = obj[prop];
+        const name = (typeof val === S) ? val : prop;
+        anEnum[prop] = getVal(name, val);
+      }
+    }
+
+    if (lockEnum)
+    {
+      return useLock ? lock(anEnum) : Object.freeze(anEnum);
+    }
+
+    return anEnum;
+  }
+
+  // Supported modes for the clone() method.
+  const CLONE = Enum(['DEF','JSON','FULL','ALL']);
 
   // Create a magic Descriptor object used by our internal functions.
-  function descriptor(desc, accessorSafe)
+  function descriptor(desc, accessorSafe, addBools)
   {
-    if (!is_obj(desc)) 
+    if (typeof desc === B)
+    { // This is a special case.
+      accessorSafe = desc;
+      addBools = true;
+      desc = {};
+    }
+
+    if (!isObj(desc)) 
       throw new Error("First parameter (desc) must be a descriptor template object");
 
     if (!Object.isExtensible(desc))
@@ -96,14 +202,15 @@
       accessorSafe = (desc.writable === undefined);
     }
     
+    // Add a function or other property.
     function add(name, val)
     {
-      Object.defineProperty(desc, name, {value: val});
+      Object.defineProperty(desc, name, {value: val, configurable: true});
     }
 
     add('accessorSafe', accessorSafe);
 
-    add('setValue', function (val)
+    add('setValue', function (val, noClean)
     {
       if (this.get !== undefined || this.set !== undefined)
       {
@@ -112,6 +219,7 @@
       }
 
       this.value = val;
+      
       return this;
     });
 
@@ -155,6 +263,24 @@
 
     } // accessorSafe
 
+    if (addBools)
+    {
+      function addBool(propname)
+      {
+        const flagname = propname[0];
+        Object.defineProperty(desc, flagname,
+        {
+          configurable: true,
+          get: function () { this[propname] = true; return this; },
+        });
+      }
+
+      addBool('configurable');
+      addBool('enumerable');
+      addBool('writable');
+
+    } // addBools
+
     return desc;
   }
 
@@ -172,13 +298,13 @@
   // A factory for building descriptor rules.
   const DESC =
   {
-    get RO()    { return descriptor({},                                                     true)  },
-    get CONF()  { return descriptor({configurable: true},                                   true)  },
-    get ENUM()  { return descriptor({enumerable: true},                                     true)  },
-    get WRITE() { return descriptor({writable: true},                                       false) },
-    get RW()    { return descriptor({configurable: true, writable: true},                   false) },
-    get DEF()   { return descriptor({configurable: true, enumerable: true},                 true)  },
-    get OPEN()  { return descriptor({configurable: true, enumerable: true, writable: true}, false) },
+    get RO()    { return descriptor(true)  },
+    get CONF()  { return descriptor(true).c  },
+    get ENUM()  { return descriptor(true).e  },
+    get WRITE() { return descriptor(false).w },
+    get RW()    { return descriptor(false).c.w },
+    get DEF()   { return descriptor(true).c.e  },
+    get OPEN()  { return descriptor(false).c.e.w },
   }
 
   /**
@@ -214,18 +340,18 @@
   {
     //console.debug("Lum~clone()", obj, opts);
 
-    if (!is_complex(obj))
+    if (!isComplex(obj))
     { // Doesn't need cloning.
       //console.debug("no cloning required");
       return obj;
     }
 
-    if (!is_obj(opts))
+    if (!isObj(opts))
     { // Opts has to be a valid object.
       opts = {};
     }
 
-    const mode    = typeof opts.mode      === N ? opts.mode      : CLONE_DEF;
+    const mode    = typeof opts.mode      === N ? opts.mode      : CLONE.DEF;
     const reclone = typeof opts.addClone  === B ? opts.addClone  : false;
     const relock  = typeof opts.addLock   === B ? opts.addLock   : false;
 
@@ -233,12 +359,12 @@
 
     //console.debug("::clone", {mode, reclone, relock});
 
-    if (mode === CLONE_JSON)
+    if (mode === CLONE.JSON)
     { // Deep clone enumerable properties using JSON trickery.
       //console.debug("::clone using JSON cloning");
       copy = JSON.parse(JSON.stringify(obj));
     }
-    else if (mode !== CLONE_ALL && Array.isArray(obj))
+    else if (mode !== CLONE.ALL && Array.isArray(obj))
     { // Make a shallow copy using slice.
       //console.debug("::clone using Array.slice()");
       copy = obj.slice();
@@ -249,7 +375,7 @@
       copy = {};
 
       let props;
-      if (mode === CLONE_ALL || mode === CLONE_FULL)
+      if (mode === CLONE.ALL || mode === CLONE.FULL)
       { // All object properties.
         //console.debug("::clone getting all properties");
         props = Object.getOwnPropertyNames(obj);
@@ -290,22 +416,22 @@
    *
    * If `null` or anything other than an object, the defaults will be:
    *
-   * ```{mode: CLONE_DEF, addClone: true, addLock: false}```
+   * ```{mode: CLONE.DEF, addClone: true, addLock: false}```
    *
    * @method Lum._.addClone
    */
   function addClone(obj, defOpts=null)
   {
-    if (!is_obj(defOpts))
+    if (!isObj(defOpts))
     { // Assign a default set of defaults.
-      defOpts = {mode: CLONE_DEF, addClone: true, addLock: false};
+      defOpts = {mode: CLONE.DEF, addClone: true, addLock: false};
     }
 
     const defDesc = getDescriptor(defOpts.cloneDesc ?? DESC.CONF);
 
     defDesc.setValue(function (opts)
     {
-      if (!is_obj(opts)) 
+      if (!isObj(opts)) 
         opts = defOpts;
       return clone(obj, opts);
     });
@@ -356,7 +482,7 @@
    *
    * If cloneOpts is `null` then we will use the following:
    *
-   * ```{mode: CLONE_DEF, addClone: true, addLock: true}```
+   * ```{mode: CLONE.DEF, addClone: true, addLock: true}```
    *
    * @return {object} The locked object.
    *
@@ -366,9 +492,9 @@
   {
     if (clonable)
     { // Add the clone method before freezing.
-      if (!is_obj(cloneOpts))
+      if (!isObj(cloneOpts))
       {
-        cloneOpts = {mode: CLONE_DEF, addClone: true, addLock: true};
+        cloneOpts = {mode: CLONE.DEF, addClone: true, addLock: true};
       }
       addClone(obj, cloneOpts);
     }
@@ -393,7 +519,7 @@
     defDesc.setValue(function(obj, cloneable, cloneOpts, useSeal)
     {
       if (typeof cloneable !== B) clonable = opts.addClone ?? true;
-      if (!is_obj(cloneOpts)) cloneOpts = opts; // Yup, just a raw copy.
+      if (!isObj(cloneOpts)) cloneOpts = opts; // Yup, just a raw copy.
       if (typeof useSeal !== B) useSeal = opts.useSeal ?? false;
       return lock(obj, cloneable, cloneOpts, useSeal);
     });
@@ -441,10 +567,6 @@
    * A magic wrapper for Object.defineProperty()
    *
    * @method Lum.prop
-   *
-   * Yeah, there was the old addProperty(), addAccessor(), and addMetaHelpers()
-   * methods in the helpers.js but I prefer how this is designed, and have
-   * deprecated those methods (and indeed made them use this behind the scenes.)
    *
    * Rather than documenting the arguments in the usual manner, I'm
    * going to simply show all of the ways this method can be called.
@@ -521,7 +643,7 @@
     }
     else if (unbound(this, true, true))
     { // Use the default options.
-      opts = is_obj(prop.options) ? prop.options : {};
+      opts = isObj(prop.options) ? prop.options : {};
     }
     else if (typeof this === O)
     { // This is already a bound copy, so `this` is the options.
@@ -549,10 +671,10 @@
     }
     else if (typeof arg1 === F && typeof arg2 === F)
     { // A getter and setter were specified.
-      desc = getDescriptor(is_obj(arg3) ? cloneIfLocked(arg3) : DESC.CONF);
+      desc = getDescriptor(isObj(arg3) ? cloneIfLocked(arg3) : DESC.CONF);
       desc.setAccessor(arg1, arg2);
     }
-    else if (is_obj(arg3))
+    else if (isObj(arg3))
     { // A custom descriptor for an accessor, find the accessor.
       desc = getDescriptor(cloneIfLocked(arg3));
       if (typeof arg1 === F)
@@ -566,9 +688,9 @@
     }
     else
     { // Not a getter/setter, likely a standard value.
-      desc = getDescriptor(is_obj(arg2) ? cloneIfLocked(arg2) : DESC.CONF);
+      desc = getDescriptor(isObj(arg2) ? cloneIfLocked(arg2) : DESC.CONF);
       
-      if (non_null(arg1))
+      if (notNil(arg1))
       { // If you really want a null 'value', use a custom descriptor.
         desc.setValue(arg1);
       }
@@ -585,6 +707,9 @@
   prop(DESC, 'make', descriptor);
   prop(DESC, 'is', isDescriptor);
   prop(DESC, 'get', getDescriptor);
+
+  // And add the CLONE enum to the clone function as the MODE property.
+  prop(clone, 'MODE', CLONE);
 
   /**
    * Build a lazy initializer property.
@@ -604,7 +729,7 @@
    */
   function lazy(obj, name, initfunc, desc=DESC.CONF)
   {
-    if (!is_complex(obj))
+    if (!isComplex(obj))
     {
       throw new Error("prop.lazy() obj parameter was not an object");
     }
@@ -632,92 +757,7 @@
   }
 
   prop(Lum, 'lazy', lazy);
-
-  function makeEnum (obj, opts={})
-  {
-    if (!is_obj(obj))
-    {
-      throw new Error("Non-object passed to Lum.makeEnum");
-    }
-
-    let useSymbols     = false, 
-        globalSymbol   = false, 
-        useNameAsValue = false, 
-        useValueAsName = false,
-        lockEnum       = true;
-
-    if (typeof opts.globals === B)
-    { // Use of globals automatically assumes use of symbols.
-      useSymbols = globalSymbol = opts.globals;
-    }
-
-    if (typeof opts.symbols === B)
-    { // We can use symbols without globals.
-      useSymbols = opts.symbols;
-    }
-    else if (typeof opts.symbols === S && opts.symbols[0].toUpperCase() === 'G')
-    { // Another way to set both useSymbols and globalSymbol all at once.
-      useSymbols = globalSymbol = true;
-    }
-
-    if (typeof opts.strings === B)
-    {
-      useNameAsValue = opts.strings;
-    }
-
-    if (typeof opts.values === B)
-    {
-      useValueAsName = opts.values;
-    }
-
-    const anEnum = {};
-
-    function getVal (name, def)
-    {
-      if (useSymbols)
-      { // We want to use symbols.
-        if (globalSymbol)
-        {
-          return Symbol.for(name);
-        }
-        else
-        {
-          return Symbol(name);
-        }
-      }
-      else
-      { // Just gonna use simple auto-incrementing integers.
-        return def;
-      }
-    }
-
-    if (Array.isArray(obj))
-    { // An array of strings is expected.
-      for (let i = 0; i < obj.length; i++)
-      {
-        const prop = obj[i];
-        if (typeof prop !== S)
-        {
-          throw new Error("Non-string passed in Lum.makeEnum object");
-        }
-        const val = useNameAsValue ? prop : i;
-        anEnum[prop] = getVal(prop, val);
-      }
-    }
-    else
-    { // An object mapping of property name to value.
-      for (let prop in obj)
-      {
-        const val = obj[prop];
-        const name = useValueAsName ? val : prop;
-        anEnum[prop] = getVal(name, val);
-      }
-    }
-
-    return lockEnum ? lock(anEnum) : anEnum;
-  }
-
-  prop(Lum, 'makeEnum', makeEnum);
+  prop(Lum, 'Enum', Enum);
 
   /**
    * Context object.
@@ -735,6 +775,107 @@
   prop(ctx, 'hasProxy', root.Proxy !== undefined);
 
   //console.debug("Lum.context", ctx, ctx.hasProxy);
+
+  function setFlag(flags, flag, value=true)
+  {
+    if (typeof flags !== N) throw new Error("Flags must be number");
+    if (typeof flag !== N) throw new Error("Flag must be number");
+
+    if (value)
+      flags = flags | flag;
+    else
+     flags = flags - (flags & flag);
+
+    return flags;
+  }
+
+  // Similar to Enum, but represented as binary flags.
+  function Flags ()
+  {
+    let opts = {};
+
+    const flags = 
+    {
+      value: 0, 
+      nextSetter: true,
+      thenSetter: true,
+    };
+
+    function set(name, getter, setter=null)
+    {
+      prop(flags, name, getter, setter, DESC.CONF);
+    }
+
+    set('not', function()
+    {
+      this.nextSetter = false;
+      return this;
+    });
+
+    set('is', function()
+    {
+      this.nextSetter = true;
+      return this;
+    });
+
+    set('then', function()
+    {
+      this.thenSetter = this.nextSetter;
+      return this;
+    });
+
+    let flagCount = 0;
+    let flagIterator = 1;
+
+    for (const flagName of arguments)
+    {
+      if (isObj(flagName))
+      { // Not a name, but options.
+        opts = flagName;
+        continue;
+      }
+      else if (typeof flagName !== S)
+      {
+        throw new Error("Only strings and objects are valid argumentse");
+      }
+
+      if (flags[flagName] !== undefined)
+      {
+        throw new Error("Duplicate flag name "+flagName);
+      }
+
+      const flagVal = flagIterator;
+
+      set(flagName, function()
+      { // This is the recommended way to set a flag.
+        setFlag(this.value, flagVal, this.nextSetter);
+        this.nextSetter = this.thenSetter;
+        return this;
+      }, 
+      function (val)
+      { // Manually set the flag to a specific value.
+        setFlag(this.value, flagVal, val);
+      });
+
+      flagCount++;
+      flagIterator *= 2;
+    }
+
+    if (flagCount === 0)
+    {
+      console.error("No flag definitions found", arguments, flags);
+    }
+    else if (flagCount === 1)
+    {
+      console.warn("Only a single flag definition", arguments, flags);
+    }
+
+    return flags;
+  }
+
+  // Make 'Flags.set()` available.
+  prop(Flags, 'set', setFlag);
+  prop(Lum, 'Flags', Flags);
 
   // A private cache of wrapper objects.
   const wrappers = [];
@@ -758,7 +899,7 @@
     static getWrapper(obj=Lum, opts=Lum.Wrapper.getWrapperOpts)
     {
       //console.debug("Wrapper.getWrapper", obj, opts);
-      const isProxy = (ctx.hasProxy && is_instance(obj, Proxy, true));
+      const isProxy = (ctx.hasProxy && isInstance(obj, Proxy, true));
 
       for (let i = 0; i < wrappers.length; i++)
       {
@@ -789,7 +930,7 @@
     constructor(obj, opts=Lum.Wrapper.constructorOpts)
     {
       //console.debug("Wrapper~constructor()", obj, opts);
-      if (!is_complex(obj))
+      if (!isComplex(obj))
       {
         throw new Error("Wrapper~construtor: obj was not a valid object");
       }
@@ -810,7 +951,7 @@
     {
       //console.debug("Wrapper.add", prop, item, this.obj, this);
 
-      const isDescriptor = (is_obj(item) && (item.value !== undefined
+      const isDescriptor = (isObj(item) && (item.value !== undefined
         || item.get !== undefined || item.set !== undefined));
 
       if (this.useproxy)
@@ -819,7 +960,7 @@
         { // It's a descriptor, assign it directly.
           this.defs[prop] = item;
         }
-        else if (non_null(item))
+        else if (notNil(item))
         { // It's some other value, make a minimal descriptor for it.
           this.defs[prop] = {value: item}
         }
@@ -856,7 +997,7 @@
         return this.obj;
       }
 
-      if (non_null(this.proxy))
+      if (notNil(this.proxy))
       { // Already created a Proxy.
         return this.proxy;
       }
@@ -962,6 +1103,7 @@
   {
     // First lets make compatibility wrappers for each of the old DESC_* properties.
     const DESCS = ['RO','CONF','ENUM','WRITE','RW','DEF','OPEN'];
+
     for (const desc of DESCS)
     {
       const getter = function()
@@ -970,6 +1112,26 @@
         return lock(DESC[desc]);
       }
       prop(_, 'DESC_'+desc, getter, null, DESC.CONF);
+    }
+
+    // And the CLONE_ variables.
+    for (const cname in CLONE)
+    {
+      _['CLONE_'+cname] = CLONE[cname];
+    }
+
+    // Now add aliases for a few renamed functions.
+    const RENAMED = 
+    {
+      is_obj: isObj,
+      is_complex: isComplex,
+      non_null: notNil,
+      is_instance: isInstance,
+    };
+
+    for (const oldname in RENAMED)
+    {
+      _[oldname] = RENAMED[oldname];
     }
 
     // When all compatibility is done, return the object.
@@ -989,17 +1151,23 @@
    * A few constants and functions that might be useful:
    *
    * `O, F, S, B, N, U, SY, BI` - the Javascript type names as strings.
-   * `is_obj, non_null, is_complex, is_instance` - type checking methods.
+   * `isObj, isNul, notNil, isComplex, isInstance, isArguments` - type checks.
    * `clone, lock, addClone, addLock, cloneIfLocked` - cloning/locking methods.
-   * `ourself` - the `ourself()` function.
+   * `prop, lazy, Enum` - Same as the `Lum.*` methods of the same name.
+   * `ourself` - The same as the `Lum.self()` method.
    * `DESC` - The Descriptor Factory object.
+   * `CLONE` - The `clone()` mode Enum (also `clone.MODE`)
+   * 
+   * Some deprecated aliases that will be removed in version 5:
+   * 
    * `DESC_*` - The old Descriptor constants (now deprecated.)
-   * `CLONE_*` - all of the cloning constants, see {@link Lum._.clone}.
+   * `CLONE_*` - all of the old cloning constants, see {@link Lum._.clone}.
+   * `is_obj, is_complex, non_null, is_instance` - type checks.
    *
    * The use of object destructuring is recommended for importing, like:
    *
    * ```
-   *  const {O,F,is_obj,clone} = Lum._;
+   *  const {O,F,isObj,clone} = Lum._;
    * ```
    *
    * @namespace Lum._
@@ -1025,14 +1193,13 @@
    */
   prop(Lum, '_', lock(COMPAT(
   {
-    // Type checking constants and functions.
-    O, F, S, B, N, U, SY, BI, is_obj, non_null, is_complex, is_instance,
+    // Type checking constants.
+    O, F, S, B, N, U, SY, BI,
+    // Type checking functions. 
+    isObj, notNil: notNil, isComplex, isInstance, isArguments,
     // Low-level object utilities.
-    clone, lock, addClone, addLock, cloneIfLocked, ourself,
-    // The new DESC object, replaces the old contants.
-    DESC, 
-    // Cloning constants.
-    CLONE_DEF, CLONE_JSON, CLONE_FULL, CLONE_ALL,
+    clone, lock, addClone, addLock, cloneIfLocked, ourself, prop,
+    lazy, Enum, DESC, CLONE, Flags, setFlag,
 
     // A method to extend the '_' property.
     extend(newprops)
@@ -1054,7 +1221,7 @@
 
   //console.debug("TESTING clone == _.clone", 
   //  clone, Lum._.clone, (clone === Lum._.clone));
-  
+
   /**
    * Namespace management object.
    *
@@ -1121,7 +1288,7 @@
 
     let desc = Lum.ns.defaultDescriptor;
 
-    if (is_obj(useprop))
+    if (isObj(useprop))
     { // An explicit descriptor was passed, use it.
       desc = useprop;
       useprop = true;
@@ -1147,7 +1314,7 @@
     let nscount = namespaces.length;
     let lastns = nscount - 1;
 
-    let dbg = {namespaces, assign, overwrite, nscount, lastns, value, useprop};
+    //let dbg = {namespaces, assign, overwrite, nscount, lastns, value, useprop};
     //console.debug("Lum.ns.add", dbg);
 
     for (let n = 0; n < nscount; n++)
@@ -1157,17 +1324,17 @@
 
       if (cns[ns] === undefined)
       { // Nothing in this namespace yet.
-        if (n == lastns && non_null(value))
+        if (n == lastns && notNil(value))
         { // We have a value to assign.
           assign(cns, ns, value);
-//          console.debug("Assigned", ns, cns[ns], assign);
+//          console.debug("Assigned", ns, cns[ns], value);
         }
         else
         { // Nothing to assign, create an empty object instead.
           assign(cns, ns);
         }
       }
-      else if (overwrite && n == lastns && non_null(value))
+      else if (overwrite && n == lastns && notNil(value))
       {
         assign(cns, ns, value);
       }
@@ -1206,6 +1373,35 @@
 
   // The descriptor used by default to register namespaces.
   Lum.ns.defaultDescriptor = DESC.DEF;
+
+  // A wrapper around `new()` to make building libraries easier.
+  prop(Lum.ns, 'build', function(opts)
+  {
+    if (typeof opts === S)
+    { // Assume it's the ns option.
+      opts = {ns: opts};
+    }
+    else if (!isObj(opts))
+    {
+      throw new Error("Invalid options");
+    }
+
+    const prefix   = opts.prefix  ?? 'Lum';
+    const propName = opts.addProp ?? '_add';
+
+    const ns = opts.ns ?? opts.name ?? opts.path;
+
+    // Build the library namespace object.
+    const newNS = Lum.ns.new(ns, opts.value, prefix, opts.useProp);
+
+    if (typeof propName === S)
+    { // Add the prop wrapper.
+      prop(newNS, propName);
+    }
+
+    // Finally, return the library object.
+    return newNS;
+  });
 
   /**
    * Get a namespace.
@@ -1347,12 +1543,179 @@
     }
   });
 
+  const LIB_TYPES = Enum(
+  [
+    'NULL',
+    'LUM',
+    'ROOT',
+    'NS',
+    'ARGS',
+  ], 
+  {
+    strings: true
+  });
+
   /**
    * Lum library manager.
    *
+   * @method Lum.lib
+   *
+   * Usage: At the very top of library files, instead of wrapping the library
+   * in a self executing block, use `Lum.lib(name, opts, func);` instead.
+   * The `func` should be the same as the one that used to be in the block.
+   *
+   * @param {string} name - The name of the library we are registering.
+   *                        This will be passed to `Lum.lib.mark()` when
+   *                        the library and its dependencies are loaded.
+   *
+   * @param {object} opts - Options for dependencies, etc.
+   *                        If this is an `Array` we assume it's `opts.deps`
+   *
+   * @param {Array}  [opts.deps] Check if the librarise have been loaded.
+   *                             If already loaded, we're good. 
+   *                             Otherwise we will try to load them with 
+   *                             `Lum.load.modules()` (assuming that the
+   *                             filename is `libraryname.js`).
+   *                             When the `Lum.load.modules()` has finished 
+   *                             loading all modules,
+   *                             we'll pass this to `Lum.lib.need()` to ensure
+   *                             they loaded properly.
+   *
+   * @param {Array}  [opts.jq]   Just like `opts.deps` but for jQuery plugins.
+   *                             That is currently all the `*.jq.js` files.
+   *                             Do not specify the `.jq.js` part.
+   * 
+   * @param {object|string} [opts.ns] If specified, this will be passed as the
+   *                                  arguments to a `Lum.ns.build()` call.
+   *
+   * @param {string} [opts.this] The `this` in the `func` will be set to:
+   *
+   *                             - `Lum.lib.TYPE.NULL` -- Plain old `null`.
+   *                             - `Lum.lib.TYPE.LUM`  -- The `Lum` object.
+   *                             - `Lum.lib.TYPE.ROOT` -- The `root` object.
+   *                             - `Lum.lib.TYPE.NS`   -- The `ns` object.
+   *                             - `Lum.lib.TYPE.ARGS` -- The `arguments` passed.
+   * 
+   *                             Default is `NS ?? LUM`.
+   * 
+   * @param {Array} [opts.args] The arguments passed to the registration function.
+   *                            An array of `Lum.lib.TYPE` values, in the order
+   *                            they should be passed to the method.
+   *                            Default is `[LUM, ARGS]`.
+   * 
+   * @param {function} func - The library registration function.
+   *                          This does all the rest of building the library.
+   *                          
    * @namespace Lum.lib
    */
-  prop(Lum, 'lib', {});
+  prop(Lum, 'lib', function (name, opts, func)
+  {
+    if (typeof name !== S) throw new Error("name must be a string");
+    if (typeof opts !== O) throw new Error("opts must be an object");
+    if (typeof func !== F) throw new Error("func must be a function");
+
+    let nsObj = null;
+
+    if (Array.isArray(opts))
+    {
+      opts = {deps: opts};
+    }
+
+    if (Array.isArray(opts.deps))
+    {
+      const needed = opts.deps;
+      const missing = Lum.lib.checkList(...needed);
+      if (missing.length > 0)
+      { // Oh dear, let's try loading them.
+        Lum.load.modules(...missing);
+        setTimeout(() => Lum.ns.need(missing), 250);
+      }
+    }
+
+    if (Array.isArray(opts.jq))
+    {
+      const needed = opts.jq;
+      const missing = Lum.jq.checkList(...needed);
+      if (missing.length > 0)
+      {
+        if (missing.includes('jQuery'))
+        {
+          throw new Error("jQuery is not loaded, but is required");
+        }
+        const toLoad = missing.map(dep => dep + '.jq');
+        Lum.load.modules(...toLoad);
+        setTimeout(() => Lum.jq.need(missing), 250);
+      }
+    }
+
+    if (notNil(opts.ns))
+    {
+      nsObj = Lum.ns.build(opts.ns);
+    }
+
+    let thisObj = nsObj ?? Lum;
+
+    const libArgs = arguments;
+
+    function getThis(thisType, def)
+    {
+      switch(thisType)
+      {
+        case LIB_TYPES.NULL:
+          return null;
+        case LIB_TYPES.LUM:
+          return Lum;
+        case LIB_TYPES.ROOT:
+          return root;
+        case LIB_TYPES.NS:
+          return nsObj;
+        case LIB_TYPES.ARGS:
+          return libArgs;
+        default:
+          return def;
+      }
+    }
+
+    if (isComplex(opts.this))
+    {
+      thisObj = opts.this;
+    }
+    else if (typeof opts.this === S)
+    {
+      thisObj = getThis(opts.this, thisObj);
+    }
+
+    let funcArgs = [];
+
+    if (Array.isArray(opts.args))
+    {
+      for (const arg of opts.args)
+      {
+        if (isComplex(arg))
+        {
+          funcArgs.push(arg);
+        }
+        else if (typeof arg === S)
+        {
+          const argVal = getThis(arg);
+          if (argVal !== undefined)
+          { // Anything other than undefined is just fine.
+            funcArgs.push(argVal);
+          }
+        }
+      }
+    }
+
+    if (funcArgs.length === 0)
+    { // Use defaults.
+      funcArgs.push(Lum, nsObj, libArgs);
+    }
+
+    // Okay, now we call the function!
+    return (func.apply(thisObj, funcArgs) ?? nsObj ?? Lum);
+  });
+
+  prop(Lum.lib, 'TYPE', LIB_TYPES);
 
   /**
    * Mark a library as loaded.
@@ -1370,11 +1733,13 @@
   /**
    * See if a library is loaded.
    *
-   * @param {string} lib  The name of the library we are looking for.
+   * @param {string} lib - The name of the library we are looking for.
+   *
+   * @return {bool} - If the library is loaded or not.
    */
   prop(Lum.lib, 'has', function (lib)
   {
-    return loaded[lib];
+    return loaded[lib] ?? false;
   });
 
   wrap.add('hasLib', Lum.lib.has);
@@ -1402,6 +1767,28 @@
   });
 
   wrap.add('checkLibs', Lum.lib.check);
+
+  /**
+   * A version of `check()` that returns a list of missing
+   * dependencies. If all are there it'll return an
+   * empty array.
+   */
+  prop(Lum.lib, 'checkList', function ()
+  {
+    const missing = [];
+    for (let l = 0; l < arguments.length; l++)
+    {
+      const lib = arguments[l];
+      if (typeof lib === S && !loaded[lib])
+      {
+        if (!missing.includes(lib))
+        {
+          missing.push(lib);
+        }
+      }
+    }
+    return missing;
+  });
 
   /**
    * Run checkLibs; if it returns a string, throw a fatal error.
@@ -1443,7 +1830,17 @@
    *
    * @namespace Lum.jq
    */
-  prop(Lum, 'jq', {});
+  prop(Lum, 'jq', function()
+  {
+    if (arguments.length === 0)
+    {
+      return Lum.jq.get();
+    }
+    else 
+    {
+      return Lum.jq.check(...arguments);
+    }
+  });
 
   /**
    * Get jQuery itself.
@@ -1481,11 +1878,37 @@
   wrap.add('checkJq', Lum.jq.check);
 
   /**
+   * Check for needed jQuery plugins.
+   */
+     prop(Lum.jq, 'checkList', function ()
+     {
+       const $ = Lum.jq.get();
+   
+       if (typeof $ === U)
+       { // This is not good!
+         return ['jQuery'];
+       }
+
+       const missing = [];
+   
+       for (let l = 0; l < arguments.length; l++)
+       {
+         const lib = arguments[l];
+         if ($.fn[lib] === undefined)
+         {
+           missing.push(lib);
+         }
+       }
+
+       return missing;
+     });
+
+  /**
    * Run checkJq; if it returns a string, throw a fatal error.
    */
   prop(Lum.jq, 'need', function ()
   {
-    const result = Lum.jq.check.apply(Lum.jq, arguments);
+    const result = Lum.jq.check(...arguments);
     if (typeof result === S)
     {
       if (result === 'jQuery')
@@ -1507,7 +1930,7 @@
    */
   prop(Lum.jq, 'want', function ()
   {
-    const result = Lum.jq.check.apply(Lum.jq, arguments);
+    const result = Lum.jq.check(...arguments);
     return (typeof result !== S);
   });
 
@@ -1519,7 +1942,7 @@
   prop(Lum.jq, 'is', function (obj)
   {
     const $ = Lum.jq.get();
-    return is_instance(obj, $);
+    return isInstance(obj, $);
   });
 
   /**
@@ -1552,7 +1975,7 @@
     { // It's already a jQuery object, return it as is.
       return el;
     }
-    else if (is_instance(el, root.Element))
+    else if (isInstance(el, root.Element))
     { // It's a DOM Element, wrap it.
       return $(el);
     }
@@ -1567,19 +1990,19 @@
    */
   prop(Lum.jq, 'eventProp', function (ev, prop, oeFirst=false)
   {
-    const hasOE = is_obj(ev.originalEvent);
+    const hasOE = isObj(ev.originalEvent);
 
     if (hasOE && oeFirst)
     {
       const oeVal = ev.originalEvent[prop];
-      if (non_null(oeVal))
+      if (notNil(oeVal))
       {
         return oeVal;
       }
     }
 
     const evVal = ev[prop];
-    if (non_null(evVal))
+    if (notNil(evVal))
     {
       return evVal;
     }
@@ -1587,7 +2010,7 @@
     if (hasOE && !oeFirst)
     {
       const oeVal = ev.originalEvent[prop];
-      if (non_null(oeVal))
+      if (notNil(oeVal))
       {
         return oeVal;
       }
@@ -1616,6 +2039,8 @@
     validate: true,
     scriptAttrs: {},
     linkAttrs: {},
+    modulePrefix: '/scripts/nano/',
+    moduleSuffix: '.js',
   }
 
   // Validators when setting values.
@@ -1642,8 +2067,8 @@
       }
     },
     validate: (val) => (typeof val === B),
-    scriptAttrs: is_obj,
-    linkAttrs: is_obj,
+    scriptAttrs: isObj,
+    linkAttrs: isObj,
   }
 
   // Error information when validation fails.
@@ -1658,22 +2083,42 @@
   }
 
   { // Now we'll assign some extra settings for prefixes and suffixes.
+
+    const AUTO = 'auto';
+    const MOD  = 'module';
+
     const IS_STRING = (val) => (typeof val === S);
     const IS_STRING_HELP = ["Must be a string"];
     const LUM_LOAD_PATH_OPTS = ['Prefix', 'Suffix'];
 
-    for (const mode of LUM_LOAD_MODES)
+    for (let mode of LUM_LOAD_MODES)
     {
-      if (mode === 'auto') continue; // Skip 'auto' mode.
+      if (mode === AUTO)
+      { // The auto mode has no options, but module mode does.
+        mode = MOD;
+      }
+
       for (const optType of LUM_LOAD_PATH_OPTS)
       {
         const opt = mode + optType;
-        LUM_LOAD_DEFAULTS[opt] = '';
+        if (mode !== MOD)
+        { // The default for path options is an empty string.
+          LUM_LOAD_DEFAULTS[opt] = '';
+        }
         LUM_LOAD_VALID[opt] = IS_STRING;
         LUM_LOAD_INVALID[opt] = IS_STRING_HELP;
       }
     }
-  }
+
+    // Now for the special 'module*' load mode.
+    for (const optType of LUM_LOAD_PATH_OPTS)
+    {
+      const opt = 'module' + optType;
+      LUM_LOAD_VALID[opt] = IS_STRING;
+      LUM_LOAD_INVALID[opt] = IS_STRING_HELP;
+    }
+
+  } // Prefix/suffix assignment block.
   
   // The function that does the validation.
   function validateLoadSetting(prop, value, reportInvalid, reportUnknown)
@@ -1734,7 +2179,7 @@
         continue;
       }
 
-      if (is_obj(arg))
+      if (isObj(arg))
       { 
         if (Array.isArray(arg))
         { // An array of sub-arguments will get its own settings context.
@@ -1803,7 +2248,7 @@
   // Allows us to set a bunch options all at once, and validate the values.
   function changeSettings (opts, validate, reportUnknown=true)
   {
-    if (!is_obj(opts))
+    if (!isObj(opts))
     {
       throw new Error("set opts must be an object");
     }
@@ -1863,7 +2308,7 @@
   // The function to initialize a `Lum.load()` *settings object*.
   function setupSettings (settings)
   {
-    if (!is_obj(settings))
+    if (!isObj(settings))
     {
       throw new Error("Settings must be an object");
     }
@@ -1874,7 +2319,7 @@
     // Clone this *settings object* and run `setupSettings()` on the clone.
     prop(settings, 'clone', function()
     {      
-      return setupSettings(clone(settings));;
+      return setupSettings(clone(this));;
     });
 
     // Add a `set()` method that handles validation automatically.
@@ -1947,7 +2392,7 @@
         {
           opts.loc = arg[0];
         }
-        else if (opts[objAttr] === undefined && is_obj(arg))
+        else if (opts[objAttr] === undefined && isObj(arg))
         {
           opts[objAttr] = arg;
         }
@@ -1963,7 +2408,7 @@
       throw new Error("Could not find a valid 'url' parameter");
     }
 
-    if (ctx.isBrowser && !is_instance(opts.loc, Element))
+    if (ctx.isBrowser && !isInstance(opts.loc, Element))
     { // Let's add the default loc.
       opts.loc = document.head;
     }
@@ -2001,13 +2446,29 @@
       }
       opts.loc.appendChild(script);
     }
-    else if (Lum.context.isWorker)
+    else if (ctx.isWorker)
     { // A Worker or ServiceWorker.
       self.importScripts(url);
       if (typeof opts.func === F)
       {
         opts.func.call(opts);
       }
+    }
+    else if (ctx.node)
+    { // Node works differently.
+      if (Lum.load.$required === undefined)
+      {
+        Lum.load.$required = {};
+      }
+      const lib = Lum.load.$required[opts.url] = require(url);
+      if (typeof opts.func  === F)
+      {
+        opts.func.call(opts, lib, Lum);
+      }
+    }
+    else 
+    {
+      console.error("Lum.load.js() is not supported in this context", arguments, this, ctx, Lum);
     }
   });
 
@@ -2044,7 +2505,7 @@
     }
     else 
     {
-      console.error("Lum.load.css() is not applicable to this context, use Lum.load.data() instead", arguments, this);
+      console.error("Lum.load.css() is not supported in this context", arguments, this, ctx, Lum);
     }
   });
 
@@ -2084,6 +2545,20 @@
       return promise;
     }
   });
+
+  /**
+   * A convenience method for loading Lum.js modules.
+   * This isn't an actual loader mode.
+   */
+  prop(Lum.load, 'modules', function(...modules)
+  {
+    return Lum.load(
+    {
+      jsPrefix: this.modulePrefix, 
+      jsSuffix: this.moduleSuffix,
+      js: modules,
+    });
+  })
 
   /**
    * Get a stacktrace. Differs from browser to browser.

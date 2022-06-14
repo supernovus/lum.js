@@ -1,11 +1,15 @@
 /**
  * Utils for working with Arrays.
  */
-(function (Lum)
+Lum.lib('arrayutils', 
+{
+  ns: 'array',
+}, 
+function (Lum, arr)
 {
   "use strict";
 
-  const arr = Lum.lib.mark('arrayutils').ns.new('array');
+  //const arr = Lum.lib.mark('arrayutils').ns.new('array');
 
   /**
    * Find the index of a value in an array.
@@ -119,5 +123,5 @@
     }
   }
 
-})(self.Lum);
+}); //(self.Lum);
 

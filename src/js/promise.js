@@ -1,8 +1,10 @@
 /**
  * A Promise-like object that offers the jQuery Deferred API.
  *
- * You might want to just use native Promises for most things. This is only
- * for cases where existing apps/libraries expect done(), fail(), etc.
+ * I'm going to say this is deprecated now that native Promises
+ * are available. If for whatever reason you need the Deferred API in a
+ * Promise-like container with a couple convenience wrappers, you can use this.
+ *
  */
 
 (function(Lum)

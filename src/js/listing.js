@@ -1,4 +1,9 @@
-(function(Lum)
+Lum.lib('listing',
+{
+  deps: ['helpers','pager'],
+  jq: [],
+},
+function(Lum)
 {
   "use strict";
 /* jshint asi: true, laxbreak: true */
@@ -1036,5 +1041,5 @@ Lum.Listing = class
 } // class Lum.Listing
 
 // End of module.
-})(self.Lum);
+}); //(self.Lum);
 
