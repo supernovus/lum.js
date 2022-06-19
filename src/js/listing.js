@@ -8,10 +8,6 @@ function(Lum)
   "use strict";
 /* jshint asi: true, laxbreak: true */
 
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
-  Lum.lib.need('helpers','pager').jq.need().lib.mark('listing');
-
   const {F,O,S,N,B,U} = Lum._;
 
 /**
@@ -764,7 +760,7 @@ Lum.Listing = class
             }
             else if (typeof curcol === O && colspec !== undefined)
             { // We need to use the nested search.
-              let subcol = Lum.getNested(curcol, colspec);
+              let subcol = Lum.opt.getPath(curcol, colspec);
               if (typeof subcol === S)
               { // We can only search strings at this point.
                 if (subcol.search(find) !== -1)
@@ -800,7 +796,7 @@ Lum.Listing = class
         {
           function get_col (obj)
           {
-            return Lum.getNested(obj, col);
+            return Lum.opt.getPath(obj, col);
           }
           var sort_str_asc = function (a, b)
           {

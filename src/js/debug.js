@@ -11,15 +11,12 @@
  *
  */
 
-(function (Lum)
+Lum.lib('debug', {}, 
+function (Lum)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  Lum.jq.need().lib.mark('debug');
-
-  const $ = Lum.jq.get();
+  const $ = Lum.jq.need().jq.get();
 
   /**
    * A class to help with debugging.
@@ -46,7 +43,7 @@
       // Call the method to initialize or update our flags.
       this.update(opts.flags);
 
-      if (Lum.hasLib('hash'))
+      if (Lum.lib.has('hash'))
       {
         if (typeof opts.hash === 'object')
         { // Might be options to build a Hash instance, or a Hash instance.
@@ -261,7 +258,7 @@
 
       const fallback = this._get_opt(prefix+'fallback_spaces', opts);
 
-      if (!Lum.hasLib('format_json'))
+      if (!Lum.lib.has('format_json'))
       { // The format_json library isn't loaded.
         if (p.format && !p.space)
         { // Let's use the fallback specifically for this purpose.
@@ -432,5 +429,5 @@
   // Not guaranteed to stick around forever, but it's here for now.
   Lum.debug = Lum.Debug.Elements;
 
-})(self.Lum);
+});
 

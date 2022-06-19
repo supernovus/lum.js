@@ -4,7 +4,8 @@
  * much easier.
  */
 
-(function($) 
+Lum.jq('disabled', {}, 
+function(Lum, $) 
 {
   $.fn.enable = function ()
   {
@@ -24,5 +25,5 @@
   {
     return this.prop('disabled');
   }
-})(self.jQuery);
+});
 

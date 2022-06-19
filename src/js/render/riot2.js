@@ -8,21 +8,18 @@
  *
  * riot-tmpl v2.3.21, @license MIT, (c) 2015 Muut Inc. + contributors 
  */
-;(function () {     // eslint-disable-line no-extra-semi
+
+Lum.lib('render/riot2',
+{
+  alias: ['render.riot2', 'riot.tmpl'],
+  ns:    {ns: 'render', subProp: '_ns'},
+}, 
+function (Lum, ns) {     
+  // eslint-disable-line no-extra-semi
   'use strict'
   /*eslint-env amd */
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Lum.markLib('riot.tmpl');
-  Lum.markLib('render.riot2');
-
-  Lum.registerNamespace('Lum.render.riot');
-
-  const ns = Lum.render;
+  const rns = ns._ns('riot');
 
   /*
    * riot.util.brackets
@@ -435,8 +432,11 @@
 
   })()
 
-  ns.riot2 = ns.riot.tmpl = tmpl;
-  ns.riot2.brackets = ns.riot.brackets = brackets;
+  Lum.prop(tmpl, 'brackets', brackets);
 
-})() // eslint-disable-line
+  ns._add('riot2', tmpl);
+  rns._add('tmpl', tmpl);
+  rns._add('brackets', brackets);
+
+}); // eslint-disable-line
 

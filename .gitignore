@@ -15,3 +15,4 @@
 /package-lock.json
 /conf/installed_deps.json
 /src/todo/*
+/src/js/deprecated.txt

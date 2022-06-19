@@ -1,10 +1,7 @@
-(function(Lum)
+Lum.lib('deprecated', {},
+function(Lum)
 {
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
-  Lum.lib.mark("deprecated");
 
   /**
    * Mark a function/method/property as deprecated.
@@ -69,8 +66,9 @@
    *
    * In any other case the return value will be undefined.
    *
+   * @method Lum.deprecated
    */
-  Lum.deprecated = function (name, replace={})
+  Lum.prop(Lum, 'deprecated', function (name, replace={})
   {
     const DEP_MSG = ':Deprecated =>';
     const REP_MSG = ':replaceWith =>';
@@ -99,12 +97,14 @@
         ? replace.strip
         : false;
 
-      let methtext = replace.toString();
+      let methtext = replace.exec.toString();
 
       if (strip)
       { // Remove wrapping anonymous closure function.
         methtext = methtext.replace(/^function\(\)\s*\{\s*(return\s*)?/, '');
         methtext = methtext.replace(/\s*\}$/, '');
+        // Also support arrow function version.
+        methtext = methtext.replace(/^\(\)\s*\=\>\s*/, '');
       }
 
       // Set the replacement msg to the method text.
@@ -117,13 +117,13 @@
     }
 
     // Show the messages.
-    console.warn.apply(console, msgs);
+    console.warn(...msgs);
 
     // Finally, call the replacement function if it was defined.
     if (exec)
     {
       return exec();
     }
-  }
+  });
 
-})(self.Lum);
+});

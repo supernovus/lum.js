@@ -1,15 +1,10 @@
-(function(Nano)
+Lum.lib('extend',
+{
+  deps: ['helpers'],
+},
+function(Lum)
 {
   "use strict";
-
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-  
-  Nano.needLibs('helpers');
-
-  Nano.markLib('extend');
 
   /**
    * Extend a new class using a parent base class.
@@ -19,14 +14,14 @@
    * passed as is. This allows for easy construction of child classes:
    *
    * ```
-   *   var childclass = Nano.extend(parentclass);
+   *   var childclass = Lum.extend(parentclass);
    * ```
    * 
    * or if you want to copy public properties from the base class that aren't
    * in the prototype, then:
    *
    * ```
-   *   var childclass = Nano.extend(parentclass, null, true);
+   *   var childclass = Lum.extend(parentclass, null, true);
    * ```
    *
    * If you need to specify your own child class constructor,
@@ -35,11 +30,11 @@
    * If copyDef is the boolean true value, it becomes {copyProperties: true}.
    * If copyDef is an object, it may have the following properties:
    *
-   *  copyProperties: A propOpts value to be passed to Nano.copyProperties();
-   *  copyInto: An array of sources to send to Nano.copyInto();
+   *  copyProperties: A propOpts value to be passed to Lum.copyProperties();
+   *  copyInto: An array of sources to send to Lum.copyInto();
    *
    * The copyProperties call if used will look like:
-   *  Nano.copyProperties(base, sub, copyDef.copyProperties);
+   *  Lum.copyProperties(base, sub, copyDef.copyProperties);
    *
    * The copyProperties and copyInto copyDef properties can be used together.
    *
@@ -53,12 +48,12 @@
    * In fact, trying to make a subclass using this from a class defined with
    * the ES2015 class syntax, will throw an error. Don't do it.
    */
-  Nano.extend = function (base, sub, copyDef)
+  Lum.extend = function (base, sub, copyDef)
   {
-//    console.error("Nano.extend()", base, sub, copyall);
+//    console.error("Lum.extend()", base, sub, copyall);
     if (typeof base !== 'function')
     {
-      console.error("Nano.extend(base): base passed was not function", arguments);
+      console.error("Lum.extend(base): base passed was not function", arguments);
       return;
     }
 
@@ -73,7 +68,7 @@
     }
     else if (typeof sub !== 'function')
     {
-      console.error("Nano.extend(base, sub): sub passed was not function", arguments);
+      console.error("Lum.extend(base, sub): sub passed was not function", arguments);
       return;
     }
 
@@ -88,7 +83,7 @@
     // Copy class properties from the base class.
     if (copyDef && copyDef.copyProperties)
     {
-      Nano.copyProperties(base, sub, copyDef.copyProperties);
+      Lum.copyProperties(base, sub, copyDef.copyProperties);
     }
 
     // Copy properties in from mixin/trait objects.
@@ -99,7 +94,7 @@
       {
         copyInto.push(copyDef.copyInto[c]);
       }
-      Nano.copyInto.apply(Nano, copyInto);
+      Lum.copyInto.apply(Lum, copyInto);
     }
 
     return sub;

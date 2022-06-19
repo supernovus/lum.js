@@ -2,18 +2,17 @@
  * A quick Lum library for making Context menus.
  * Replaces the older menu.jq.js, this will override that if used.
  */
-(function(Lum)
+Lum.lib('contextmenu', {},
+function(Lum)
 {
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not loaded");
 
   // TODO: make jQuery optional.
   const $ = Lum.jq.need().jq.get();
 
   let $registered = false; // Private storage for $register() static method.
 
-  const cmenu = Lum.lib.mark('contextmenu').ns.new('ContextMenu', class
+  const cmenu = Lum.ns.new('ContextMenu', class
   {
     constructor (options={})
     {
@@ -278,4 +277,4 @@
 
   }); // class Lum.ContextMenu
 
-})(self.Lum);
+}); //(self.Lum);

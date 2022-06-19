@@ -118,8 +118,6 @@
     },
   };
 
-  function NYI() { throw new Error("Not yet implemented"); }
-
   /**
    * URL-safe variants of the Base64 algorithm.
    *

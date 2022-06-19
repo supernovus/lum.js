@@ -123,5 +123,5 @@ function (Lum, arr)
     }
   }
 
-}); //(self.Lum);
+});
 

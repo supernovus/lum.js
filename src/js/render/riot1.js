@@ -2,21 +2,17 @@
 // Modified to be a Lum library only.
 // This is extremely limited (but extremely small).
 // Check out riot.tmpl (the rendering engine from riot.js v2).
-;(function()
+
+Lum.lib('render/riot1', 
+{
+  alias: ['render.riot1', 'riot.render'],
+  ns:    {ns: 'render', subProp: '_ns'},
+}, 
+function(Lum, ns)
 {
   "use strict";
 
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Lum.markLib('riot.render');
-  Lum.markLib('render.riot1');
-
-  Lum.registerNamespace('Lum.render.riot');
-
-  const ns = Lum.render;
+  const rns = ns._ns('riot');
 
   var FN = {}, // Precompiled templates (JavaScript functions)
   template_escape = {"\\": "\\\\", "\n": "\\n", "\r": "\\r", "'": "\\'"},
@@ -28,16 +24,18 @@
     });
   }
 
-  ns.riot1 = ns.riot.render = function(tmpl, data, escape_fn) {
+  function render(tmpl, data, escape_fn) {
     if (escape_fn === true) escape_fn = default_escape_fn;
     tmpl = tmpl || '';
 
     return (FN[tmpl] = FN[tmpl] || new Function("_", "e", "return '" +
       tmpl.replace(/[\\\n\r']/g, function(char) {
         return template_escape[char];
-      }).replace(/{\s*([\w\.]+)\s*}/g, "' + (e?e(_.$1,'$1'):_.$1||(_.$1==null?'':_.$1)) + '") + "'")
+      }).replace(/{\s*([\w\.]+)\s*}/g, "' + (e?e(_.$-1,'$1'):_.$1||(_.$1==null?'':_.$1)) + '") + "'")
     )(data, escape_fn);
   }
 
-})();
-
+  ns._add('riot1', render);
+  rns._add('render', render);
+  
+});

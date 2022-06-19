@@ -1,10 +1,9 @@
-(function(Lum)
+Lum.lib('css', {},
+function(Lum)
 {
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not found");
   
-  Lum.lib.mark('css').ns.new('CSS', class
+  Lum.ns.new('CSS', class
   {
     constructor (doc)
     {
@@ -55,4 +54,4 @@
     }
   });
 
-})(self.Lum);
+});

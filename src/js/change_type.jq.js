@@ -4,7 +4,8 @@
  * and offers a few more features than most.
  */
 
-(function($) 
+Lum.jq('change_type', {},
+function(Lum, $) 
 {
   "use strict";
 
@@ -131,4 +132,4 @@
     return this.changeElementType('button', {filter, getContents});
   }
 
-})(self.jQuery);
+}); //(self.jQuery);

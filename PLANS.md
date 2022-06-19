@@ -12,6 +12,8 @@ object and basic namespaces.
 Some of the libraries are going to get nuked and won't have replacements.
 A bunch of deprecated aliases are going to go away as well.
 
+The `Nano` global alias that has been exported will be nuked.
+
 ## Methods and properties to be removed
 
 Everything using `wrap.add()`, regardless of file will go. In addition the
@@ -33,7 +35,7 @@ following list is scheduled to be removed in version 5.
 
 ## Overhauls
 
-* Rename `helpers.js` to `obj.js`
+* Split `helpers.js` into `obj.js` and `opt.js` libraries.
 * Change all direct assignments to `Lum.obj` into `prop()` assignments.
 * Finish the long shelved `tabs.js`, which will replace `tabpanes.js`.
 * Move `*.jq.js` to a `jq` subfolder and remove `.jq` from the filename.
