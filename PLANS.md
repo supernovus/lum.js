@@ -23,9 +23,13 @@ following list is scheduled to be removed in version 5.
   * `Lum._.DESC_*` contants; use `Lum._.DESC.*` factory properties instead.
   * `Lum._.CLONE_*` constants; use `Lum._.CLONE.*` enum properties instead.
   * `Lum._.is_*` methods; use the camelCase function names instead.
+* From `arrayutils.js`:
+  * `Lum.array.indexOf` method; use `Array.indexOf()` instead.
+  * `Lum.array.contains` method; use `Array.includes()` instead.
 
 ## Files/libraries to be removed
 
+* `deprecated.js`
 * `helpers/extend.js`
 * `polyfill/string_repeat.js`
 * `promise.js`
@@ -37,7 +41,6 @@ following list is scheduled to be removed in version 5.
 
 * Rename `helpers.js` to `obj.js`.
 * Extract `Lum.Mask` out of `modal.js` into `mask.js`
-* Change all direct assignments to `Lum.obj` into `prop()` assignments.
 * Finish the long shelved `tabs.js`, which will replace `tabpanes.js`.
 * Move `*.jq.js` to a `jq` subfolder and remove `.jq` from the filename.
 * Update all the tests to work with the new versions.

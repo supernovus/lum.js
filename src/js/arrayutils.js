@@ -10,13 +10,10 @@ function (Lum, arr)
 {
   "use strict";
 
-  //const arr = Lum.lib.mark('arrayutils').ns.new('array');
-
   /**
    * Find the index of a value in an array.
    *
-   * This isn't really needed anymore as Array.indexOf() is a thing now.
-   * It's kept for backwards compatibility only.
+   * @deprecated Use `Array.indexOf()` now.
    *
    * @param {Array} array  The array.
    * @param {mixed} value  The value to look for.
@@ -25,6 +22,7 @@ function (Lum, arr)
    */
   arr.indexOf = function (array, value)
   {
+    console.warn("Deprecated: use ");
     var index  = -1,
         length = array.length;
 
@@ -41,8 +39,7 @@ function (Lum, arr)
   /**
    * See if an array contains a value.
    *
-   * This isn't really needed anymore as Array.includes() is a thing now.
-   * It's kept for backwards compatibility only.
+   * @deprecated Use `Array.includes()` now.
    *
    * @param {Array} array  The array.
    * @param {mixed} value  The value to look for.

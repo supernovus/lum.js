@@ -2654,6 +2654,14 @@ function (init)
   // Add the methods handled by the LoadTracker.
   loaded.setupNamespace(Lum.lib);
 
+  // Internal API not meant for outside use.
+  prop(Lum.lib, 'toCore', function(lib, mark=true)
+  {
+    if (mark)
+      Lum.lib.mark(lib);
+    console.error(lib, '→ replaced by core module');
+  });
+
   const JQ_TYPES = Enum(
   [
     'NULL',
@@ -3602,6 +3610,28 @@ function (init)
       throw new Error(`Abstract method ${name}() was not implemented`);
     }
 
+  });
+
+  /**
+   * Function prototypes for async, generator, and async generator functions.
+   */
+  prop(Lum, 'Function', 
+  {
+    /**
+     * Constructor for dynamic generator functions.
+     */
+    Generator: Object.getPrototypeOf(function*(){}).constructor,
+  
+    /**
+     * Constructor for dynamic async functions.
+     */
+    Async: Object.getPrototypeOf(async function(){}).constructor,
+  
+    /**
+     * Constructor for dynamic async generator functions.
+     */
+    AsyncGenerator: Object.getPrototypeOf(async function*(){}).constructor,
+  
   });
 
     //--- Wrapper class (move into 'wrapper' library in next release)
