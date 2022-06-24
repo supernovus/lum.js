@@ -1,10 +1,11 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'modelapi',
+  jq: true,
+},
+function(Lum)
 {
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  Lum.lib.need('helpers').lib.mark('modelapi');
 
   const {F,O,N,S,B,is_obj} = Lum._;
  
@@ -49,7 +50,7 @@
         throw new Error("ModelAPI constructor only accepts an object");
       }
 
-      if (Lum.hasLib('observable'))
+      if (Lum.lib.has('observable'))
       {
         const obsopts = (conf.observable !== undefined)
           ? conf.observable
@@ -78,7 +79,7 @@
        */
       this.conf = conf;
 
-      if (Lum.hasLib('debug'))
+      if (Lum.lib.has('debug'))
       { // Set up the debugging.
 
         let dbgopts = {};
@@ -445,13 +446,11 @@
      * We will add some magical methods to the object, including a save()
      * function that will save any changes back to the hidden element.
      *
-     * Requires the json.jq and exists.jq jQuery extensions, as well as
-     * the helpers library (which adds the addProperty() method, used here.)
+     * Requires the json.jq and exists.jq jQuery extensions.
      */
     _load_json_model (name, source)
     {
-      Lum.needLib('helpers');
-      Lum.needJq('JSON', 'exists');
+      Lum.jq.need('JSON', 'exists');
 
       var elname;
       if ('element' in source)
@@ -481,7 +480,7 @@
         }
   
         // Add a special "save" function.
-        Lum.addProperty(jsondata, 'save', function (target)
+        Lum.prop(jsondata, 'save', function (target)
         {
           if (!target)
             target = elname;
@@ -498,7 +497,7 @@
   
         // Add a special "json" function. This requires the
         // format_json library to have been loaded.
-        Lum.addProperty(jsondata, 'json', function (format)
+        Lum.prop(jsondata, 'json', function (format)
         {
           var json = JSON.stringify(this);
           if (format && typeof Lum.format_json === F)
@@ -877,5 +876,5 @@
    */
   Lum.ModelAPI.prototype._default_observable = {addme: 'make_observable'};
 
-})(self.Lum);
+});
 

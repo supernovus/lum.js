@@ -11,7 +11,8 @@
  *
  */
 
-(function($) 
+Lum.jq('json', 
+function(Lum, $) 
 {
   $.fn.JSON = $.fn.json = function (obj, rep, space)
   {
@@ -24,5 +25,5 @@
       return this.val(JSON.stringify(obj, rep, space));
     }
   };
-})(self.jQuery);
+});
 

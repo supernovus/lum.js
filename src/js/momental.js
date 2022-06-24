@@ -1,6 +1,6 @@
-(function(Lum)
+Lum.lib('momental', function(Lum)
 {
-  Lum.lib.mark('momental');
+  "use strict";
 
   const {S,N,is_obj} = Lum._;
   const dt = luxon.DateTime;
@@ -69,4 +69,4 @@
 
   Lum.ns.add('moment', moment);
 
-})(self.Lum);
+});

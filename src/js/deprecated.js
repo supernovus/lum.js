@@ -1,4 +1,4 @@
-Lum.lib('deprecated', {},
+Lum.lib('deprecated',
 function(Lum)
 {
   "use strict";

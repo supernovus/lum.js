@@ -1,8 +1,9 @@
 /**
  * Utils for working with Arrays.
  */
-Lum.lib('arrayutils', 
+Lum.lib(
 {
+  name: 'arrayutils', 
   ns: 'array',
 }, 
 function (Lum, arr)

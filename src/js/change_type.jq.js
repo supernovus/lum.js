@@ -4,7 +4,7 @@
  * and offers a few more features than most.
  */
 
-Lum.jq('change_type', {},
+Lum.jq('change_type',
 function(Lum, $) 
 {
   "use strict";

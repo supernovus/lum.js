@@ -4,7 +4,7 @@
  * much easier.
  */
 
-Lum.jq('disabled', {}, 
+Lum.jq('disabled',
 function(Lum, $) 
 {
   $.fn.enable = function ()

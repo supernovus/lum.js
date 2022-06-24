@@ -1,10 +1,12 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'grid',
+},
+function(Lum)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
-  Lum.lib.mark('grid');
+  const prop = Lum.prop;
 
   /**
    * Grid library.
@@ -669,10 +671,10 @@
   } // class Grid
 
   // Assign the Grid class to Lum.Grid
-  Lum.Grid = Grid; 
+  prop(Lum, 'Grid', Grid);
 
   // We'll add the conflict resolution methods to the resolveConflicts object.
-  var rc = Lum.Grid.prototype.resolveConflicts;
+  const rc = Lum.Grid.prototype.resolveConflicts;
 
   /**
    * Use findEmptyPosition() to find an available space.
@@ -980,7 +982,7 @@
   } // class DisplayGrid
 
   // Assign the DisplayGrid class to Lum.Grid.Display
-  Lum.Grid.Display = DisplayGrid;
+  prop(Lum.Grid, 'Display', DisplayGrid);
 
   // Everything past here requires jQuery UI to be loaded.
   if ($ === undefined || $.ui === undefined)
@@ -989,7 +991,7 @@
     return;
   }
 
-  Lum.markLib('grid.ui');
+  Lum.lib.mark('grid.ui');
 
   /**
    * UIGrid
@@ -1330,6 +1332,6 @@
   } // class UIGrid
 
   // Assign the UIGrid class to Lum.Grid.UI
-  Lum.Grid.UI = UIGrid;
+  prop(Lum.Grid, 'UI', UIGrid);
 
-})(self.Lum);
+});

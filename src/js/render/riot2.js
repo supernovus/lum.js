@@ -9,9 +9,9 @@
  * riot-tmpl v2.3.21, @license MIT, (c) 2015 Muut Inc. + contributors 
  */
 
-Lum.lib('render/riot2',
+Lum.lib(
 {
-  alias: ['render.riot2', 'riot.tmpl'],
+  name: ['render/riot2', 'render.riot2', 'riot.tmpl'],
   ns:    {ns: 'render', subProp: '_ns'},
 }, 
 function (Lum, ns) {     

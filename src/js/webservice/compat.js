@@ -12,18 +12,14 @@
  * using any internal structures, they've all pretty much changed. It was never
  * recommended using internal structures to begin with, so refactor your code!
  */
-(function (Nano)
+Lum.lib(
+{
+  name: ['webservice/compat','webservice.compat'],
+  deps: ['webservice'],
+},
+function (Nano)
 {
   "use strict";
-
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.needLibs('webservice');
-
-  Nano.markLib('webservice.compat');
 
   console.log("Using WebService compat library. Look for DEPRECATED messages.");
 
@@ -167,4 +163,4 @@
     }
   }
 
-})(window.Lum);
+});

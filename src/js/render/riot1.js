@@ -3,9 +3,9 @@
 // This is extremely limited (but extremely small).
 // Check out riot.tmpl (the rendering engine from riot.js v2).
 
-Lum.lib('render/riot1', 
+Lum.lib(
 {
-  alias: ['render.riot1', 'riot.render'],
+  name: ['render/riot1', 'render.riot1', 'riot.render'],
   ns:    {ns: 'render', subProp: '_ns'},
 }, 
 function(Lum, ns)

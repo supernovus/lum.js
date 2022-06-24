@@ -1,13 +1,14 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'elementeditor',
+  deps: ['observable'],
+  jq: true,
+},
+function(Lum, $)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
-  Lum.lib.need('observable').jq.need().lib.mark('elementeditor');
-
   const isObs = Lum.observable.is; 
-  const $ = Lum.jq.get();
 
   const T_STR    = 0;
   const T_INT    = 1;
@@ -639,4 +640,4 @@
 
   }
 
-})(self.Lum);
+});

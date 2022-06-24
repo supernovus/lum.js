@@ -5,22 +5,20 @@
  * Currently using Ace as it's backend component.
  */
 
-(function(Lum)
+Lum.lib(
+{
+  name: 'editor',
+  needs: ['ace','CryptoJS'],
+  jq: true,
+  assign: 'Editor',
+},
+function(Lum, $)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  Lum.ns.need('ace', 'CryptoJS').jq.need().lib.mark('editor');
-
-  const $ = Lum.jq.get();
-
   const BASE64 = 'base64';
 
-  /**
-   * Build an editor object.
-   */ 
-  Lum.Editor = class 
+  return class 
   {
     constructor (opts)
     {
@@ -177,4 +175,4 @@
     static get BASE64() { return BASE64; }
   }
 
-})(self.Lum);
+});

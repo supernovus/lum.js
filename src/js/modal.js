@@ -2,16 +2,14 @@
  * Modal dialog boxes, and UI masks made easy.
  */
 
-(function (Lum)
+Lum.lib(
+{
+  name: ['modal','mask'],
+  jq: true,
+},
+function (Lum, $)
 {
   "use strict";
-
-
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  Lum.jq.need().lib.mark('modal');
-
-  const $ = Lum.jq.get();
 
   const {F,O,N,B,S} = Lum._;
 
@@ -464,5 +462,5 @@
   // The new default is uiWindowCenter.
   dt.default = dt.uiWindowCenter;
 
-})(self.Lum);
+});
 

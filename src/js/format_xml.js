@@ -1,4 +1,9 @@
-(function (Lum)
+Lum.lib(
+{
+  name: 'format_xml',
+  assign: 'format.xml',
+},
+function (Lum)
 {
   "use strict";
 
@@ -7,7 +12,7 @@
 
   if (Lum === undefined) throw new Error("Lum core not loaded");
 
-  function format (xml) 
+  function formatXML (xml) 
   {
     var reg = /(>)(<)(\/*)/g;
     var wsexp = / *(.*) +\n/g;
@@ -69,8 +74,6 @@
     return formatted;
   }
 
-  Lum.lib.mark('format_xml').ns.new('format.xml', format);
-
   const $ = Lum.jq.get();
 
   if ($ !== undefined)
@@ -90,7 +93,7 @@
         else
           return; // We don't support anything but <textarea/> and <pre/>.
   
-        var newval = format(oldval);
+        var newval = formatXML(oldval);
   
         if (mytype == "textarea")
           $this.val(newval);
@@ -100,5 +103,7 @@
     }
   }
 
-})(self.Lum);
+  return formatXML;
+
+});
 

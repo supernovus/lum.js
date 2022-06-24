@@ -12,7 +12,7 @@ object and basic namespaces.
 Some of the libraries are going to get nuked and won't have replacements.
 A bunch of deprecated aliases are going to go away as well.
 
-The `Nano` global alias that has been exported will be nuked.
+The `Nano` global alias that has been exported will be nuked. It's `Lum` now.
 
 ## Methods and properties to be removed
 
@@ -35,8 +35,16 @@ following list is scheduled to be removed in version 5.
 
 ## Overhauls
 
-* Split `helpers.js` into `obj.js` and `opt.js` libraries.
+* Rename `helpers.js` to `obj.js`.
+* Extract `Lum.Mask` out of `modal.js` into `mask.js`
 * Change all direct assignments to `Lum.obj` into `prop()` assignments.
 * Finish the long shelved `tabs.js`, which will replace `tabpanes.js`.
 * Move `*.jq.js` to a `jq` subfolder and remove `.jq` from the filename.
+* Update all the tests to work with the new versions.
+
+## Further down the road
+
+* Standardize all jsdoc comments using JSDoc 3 format.
+* Make jQuery optional anywhere possible.
+* Standardize debugging using a revamped `debug` library.
 

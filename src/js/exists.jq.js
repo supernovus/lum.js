@@ -3,11 +3,11 @@
  * see if an element exists.
  */
 
-(function($) 
+Lum.jq('exists',
+function(Lum, $) 
 {
   $.fn.exists = function ()
   {
     return this.length !== 0;
   };
-})(self.jQuery);
-
+});

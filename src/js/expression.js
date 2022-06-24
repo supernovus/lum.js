@@ -3,28 +3,29 @@
  *
  * Fully compatible with Lum.php's implementation.
  */
-(function(Lum)
+Lum.lib(
+{
+  name: 'expression',
+  ns: 'Expression',
+},
+function(Lum, ns)
 {
   if (Lum === undefined) throw new Error("Lum core not found");
 
   const {O,S,N,F} = Lum._;
 
-  const ns = Lum.lib.mark('expression').ns.new('Expression');
+  ns._add('ASSOC_NONE',  0);
+  ns._add('ASSOC_LEFT',  1);
+  ns._add('ASSOC_RIGHT', 2);
 
-  const setprop = Lum.prop(ns);
-
-  setprop('ASSOC_NONE',  0);
-  setprop('ASSOC_LEFT',  1);
-  setprop('ASSOC_RIGHT', 2);
-
-  ns.Parser = class 
+  ns._add('Parser', class 
   {
     constructor (options)
     {
       this.data = [];
       this.operators = [];
 
-      if (typeof options.operators === 'object')
+      if (typeof options.operators === O)
       { // An assignment of operators.
         for (let opname in options.operators)
         {
@@ -33,7 +34,7 @@
         }
       }
 
-      if (typeof options.lp === 'string')
+      if (typeof options.lp === S)
       {
         this.lp = options.lp;
       }
@@ -41,7 +42,7 @@
       {
         this.lp = '(';
       }
-      if (typeof options.rp === 'string')
+      if (typeof options.rp === S)
       {
         this.rp = options.rp;
       }
@@ -57,7 +58,7 @@
       {
         this.operators[name.name] = name;
       }
-      else if (typeof name === 'string')
+      else if (typeof name === S)
       {
         this.operators[name] = new Operator(name, opts);
       }
@@ -309,16 +310,16 @@
       }
     }
 
-  }
+  });
 
-  var Operator = ns.Operator = class
+  class Operator
   {
     constructor (name, opts)
     {
       this.name = name;
-      this.operands = (typeof opts.operands === 'number') 
+      this.operands = (typeof opts.operands === N) 
         ? opts.operands : 2;
-      this.precedence = (typeof opts.precedence === 'number')
+      this.precedence = (typeof opts.precedence === N)
         ? opts.precedence : 1;
   
       if (opts.assoc !== undefined)
@@ -327,11 +328,11 @@
         {
           this.assoc = ns.ASSOC_NONE;
         }
-        else if (typeof opts.assoc === 'number')
+        else if (typeof opts.assoc === N)
         {
           this.assoc = opts.assoc;
         }
-        else if (typeof opts.assoc === 'string')
+        else if (typeof opts.assoc === S)
         {
           var assocStr = opts.assoc.substr(0,1).toLowerCase();
           if (assocStr == 'l')
@@ -367,11 +368,11 @@
   
       if (opts.evaluate !== undefined)
       {
-        if (typeof opts.evaluate === 'function')
+        if (typeof opts.evaluate === F)
         { // Using a custom evaluator.
           this.evaluator = opts.evaluate;
         }
-        else if (typeof opts.evaluate === 'string')
+        else if (typeof opts.evaluate === S)
         { // Using a built-in evaluator.
           this.setEvaluator(opts.evaluate.toLowerCase());
         }
@@ -388,12 +389,12 @@
 
     setEvaluator (evaluator)
     {
-      if (typeof evaluator === 'string'
-        && typeof Ope[evaluator] === 'function')
+      if (typeof evaluator === S
+        && typeof Ope[evaluator] === F)
       {
         this.evaluator = Ope[evaluator];
       }
-      else if (typeof evaluator === 'function')
+      else if (typeof evaluator === F)
       {
         this.evaluator = evaluator;
       }
@@ -405,7 +406,7 @@
   
     evaluate (items)
     {
-      if (typeof this.evaluator !== 'function')
+      if (typeof this.evaluator !== F)
       {
         throw new Error("Attempt to evaluate an operator without a handler");
       }
@@ -418,8 +419,8 @@
       for (var i = 0; i < items.length; i++)
       {
         var item = items[i];
-        if (typeof item === 'object' && item !== null 
-          && typeof item.evaluate === 'function')
+        if (typeof item === O && item !== null 
+          && typeof item.evaluate === F)
         {
           flat[i] = item.evaluate();
         }
@@ -449,7 +450,9 @@
 
   } // class Operator
 
-  var Ope = Operator.Evaluators = 
+  ns._add('Operator', Operator);
+
+  const Ope = Lum.prop(Operator, 'Evaluators', 
   {
     not (items)
     {
@@ -526,9 +529,9 @@
       return (items[0] * -1);
     },
 
-  };
+  }); // Operator.Evaluators
  
-  var Condition = ns.Condition = class
+  class Condition
   {
     constructor (op, items)
     {
@@ -551,4 +554,6 @@
 
   }
 
-})(self.Lum);
+  ns._add('Condition', Condition);
+
+});

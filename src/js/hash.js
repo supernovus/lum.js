@@ -1,10 +1,11 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'hash',
+  assign: 'Hash',
+},
+function(Lum)
 {
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
-  Lum.lib.mark('hash');
 
   const JSON_ALL = /^(\[.*?\]|\{.*?\})$/;
   const JSON_ARR = /^\[.*?\]$/;
@@ -12,6 +13,8 @@
 
   /**
    * Lum URL Hash management class.
+   * 
+   * @class Lum.Hash
    *
    * You can create an instance of this for any library that uses URL
    * hashes, and it supports a wide variety of URL hash functionality.
@@ -19,7 +22,7 @@
    * @property {boolean} shortOpt  Allow short option fallback?
    * @property {boolean} autoArray Use smart array format detection?
    */
-  Lum.Hash = class
+  return class
   {
     /**
      * Create a URLHash instance.
@@ -680,4 +683,4 @@
 
   }
 
-})(self.Lum);
+});

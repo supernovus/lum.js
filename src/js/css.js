@@ -1,9 +1,14 @@
-Lum.lib('css', {},
+Lum.lib(
+{
+  name: 'css',
+  assign: 'CSS',
+},
 function(Lum)
 {
   "use strict";
   
-  Lum.ns.new('CSS', class
+  // Defining a custom class.
+  return class
   {
     constructor (doc)
     {
@@ -52,6 +57,6 @@ function(Lum)
   
       return matching;
     }
-  });
+  }
 
 });

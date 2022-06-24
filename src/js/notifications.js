@@ -18,17 +18,13 @@
  *
  */
 
-(function ($)
+Lum.lib(
+{
+  name: 'notifications',
+},
+function (Lum, $)
 {
   "use strict";
-  
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Lum.needLibs('helpers');
-  Lum.markLib('notifications');
 
   /**
    * A Notification system. 
@@ -39,12 +35,12 @@
   {
     constructor (options={})
     {
-      if (Lum.hasLib('observable'))
+      if (Lum.lib.has('observable'))
       {
         Lum.observable(this, options.observable);
       }
 
-      let hasJSON = Lum.wantJq('JSON');
+      let hasJSON = Lum.jq.has('JSON');
   
       if (options.strings !== undefined)
       { // For maximum flexibility, pass in the strings/notifications.
@@ -230,9 +226,9 @@
   
     extendNotification (notification)
     {
-      Lum.addProperty(notification, 'parent', this);
+      Lum.prop(notification, 'parent', this);
   
-      Lum.addAccessor(notification, 'text', 
+      Lum.prop(notification, 'text', 
       function ()
       {
         var name = this.name;
@@ -263,7 +259,7 @@
         console.error("Notification text is immutable!");
       });
   
-      Lum.addProperty(notification, 'keyCount', function ()
+      Lum.prop(notification, 'keyCount', function ()
       {
         if (this.key && this.parent.keyCount[this.key] !== undefined)
         {
@@ -272,7 +268,7 @@
         return 1;
       });
   
-      Lum.addProperty(notification, 'remove', function (opts={})
+      Lum.prop(notification, 'remove', function (opts={})
       {
         if (opts === true)
         { // Remove from parent, and redraw the list.
@@ -913,4 +909,4 @@
     return elem;
   }
 
-})(window.jQuery);
+});

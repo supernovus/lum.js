@@ -133,6 +133,12 @@ function (init)
     {
       throw new TypeError(`Invalid type ${JSON.stringify(type)} specified`);
     }
+
+    if (typeof allowNull === S && msg === null)
+    { // Message was passed without allowNull.
+      msg = allowNull;
+      allowNull = false;
+    }
     
     if (!allowNull && type === O)
     { // Pass it on to needObj() which rejects null.
@@ -943,25 +949,115 @@ function (init)
     $wrapBackupPrefix: 'orig$',
   };
 
-  // An internal class to keep track of loaded libraries, etc.
+  /**
+   * Track if libraries, plugins, or whatever are loaded.
+   * 
+   * Automatically manages events that are trigged on load.
+   * Also will automatically run events assigned *after* the 
+   * desired item has been loaded.
+   * 
+   * Can handle custom tests in addition to the default
+   * test which simply see's if the `loadTracker.mark()`
+   * method has been called for the specified name.
+   * 
+   * @class Lum.LoadTracker
+   */
   class LoadTracker
   {
-    constructor()
+    /**
+     * Build a LoadTracker
+     * 
+     * @param {object} [opts] - Named options for custom behaviours.
+     * 
+     * @param {function} [opts.or] A custom test for `is()` method.
+     *   If this returns true, `is()` will return true immediately.
+     *   Mutually exclusive with the `opts.and` option.
+     * 
+     *   The function will have `this` set to the `LoadTracker` instance.
+     *   It will be passed the same arguments sent to the `is()` method.
+     *   The function must return a boolean value indicating if the item
+     *   is considered *loaded* for the purposes of this loader instance.
+     * 
+     * @param {function} [opts.and] A custom test for `is()` method.
+     *   If this returns false, `is()` will return false immediately.
+     *   Mutually exclusive with the `opts.or` option.
+     * 
+     *   The same function notes as `opts.or` apply to this as well.
+     * 
+     * @param {boolean} [opts.before=false] When to run the custom test.
+     *   If `true` the custom test is run before the standard test.
+     *   If `false` the custom test is run after the standard test.
+     * 
+     *   If `opts.or` was used, and whichever test is ran first returns 
+     *   `true`, the other test won't be run at all.
+     * 
+     *   Likewise, if `opts.and` was used, and whichever test is ran first
+     *   returns `false`, the other test won't be run at all.
+     *
+     * @param {function} [opts.check] A custom test for the `check*` methods.
+     *   If specified, this will be ran *before* checking the rest of the
+     *   arguments. The first parameter passed to the function is a boolean,
+     *   indicating if only a single return value is expected; `checkOne()` 
+     *   passes `true` while `checkAll()` passes false. All subsequent
+     *   parameters will be the arguments passed to the calling method.
+     *   The function will have `this` set to the `LoadTracker` instance.
+     * 
+     *   When called from `checkOne()` if it returns a string, that will
+     *   be returned as the missing item name. Return nil if no errors.
+     * 
+     *   When called from `checkAll()` if it returns an Array, all items
+     *   from that array will be added to the list of missing items, and
+     *   then the regular `checkAll()` logic will continue. If however it
+     *   returns a string, then that will be returned as the sole item in
+     *   the missing list without running any further `checkAll()` logic.
+     *   Return nil or an *empty* array if no errors.
+     * 
+     */
+    constructor(opts={})
     {
-      prop(this, '$loaded', {});
-      prop(this, '$onload', {});
+      needObj(opts);
+
+      prop(this, '$loaded', {}); // List of loaded libraries.
+      prop(this, '$onload', {}); // Events to trigger when libraries are loaded.
+
+      let isTest = false, testOr = false;
+      if (typeof opts.or === F)
+      { // A test that can override 
+        isTest = opts.or;
+        testOr = true;
+      }
+      else if (typeof opts.and === F)
+      {
+        isTest = opts.and;
+        testOr = false;
+      }
+      
+      prop(this, '$isTest',  isTest);
+      prop(this, '$isOr',    testOr);
+      prop(this, '$is1st',   opts.before ?? false);
+      prop(this, '$check',   opts.check  ?? false);
+      prop(this, '$typeOne', opts.type   ?? 'item');
+      prop(this, '$typeAll', opts.types  ?? this.$typeOne + 's');
+      
     }
 
+    /**
+     * Assign a callback function to be called.
+     * 
+     * All callbacks for a given `name` will be ran when
+     * that `name` has been passed to `mark()` or `call()`.
+     * 
+     * @param {string}   name  - The name of the item to be loaded.
+     * @param {function} event - The callback function.
+     *  
+     * @returns {boolean} - Is the method call deferred?
+     *   If `true` the `name` has not been marked as loaded, so the
+     *   method has been added to a queue that will be called
+     */
     on(name, event)
     {
-      if (typeof name !== S)  throw new TypeError("Name must be a string");
-      if (typeof event !== F) throw new TypeError("Event must be a function");
-
-      if (this.$loaded[name])
-      { // Execute the function right now.
-        event.call(Lum, name, false);
-        return false; // This indicates the event was called immediately.
-      }
+      needType(S, name,  "Name must be a string");
+      needType(F, event, "Event must be a function");
 
       if (!Array.isArray(this.$onload[name]))
       { // Add an array of events.
@@ -970,12 +1066,49 @@ function (init)
 
       this.$onload[name].push(event);
 
-      return true; // This indicates the event was deferred.
+      if (this.is(name))
+      { // Execute the function right now.
+        event.call(Lum, name, false);
+        return false;
+      }
+
+      return true;
     }
 
-    mark(name)
+    /**
+     * Mark an item as loaded.
+     * 
+     * @param {string} name - Item being marked as loaded.
+     * @param {boolean} [call=true]     Also call `call()` method?
+     * @param {boolean} [skipTest=true] Passed to `call()` method.
+     */
+    mark(name, call=true, skipTest=true)
     { 
       prop(this.$loaded, name, true);
+      if (call)
+      {
+        this.call(name, skipTest);
+      }
+    }
+
+    /**
+     * Call all of the callback function for an item.
+     * 
+     * @param {string} name - The name of the item. 
+     * @param {boolean} [skipTest=false] Skip the `is()` test?
+     *  If `false` we call `this.is(name)` and will only continue
+     *  if it returns a true value. If `true` we call without testing.
+     *  
+     * @returns {boolean} - If the events were called or not.
+     */
+    call(name, skipTest=false)
+    {
+      if (!skipTest && !this.is(name))
+      { // Okay, we cannot call if the item isn't loaded.
+        console.error("Cannot call events if item is not loaded", name, this);
+        return false;
+      }
+
       if (Array.isArray(this.$onload[name]))
       {
         for (const event of this.$onload[name])
@@ -983,42 +1116,375 @@ function (init)
           event.call(Lum, name, true);
         }
       }
+
+      return true;
     }
 
+    /**
+     * Check if the item is loaded.
+     * 
+     * @param {string} name - The item to check.
+     * @returns {boolean}
+     */
     is(name)
     {
-      return this.$loaded[name] ?? false;
+      if (typeof name !== S)
+      {
+        console.error("Name must be a string", name);
+        return false;
+      }
+
+      let okay = false;
+
+      const hasTest = (typeof this.$isTest === F);
+      const test1st = this.$is1st;
+      const testOr  = this.$isOr;
+
+      // A test that indicates we can return `okay` value.
+      const done = () => (!hasTest || (testOr && okay) || (!testOr && !okay));
+
+      if (hasTest && test1st)
+      { // A custom test that is called before the normal test.
+        okay = this.$isTest(...arguments);
+        console.debug("is:before", okay, this);
+        if (done()) return okay;
+      }
+
+      // Call the normal test, is the name marked?
+      okay = (this.$loaded[name] ?? false);
+      if (done()) return okay;
+
+      if (hasTest && !test1st)
+      { // A custom test that is called after the normal test.
+        okay = this.$isTest(...arguments);
+        console.debug("is:after", okay, this);
+      }
+
+      return okay;
     }
 
-    list()
+    /**
+     * Get a list of loaded items.
+     * 
+     * This only includes items that have been marked using the
+     * `mark()` method.
+     * 
+     * @param {boolean|function} [sort=false] Should we sort the results?
+     *   If this is `true` we use the default sorting algorithm.
+     *   If this is a function, it's passed to the `array.sort()` method.
+     *   Any other value and the list will be in the order returned
+     *   by the `Object.keys()` method.
+     * 
+     * @returns {Array} The list of loaded items.
+     */
+    list(sort=false)
+    {
+      let list = Object.keys(this.$loaded);
+      if (sort === true)
+      { // If sort is boolean true, use default sorting algorithm.
+        list.sort();
+      }
+      else if (typeof sort === F)
+      { // A custom sort function.
+        list.sort(sort);
+      }
+      return list;
+    }
+
+    /**
+     * The same output as `list(false)` but as a readonly accessor property.
+     */
+    get keys()
     {
       return Object.keys(this.$loaded);
     }
 
+    /**
+     * Return the first item that isn't loaded.
+     * 
+     * @param {string} ...names - Any items you want to look for.
+     * 
+     * @returns {string|undefined} If no items are missing, will be undefined.
+     */
     checkOne()
     {
+      if (typeof this.$check === F)
+      {
+        const check = this.$check(true, ...arguments);
+        console.debug("checkOne:$check", check, this);
+        if (typeof check === S && check.trim() !== '')
+        { // A non-empty string was passed.
+          return check;
+        }
+      }
+
       for (const lib of arguments)
       {
-        if (typeof lib === S && !this.is(lib))
+        if (!this.is(lib))
         {
           return lib;
         }
       }
     }
 
+    /**
+     * Return a full list of any missing items.
+     * 
+     * @param {string} ...names - Any items you want to look for.
+     * 
+     * @returns {Array} A list of missing items.
+     */
     checkAll()
     {
+      const missing = [];
+
+      if (typeof this.$check === F)
+      {
+        const check = this.$check(false, ...arguments);
+        console.debug("checkAll:$check", check, this);
+        if (Array.isArray(check))
+        { // May have missing items, or be empty.
+          missing.push(...check);
+        }
+        else if (typeof check === S)
+        { // A string indicates we can continue no further.
+          missing.push(check);
+          return missing;
+        }
+      }
+
+      for (const lib of arguments)
+      {
+        if (!this.is(lib))
+        {
+          missing.push(lib);
+        }
+      }
+
+      return missing;
+    }
+
+    /**
+     * Setup a namespace object with wrapper methods.
+     * 
+     * @param {object} ns - The namespace object, may also be a function. 
+     * @param {object} [names] A map of alternate names for the methods.
+     * 
+     * The default method names are:
+     * 
+     * `mark`     → Call `lt.mark`, returns `ourself()`.
+     * `has`      → Proxy `lt.is`.
+     * `check`    → Proxy `lt.checkOne`.
+     * `checkAll` → Proxy `lt.checkAll`.
+     * `list`     → Proxy `lt.list`.
+     * `need`     → Call `check`, if any missing, throw Error.
+     * `want`     → Call `check`, return true if all are loaded, false if not.
+     * `onLoad`   → Proxy `on`.
+     * 
+     * If any of the method names are already present, they will be skipped.
+     * 
+     */
+    setupNamespace(ns, names={})
+    {
+      needObj(ns, true, "Invalid namespace object");
+      needObj(names, false, "Names must be an object");
+
+      const thisLoad = this; // Contextual instance reference.
+      let propName;          // Will be set by hasnt() closure.
+
+      const getname = (name) => names[name] ?? name;
+
+      const hasnt = (name) => 
+      {
+        propName = getname(name);
+        return (ns[propName] === undefined);
+      }
+
+      const addfunc = (func) => prop(ns, propName, func);
+      const addgetter = (func) => prop(ns, propName, func, null, DESC.CONF);
+
+      // Options for need() and want().
+      const loadOpts = prop(ns, '$loadOpts', 
+      {
+        checkAll: false,
+        warnings: false,
+      }).$loadOpts;
+
+      if (hasnt('mark'))
+      {
+        addfunc(function()
+        {
+          thisLoad.mark(...arguments);
+          return ourself();
+        });
+      }
+      
+      if (hasnt('has'))
+      {
+        addfunc(function()
+        {
+          return thisLoad.is(...arguments);
+        });
+      }
+
+      if (hasnt('check'))
+      {
+        addfunc(function()
+        {
+          return thisLoad.checkOne(...arguments);
+        })
+      }
+
+      if (hasnt('checkAll'))
+      {
+        addfunc(function()
+        {
+          return thisLoad.checkAll(...arguments);
+        });
+      }
+
+      if (hasnt('list'))
+      {
+        addfunc(function()
+        {
+          return thisLoad.list(...arguments);
+        });
+      }
+
+      if (hasnt('missing'))
+      {
+        addfunc(function(
+        {
+          fatal = false, 
+          all   = loadOpts.checkAll, 
+          warn  = loadOpts.warnings, 
+          ok    = this,
+        },
+          ...items)
+        {
+          const thisCheck = all ? getname('checkAll') : getname('check');
+          const result = ns[thisCheck](...items);
+
+          if (typeof result === S 
+            || (all && Array.isArray(result) && result.length > 0))
+          { // There are missing libraries.
+            const typeName = all ? thisLoad.$typeAll : thisLoad.$typeOne;
+            const missing = fatal ? JSON.stringify(result) : result;
+
+            if (fatal)
+            {
+              throw new Error(`Missing required ${typeName}: ${missing}`);
+            }
+            else 
+            {
+              if (warn)
+              {
+                console.warn("Missing", typeName, missing);
+              }
+              return false;
+            }
+          }
+
+          // If we reached here, nothing was reported as missing.
+          return ok;
+        });
+      }
+
+      if (hasnt('need'))
+      {
+        addfunc(function()
+        {
+          const missing = getname('missing');
+          return ns[missing]({fatal: true, ok: ourself()}, ...arguments);
+        });
+      }
+
+      if (hasnt('want'))
+      {
+        addfunc(function()
+        {
+          const missing = getname('missing');
+          return ns[missing]({fatal: false, ok: true}, ...arguments);
+        });
+      }
+
+      if (hasnt('all'))
+      {
+        addgetter(function()
+        {
+          loadOpts.checkAll = true;
+          return ns;
+        });
+      }
+
+      if (hasnt('one'))
+      {
+        addgetter(function()
+        {
+          loadOpts.checkAll = false;
+          return ns;
+        });
+      }
+
+      if (hasnt('showWarnings'))
+      {
+        addfunc(function(val)
+        {
+          if (typeof val === B)
+          {
+            loadOpts.warnings = val;
+            return this;
+          }
+          else 
+          {
+            return loadOpts.warnings;
+          }
+        });
+      }
+
+      if (hasnt('onLoad'))
+      {
+        addfunc(function()
+        {
+          return thisLoad.on(...arguments);
+        });
+      }
 
     }
   }
 
   prop(Lum, 'LoadTracker', LoadTracker);
 
+  // A tag for jQuery if it's missing.
+  const JQTAG = 'jQuery';
+
   // Store loaded libraries in a private object.
-  const loaded = new LoadTracker();
+  // Using all default tests for this one.
+  const loaded = new LoadTracker({type: 'library', types: 'libraries'});
 
   // Ditto for Lum-specific jQuery libraries.
-  const jqLoaded = new LoadTracker();
+  // But with some custom tests.
+  const jqLoaded = new LoadTracker(
+  {
+    type:  'jQuery library',
+    types: 'jQuery libraries',
+    or: function(name)
+    { // See if a jQuery function handler by that name exists.
+      const $ = Lum.jq.get();
+      //console.debug("jqLoaded:$isTest[or]", $, this);
+      if (typeof $ !== F || !isObj($.fn)) return false;
+      return ($.fn[name] !== undefined);
+    },
+    check: function()
+    { // We don't actually care about the arguments in this one.
+      const $ = Lum.jq.get();
+      //console.debug("jqLoader:$check", $, this);
+      if (typeof $ !== F || !isObj($.fn))
+      { // Missing jQuery itself!
+        return JQTAG;
+      }
+    },
+  });
 
   // Pass `this` here to see if it's considered unbound.
   function unbound(whatIsThis, lumIsUnbound=false, rootIsUnbound=true)
@@ -1507,24 +1973,24 @@ function (init)
    * @param {object} opts - Named options
    * 
    * @param {object} [opts.obj]  An object to look for a property in.
-   *                             Will be passed to `Lum.opt.get()`.
-   *                             Must also specify `opts.prop`.
+   *   Will be passed to `Lum.opt.get()`. Must also specify `opts.prop`.
+   * 
    * @param {string} [opts.prop] Property to look for in the object.
-   *                             Must be specified with `opts.obj`.
+   *   Must be specified with `opts.obj`.
    * 
    * @param {*} [opts.val] Value to test using `Lum.opt.val()`
-   *                       Only used if `opts.obj` and `opts.prop`
-   *                       were not specified, or invalid values.
+   *   Only used if `opts.obj` and `opts.prop` were not specified, 
+   *   or invalid values.
    * 
-   * @param {function} [opts.lazy]     A function to return the default value.
-   * @param {*}        [opts.lazyThis] Will be used as `this` in `opts.lazy`.
+   * @param {function} [opts.lazy] A function to return the default value.
+   * 
+   * @param {*} [opts.lazyThis] Will be used as `this` in `opts.lazy`.
    * 
    * @param {*} [opts.default] The default value to use.
-   *                           Only used if `opts.lazy` was not used.
+   *   Only used if `opts.lazy` was not used.
    * 
    * @param {boolean} [opts.allowNull] Should `null` values be considered set?
-   *                                   Default `true` if `opts.obj` was used,
-   *                                   or `false` if `opts.val` was used.
+   *   Default `true` if `opts.obj` was used, or `false` otherwise.
    * 
    * @returns {*} See `Lum.opt.val` and `Lum.opt.get` for details.
    * 
@@ -1680,14 +2146,7 @@ function (init)
     overwrite=false, 
     useprop=null)
   {
-    if (typeof namespaces === S)
-    {
-      namespaces = namespaces.split('.');
-    }
-    else if (!Array.isArray(namespaces))
-    {
-      throw new Error("namespaces must be string or array");
-    }
+    namespaces = nsArray(namespaces);
 
     let desc = Lum.ns.defaultDescriptor;
 
@@ -1753,6 +2212,7 @@ function (init)
   {
     console.debug("Lum.ns.new", {namespaces, value, prefix, useprop}, arguments);
     const PRE = 'Prefix';
+    const NS  = 'Namespace';
 
     if (typeof namespaces === S)
     {
@@ -1766,7 +2226,7 @@ function (init)
     }
     else
     {
-      throw new TypeError("namespaces"+SOA);
+      throw SOA(NS);
     }
 
     return Lum.ns.add(namespaces, value, false, useprop);
@@ -1928,7 +2388,7 @@ function (init)
    * @param {boolean} [overwrite=false] Overwrite existing target namespace?
    * @param {string} [prefix="Lum."] Prefix for the namespace target.
    *
-   * @return Lum  The core Lum library is returned for chaining purposes.
+   * @return {object} The core Lum library is returned for chaining purposes.
    */
   prop(Lum.ns, 'link', function (obj, target, overwrite=false, prefix="Lum.")
   {
@@ -1958,6 +2418,7 @@ function (init)
     'WRAP',
     'ROOT',
     'NS',
+    'JQ',
     'ARGS',
   ], 
   {
@@ -1970,65 +2431,83 @@ function (init)
    * @method Lum.lib
    *
    * Usage: At the very top of library files, instead of wrapping the library
-   * in a self executing block, use `Lum.lib(name, opts, func);` instead.
+   * in a self executing block, use `Lum.lib(opts, func);` instead.
    * The `func` should be the same as the one that used to be in the block.
    *
-   * @param {string} name - The name of the library we are registering.
-   *                        This will be passed to `Lum.lib.mark()` when
-   *                        the library and its dependencies are loaded.
+   * @param {object} [opts] - Library configuration settings.
+   *   If this is passed as a `string` it's assumed to be `opts.name`.
    *
-   * @param {object} [opts] Options for dependencies, etc.
-   *                        If this is an `Array` we assume it's `opts.deps`
-   *
-   * @param {Array}  [opts.deps] Check if the librarise have been loaded.
-   * @param {Array}  [opts.jq]   Just like `opts.deps` but for jQuery plugins.
-   * @param {object|string} [opts.ns] If specified, this will be passed as the
-   *                                  arguments to a `Lum.ns.build()` call.
+   * @param {string|Array} [opts.name] - The name of the library.
+   *   This will be passed to `Lum.lib.mark()` when the library and its 
+   *   dependencies are loaded. You can use an array to specify aliases.
+   * 
+   * @param {Array} [opts.deps] Check if the libraries have been loaded.
+   * 
+   * @param {Array|boolean} [opts.jq] Check if the jQuery libraries are loaded.
+   *   If specified as an empty array or `true` then it simply ensures that
+   *   the main jQuery library itself has been loaded.
+   * 
+   * @param {Array} [opts.needs] Check if the specified namespaces exist.
+   * 
+   * @param {object|string} [opts.ns] Call `Lum.ns.build()` and pass this.
+   * 
+   * @param {object} [opts.assign] Alternative namespace assignment.
+   *   This assignment is done *after* the `func` has been called, and
+   *   uses the return value from the function as the namespace object.
+   *   This is useful in cases where the namespace is a `class` definition.
    *
    * @param {string} [opts.this] The `this` in the `func` will be set to:
    *
-   *                             - `Lum.lib.TYPE.NULL` -- Plain old `null`.
-   *                             - `Lum.lib.TYPE.SELF` -- The `ourself()` value.
-   *                             - `Lum.lib.TYPE.LUM`  -- The unwrapped `Lum` object. 
-   *                             - `Lum.lib.TYPE.WRAP` -- The wrapped `Lum` `Proxy`.
-   *                             - `Lum.lib.TYPE.ROOT` -- The `root` object.
-   *                             - `Lum.lib.TYPE.NS`   -- The `ns` object.
-   *                             - `Lum.lib.TYPE.ARGS` -- The `arguments` passed.
+   *   - `Lum.lib.TYPE.NULL` -- Plain old `null`.
+   *   - `Lum.lib.TYPE.SELF` -- The `ourself()` value.
+   *   - `Lum.lib.TYPE.LUM`  -- The unwrapped `Lum` object. 
+   *   - `Lum.lib.TYPE.WRAP` -- The wrapped `Lum` `Proxy`.
+   *   - `Lum.lib.TYPE.ROOT` -- The `root` object.
+   *   - `Lum.lib.TYPE.NS`   -- The `ns` object (if `opts.ns` was used).
+   *   - `Lum.lib.TYPE.JQ`   -- The jQuery object (if `opts.jq` was used).
+   *   - `Lum.lib.TYPE.ARGS` -- The `arguments` passed.
    * 
-   *                             Default is `NS ?? SELF`.
+   *   Default is `NS ?? SELF`.
    * 
-   * @param {Array} [opts.args] The arguments passed to the registration function.
-   *                            An array of `Lum.lib.TYPE` values, in the order
-   *                            they should be passed to the method.
-   *                            Default is `[SELF, NS, ARGS]`.
+   * @param {Array} [opts.args] The arguments for the registration function.
+   *   An array of `Lum.lib.TYPE` values, in the order they should be passed 
+   *   to the function. 
+   *   
+   *   The default depends on the other options passed.
+   * 
+   *   - If neither `opts.ns` or `opts.jq`: `[SELF, ARGS]`;
+   *   - If `opts.ns` but not `opts.jq`: `[SELF, NS, ARGS]`;
+   *   - If `opts.jq` but not `opts.ns`: `[SELF, JQ, ARGS]`;
+   *   - If both `opts.ns` and `opts.jq`: `[SELF, NS, JQ, ARGS]`;
+   * 
+   * @param {string} [opts.return] What should this method return?
    * 
    * @param {function} func - The library registration function.
    *                          This does all the rest of building the library.
-   *                          
-   * @namespace Lum.lib
+   * 
+   * @return {mixed} Return value from `func` if non-nil, or `ourself()`.                   
    */
-  prop(Lum, 'lib', function (name, opts, func)
+  prop(Lum, 'lib', function (opts, func)
   {
-    if (typeof name !== S) throw new Error("name must be a string");
-
-    if (typeof opts === F)
+    if (typeof opts === S)
+    { // Name of library passed instead of options.
+      opts = {name: opts};
+    }
+    else if (typeof opts === F)
     { // Options are optional, or may be after the function.
       const _opts = isObj(func) ? func : {};
       func = opts;
       opts = _opts;
     }
-    else 
-    { // In any other case, we need to type check.
-      if (typeof opts !== O) throw new Error("opts must be an object");
-      if (typeof func !== F) throw new Error("func must be a function");
+    else if (!isObj(opts))
+    { // Assume no options. Weird, but whatever.
+      opts = {};
     }
+
+    // One last crucial type check.
+    if (typeof func !== F) throw new TypeError("func must be a function");
 
     let nsObj = null;
-
-    if (Array.isArray(opts))
-    {
-      opts = {deps: opts};
-    }
 
     if (Array.isArray(opts.deps))
     {
@@ -2036,10 +2515,24 @@ function (init)
       Lum.lib.need(...needed);
     }
 
+    if (Array.isArray(opts.needs))
+    {
+      const needed = opts.needs;
+      Lum.ns.need(...needed);
+    }
+
+    let $ = null;
+
     if (Array.isArray(opts.jq))
     {
       const needed = opts.jq;
       Lum.jq.need(...needed);
+      $ = Lum.jq.get();
+    }
+    else if (opts.jq === true)
+    {
+      Lum.jq.need();
+      $ = Lum.jq.get();
     }
 
     if (notNil(opts.ns))
@@ -2067,6 +2560,8 @@ function (init)
           return root;
         case LIB_TYPES.NS:
           return nsObj;
+        case LIB_TYPES.JQ:
+          return $;
         case LIB_TYPES.ARGS:
           return libArgs;
         default:
@@ -2105,111 +2600,59 @@ function (init)
     }
 
     if (funcArgs.length === 0)
-    { // Use defaults.
-      funcArgs.push(ourself(), nsObj, libArgs);
+    { // Use defaults based on other options.
+      funcArgs.push(ourself());
+      if (isComplex(nsObj))
+        funcArgs.push(nsObj);
+      if (typeof $ === F)
+        funcArgs.push($);
+      funcArgs.push(libArgs);
     }
 
     // Okay, now we call the function!
     const retVal = func.apply(thisObj, funcArgs);
 
-    // Assuming it didn't throw an exception, mark the library as loaded.
-    Lum.lib.mark(name);
-
-    if (typeof opts.alias === S)
-    {
-      Lum.lib.mark(opts.alias);
+    let aopts = null;
+    if (typeof opts.assign === S)
+    { // A different kind of namespace assignment.
+      aopts = {ns: opts.assign, addProp: false};
     }
-    else if (Array.isArray(opts.alias))
+    else if (isObj(opts.assign))
     {
-      for (const alias of opts.alias)
+      aopts = clone(opts.assign);
+      if (aopts.addProp === undefined)
+        aopts.addProp = false;
+    }
+
+    if (isObj(aopts))
+    { // Okay, let's do this.
+      if (isNil(retVal))
+        throw new TypeError("function did not return object to assign");
+      aopts.value = retVal;
+      Lum.ns.build(aopts);
+    }
+
+    // Now mark the name(s) as loaded.
+    if (typeof opts.name === S)
+    {
+      Lum.lib.mark(opts.name);
+    }
+    else if (Array.isArray(opts.name))
+    {
+      for (const name of opts.name)
       {
-        Lum.lib.mark(alias);
+        Lum.lib.mark(name);
       }
     }
 
     // And now we're done.
-    return (retVal ?? nsObj ?? Lum);
+    return (retVal ?? Lum);
   });
 
   prop(Lum.lib, 'TYPE', LIB_TYPES);
 
-  /**
-   * Mark a library as loaded.
-   *
-   * @param {string} lib  The name of the library we are marking as loaded.
-   */
-  prop(Lum.lib, 'mark', function (lib)
-  {
-    loaded.mark(lib);
-    return ourself();
-  });
-
-  /**
-   * See if a library is loaded.
-   *
-   * @param {string} lib - The name of the library we are looking for.
-   *
-   * @return {bool} - If the library is loaded or not.
-   */
-  prop(Lum.lib, 'has', function (lib)
-  {
-    return loaded.is(lib);
-  });
-
-  /**
-   * Check for loaded libraries. 
-   *
-   * They must have been marked as loaded to pass the test.
-   *
-   * Any arguments are the names of libraries we need.
-   *
-   * Returns the name of the first missing library, or undefined if all
-   * requested libraries are loaded.
-   */
-  prop(Lum.lib, 'check', function ()
-  {
-    return loaded.checkOne(...arguments);
-  });
-
-  /**
-   * A version of `check()` that returns a list of missing
-   * dependencies. If all are there it'll return an
-   * empty array.
-   */
-  prop(Lum.lib, 'checkList', function ()
-  {
-    return loaded.checkAll(...arguments);
-  });
-
-  /**
-   * Run checkLibs; if it returns a string, throw a fatal error.
-   */
-  prop(Lum.lib, 'need', function ()
-  {
-    const result = Lum.lib.check(...arguments);
-    if (typeof result === S)
-    {
-      throw new Error("Missing required Lum library: "+result);
-    }
-    return ourself();
-  });
-
-  /**
-   * Run checkLibs; return false if the value was a string, or true otherwise.
-   */
-  prop(Lum.lib, 'want', function ()
-  {
-    const result = Lum.lib.check(...arguments);
-    return (typeof result !== S);
-  });
-
-  /**
-   * Get a list of loaded libraries.
-   */
-  prop(Lum.lib, 'list', function ()
-  {
-    return loaded.list();
-  });
+  // Add the methods handled by the LoadTracker.
+  loaded.setupNamespace(Lum.lib);
 
   const JQ_TYPES = Enum(
   [
@@ -2228,42 +2671,84 @@ function (init)
   /**
    * jQuery library helper.
    *
-   * @namespace Lum.jq
+   * @method Lum.jq
+   *
+   * Usage: At the very top of jQuery plugins, instead of wrapping the library
+   * in a self executing block, use `Lum.jq(opts, func);` instead.
+   * The `func` should be the same as the one that used to be in the block.
+   *
+   * @param {object} opts - Library configuration settings.
+   *   If this is passed as a `string` it's assumed to be `opts.name`.
+   *
+   * @param {string|Array} opts.name - The name of the library.
+   *   This will be passed to `Lum.jq.mark()` when the library and its 
+   *   dependencies are loaded. You can use an array to specify aliases.
+   * 
+   * @param {Array} [opts.deps] Check if the libraries have been loaded.
+   * 
+   * @param {Array} [opts.jq] Check if other jQuery libraries are loaded.
+   * 
+   * @param {Array} [opts.needs] Check if the specified namespaces exist.
+   *
+   * @param {string} [opts.this] The `this` in the `func` will be set to:
+   *
+   *   - `Lum.jq.TYPE.NULL` -- Plain old `null`.
+   *   - `Lum.jq.TYPE.SELF` -- The `ourself()` value.
+   *   - `Lum.jq.TYPE.LUM`  -- The unwrapped `Lum` object. 
+   *   - `Lum.jq.TYPE.WRAP` -- The wrapped `Lum` `Proxy`.
+   *   - `Lum.jq.TYPE.ROOT` -- The `root` object.
+   *   - `Lum.jq.TYPE.JQ`   -- The jQuery library.
+   *   - `Lum.jq.TYPE.ARGS` -- The `arguments` passed.
+   * 
+   *   Default is `JQ`.
+   * 
+   * @param {Array} [opts.args] The arguments for the registration function.
+   *   An array of `Lum.jq.TYPE` values, in the order they should be passed 
+   *   to the function. 
+   *   
+   *   Default is `[SELF, JQ, ARGS]`.
+   * 
+   * @param {function} func - The library registration function.
+   *                          This does all the rest of building the library.
+   * 
+   * @return {mixed} Return value from `func` if non-nil, or `ourself()`.    
    */
-  prop(Lum, 'jq', function(name, opts, func)
+  prop(Lum, 'jq', function(opts, func)
   {
-    if (typeof name !== S)
-    { // Treat it as an alias to get()
-      return Lum.jq.get();
-    }
-
     const $ = Lum.jq.get();
     if ($ === undefined)
     {
       throw new Error("jQuery is required but not found");
     }
 
-    if (typeof opts === F)
+    if (typeof opts === S)
+    {
+      opts = {name: opts}
+    }
+    else if (typeof opts === F)
     {
       const _opts = isObj(func) ? func : {};
       func = opts;
       opts = _opts;
     }
-    else 
-    {
-      if (typeof opts !== O) throw new Error("opts must be an object");
-      if (typeof func !== F) throw new Error("func must be a function");
+    else if (!isObj(opts))
+    { // Assume no options. Weird, but whatever.
+      opts = {};
     }
 
-    if (Array.isArray(opts))
-    {
-      opts = {jq: opts};
-    }
+    // One last crucial type check.
+    if (typeof func !== F) throw new TypeError("func must be a function");    
 
     if (Array.isArray(opts.deps))
     {
       const needed = opts.deps;
       Lum.lib.need(...needed);
+    }
+
+    if (Array.isArray(opts.needs))
+    {
+      const needed = opts.needs;
+      Lum.ns.need(...needed);
     }
 
     if (Array.isArray(opts.jq))
@@ -2337,8 +2822,18 @@ function (init)
     // Okay, now we call the function!
     const retVal = func.apply(thisObj, funcArgs);
 
-    // Assuming it didn't throw an exception, mark the library as loaded.
-    Lum.jq.mark(name);
+    // Now mark the name(s) as loaded.
+    if (typeof opts.name === S)
+    {
+      Lum.jq.mark(opts.name);
+    }
+    else if (Array.isArray(opts.name))
+    {
+      for (const name of opts.name)
+      {
+        Lum.jq.mark(name);
+      }
+    }
 
     // And now we're done.
     return (retVal ?? Lum);
@@ -2346,15 +2841,6 @@ function (init)
 
   // Like the loader.
   prop(Lum.jq, 'TYPE', JQ_TYPES);
-
-  /**
-   * Mark a Lum-specific jQuery plugin as loaded.
-   */
-  prop(Lum.jq, 'mark', function(name)
-  {
-    jqLoaded.mark(name);
-    return ourself();
-  });
 
   /**
    * Get jQuery itself.
@@ -2365,65 +2851,6 @@ function (init)
   prop(Lum.jq, 'get', function ()
   {
     return (typeof Lum.jq.$ === F) ? Lum.jq.$ : root.jQuery;
-  });
-
-  /**
-   * Check for needed jQuery plugins.
-   */
-  prop(Lum.jq, 'check', function ()
-  {
-    const $ = Lum.jq.get();
-
-    if (typeof $ === U)
-    {
-      return 'jQuery';
-    }
-
-    return jqLoaded.checkOne(...arguments);
-  });
-
-  /**
-   * Check for needed jQuery plugins.
-   */
-  prop(Lum.jq, 'checkList', function ()
-  {
-    const $ = Lum.jq.get();
-
-    if (typeof $ === U)
-    { // This is not good!
-      return ['jQuery'];
-    }
-
-    return jqLoaded.checkAll(...arguments);
-  });
-
-  /**
-   * Run checkJq; if it returns a string, throw a fatal error.
-   */
-  prop(Lum.jq, 'need', function ()
-  {
-    const result = Lum.jq.check(...arguments);
-    if (typeof result === S)
-    {
-      if (result === 'jQuery')
-      {
-        throw new Error("Missing jQuery");
-      }
-      else
-      {
-        throw new Error("Missing required jQuery plugin: "+result);
-      }
-    }
-    return ourself();
-  });
-
-  /**
-   * Run checkJq; return false if the value was a string, or true otherwise.
-   */
-  prop(Lum.jq, 'want', function ()
-  {
-    const result = Lum.jq.check(...arguments);
-    return (typeof result !== S);
   });
 
   /**
@@ -2514,6 +2941,9 @@ function (init)
   {
     return Lum.jq.eventProp(ev, 'dataTransfer', true);
   });
+
+  // Add the methods handled by the LoadTracker.
+  jqLoaded.setupNamespace(Lum.jq);
 
   // A list of valid Lum.load modes.
   const LUM_LOAD_MODES = ['auto','data','js'];

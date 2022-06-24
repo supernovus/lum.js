@@ -1,7 +1,9 @@
-Lum.lib('listing',
+Lum.lib(
 {
+  name: 'listing',
   deps: ['helpers','pager'],
-  jq: [],
+  assign: 'Listing',
+  jq: true,
 },
 function(Lum)
 {
@@ -17,8 +19,10 @@ function(Lum)
  *
  * This does not bind any actions to the listing buttons, so you still
  * need to do that yourself.
+ * 
+ * @class Lum.Listing
  */
-Lum.Listing = class
+return class
 {
   constructor (options)
   {
@@ -1036,6 +1040,5 @@ Lum.Listing = class
 
 } // class Lum.Listing
 
-// End of module.
-}); //(self.Lum);
+});
 

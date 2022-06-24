@@ -10,23 +10,15 @@
  *
  * With the advent of proper classes, native promises, and better overall
  * native APIs, a lot of what this extension did is no longer necessary.
- *
- * Plus I no longer recommend "extending" the objects returned from web service
- * calls. Instead I write proper child classes, and pass the web service
- * response to their constructors to use to populate the real child object.
  */
-(function($)
+Lum.lib(
+{
+  name: ['modelapi/ws_model', 'modelapi.ws_model'],
+  deps: ['modelapi', 'promise'],
+},
+function(Lum)
 {
   "use strict";
-
-  if (window.Lum === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Lum.needLibs('modelapi','promise');
-
-  Lum.markLib('modelapi.ws_model');
 
   let map = Lum.ModelAPI.prototype;
 
@@ -228,7 +220,7 @@
           this[name].props.push(props);
         }
       }
-      else if ($.isArray(props))
+      else if (Array.isArray(props))
       {
         for (var p in props)
         {
@@ -324,7 +316,7 @@
         if (self.__ws.watch)
           this.removed(props);
       }
-      else if ($.isArray(props))
+      else if (Array.isArray(props))
       {
         for (var p in props)
         {
@@ -478,4 +470,4 @@
     return ret;
   }
 
-})(jQuery);
+});

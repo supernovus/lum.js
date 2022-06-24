@@ -1,10 +1,13 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'dynamic_functions',
+  assign: 'Function',
+}, 
+function(Lum)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  Lum.lib.mark('dynamic_functions').ns.new('Function',
+  const DynamicFunctions = 
   {
     /**
      * Constructor for dynamic generator functions.
@@ -21,6 +24,10 @@
      */
     AsyncGenerator: Object.getPrototypeOf(async function*(){}).constructor,
   
-  });
+  }
 
-})(self.Lum);
+  // TODO: more function building tools.
+
+  return DynamicFunctions;
+
+});

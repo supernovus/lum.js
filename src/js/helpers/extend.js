@@ -1,5 +1,6 @@
-Lum.lib('extend',
+Lum.lib(
 {
+  name: 'extend',
   deps: ['helpers'],
 },
 function(Lum)
@@ -100,4 +101,4 @@ function(Lum)
     return sub;
   }
 
-})(window.Lum);
+});

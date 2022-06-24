@@ -11,12 +11,16 @@
  *
  */
 
-Lum.lib('debug', {}, 
-function (Lum)
+Lum.lib(
+{
+  name: 'debug',
+  jq: true,
+}, 
+function (Lum, $)
 {
   "use strict";
 
-  const $ = Lum.jq.need().jq.get();
+  //const $ = Lum.jq.need().jq.get();
 
   /**
    * A class to help with debugging.

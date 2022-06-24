@@ -20,14 +20,15 @@
  *    of the desired algorithms.
  *
  * TODO: write tests for this.
+ * POSSIBLE TODO: move all of these into an 'encode' sub-namespace?
  */
-(function(Lum)
+Lum.lib(
+{
+  name: 'encode'
+}, 
+function(Lum)
 {
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
-  Lum.lib.mark('encode');
 
   /**
    * The 'ord' method from PHP.
@@ -344,4 +345,4 @@
 
   }
 
-})(self.Lum)
+});

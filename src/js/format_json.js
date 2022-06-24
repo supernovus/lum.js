@@ -2,15 +2,17 @@
  * A function and jQuery wrapper for formatting JSON text in a friendly way.
  */
 
-(function (Lum)
+Lum.lib(
+{
+  name: 'format_json',
+  assign: 'format.json',
+},
+function (Lum)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
   // Based on http://ketanjetty.com/coldfusion/javascript/format-json/
-
-  function format (val)
+  function formatJSON (val)
   { 
     var retval = '';
     var str = val;
@@ -52,10 +54,10 @@
         }
       }
     }
-    return retval;
-  }
 
-  Lum.lib.mark('format_json').ns.new('format.json', format);
+    return retval;
+
+  } // format()
 
   const $ = Lum.jq.get();
 
@@ -76,7 +78,7 @@
         else
           return; // We currently only support <textarea/> and <pre/>.
   
-        var newval = format(oldval);
+        var newval = formatJSON(oldval);
   
         if (mytype == "textarea")
           $this.val(newval);
@@ -86,5 +88,8 @@
     }
   }
 
-})(self.Lum);
+  // We're done.
+  return formatJSON;
+
+});
 

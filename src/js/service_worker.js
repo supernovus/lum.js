@@ -34,7 +34,6 @@
  *
  */
 Lum.lib('service_worker',
-{},
 function(Lum)
 {
   "use strict";
