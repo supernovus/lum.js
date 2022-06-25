@@ -16,17 +16,9 @@
  *
  */
 
-(function($) 
+Lum.jq('selectboxes', 
+function($) 
 {
-
-/**
- * Exists solely so there is a function with the same name as the library.
- * Returns all '<select>' elements within the current jQuery selection.
- */
-$.fn.selectboxes = function()
-{
-  return this.find('select');
-}    
  
 /*
  * Adds (single/multiple) options to a select box (or series of select boxes)
@@ -548,4 +540,4 @@ $.fn.selectedOptions = function()
 	return this.find("option:selected");
 };
 
-})(jQuery);
+});

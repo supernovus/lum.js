@@ -1,12 +1,15 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'whenready', 
+  assign: 'WhenReady',
+},
+function(Lum)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not found");
-
   const {F,N} = Lum._;
  
-  Lum.WhenReady = class
+  return class WhenReady
   {
     constructor(count, func, self)
     {
@@ -34,4 +37,4 @@
 
   } // class WhenReady
 
-})(self.Lum);
+});

@@ -1,26 +1,28 @@
-(function(Nano, $)
+Lum.lib(
 {
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.needLibs('hash');
-
-  Nano.markLib('tabpanes');
+  name: 'tabpanes',
+  deps: ['hash'],
+  jq: true,
+  assign: 'TabPanes',
+},
+function(Lum, $)
+{
+  "use strict";
 
   /**
    * A GUI library to make tabbed panes.
+   * 
+   * @class Lum.TabPanes
    *
-   * Requires jQuery and Nano.Hash. Supports a wide variety of tab/pane styles.
+   * Requires jQuery and Lum.Hash. Supports a wide variety of tab/pane styles.
    * 
    * I'm working on a replacement for this that takes ideas for another tab
    * system I built for one of my projects, and will eventually support all the
    * different features of both, plus new features!
    *
-   * @property {object} urlHash  A Nano.Hash instance.
+   * @property {object} urlHash  A Lum.Hash instance.
    */
-  Nano.TabPanes = class
+  return class
   {
     /**
      * Create a TabPanes instance.
@@ -29,7 +31,7 @@
      * jQuery's show() and hide() methods to toggle the panes.
      *
      * @param {object} opts Options to build this instance.
-     * @param {object} [opts.hash] Either a Nano.Hash instance, or options to build a Nano.Hash instance. If the latter, and 'shortOpt' is not set, it will be set to true by default. The instance will be set to the 'urlHash' property.
+     * @param {object} [opts.hash] Either a Lum.Hash instance, or options to build a Lum.Hash instance. If the latter, and 'shortOpt' is not set, it will be set to true by default. The instance will be set to the 'urlHash' property.
      * @param {string} [opts.paneSelector='div.pane'] The selector to find panes.
      * @param {string} [opts.tabsSelector='.tabs a'] The selector to find tabs.
      * @param {string} [opts.activeClass='current'] The class to add to the tab currently selected.
@@ -54,7 +56,7 @@
     {
       if (typeof opts.hash === 'object')
       {
-        if (opts.hash instanceof Nano.Hash)
+        if (opts.hash instanceof Lum.Hash)
         { // The Hash instance was passed directly.
           this.urlHash = opts.hash;
         }
@@ -65,12 +67,12 @@
           {
             hashOpts.shortOpt = true;
           }
-          this.urlHash = new Nano.Hash(hashOpts);
+          this.urlHash = new Lum.Hash(hashOpts);
         }
       }
       else
-      { // Build a Nano.Hash with 'shortOpts'.
-        this.urlHash = new Nano.Hash({shortOpt: true});
+      { // Build a Lum.Hash with 'shortOpts'.
+        this.urlHash = new Lum.Hash({shortOpt: true});
       }
 
       this.paneSelector = 'paneSelector' in opts ? opts.paneSelector : 'div.pane';
@@ -246,6 +248,6 @@
       return foundTab;
     }
 
-  } // class Nano.TabPanes
+  } // class Lum.TabPanes
 
-})(window.Lum, window.jQuery);
+});

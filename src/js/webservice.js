@@ -13,41 +13,48 @@
  * TODO: Rip out the simplistic debugging and replace it with support for
  *       the new Lum.Debug library instead. Don't forget to update the
  *       toggleDebug() method in ModelAPI when you do this.
+ * 
+ * TODO: Replace use of `Nano.clone` from `obj` library with `Nano._.clone`
+ * 
+ * TODO: Write FetchTransport, and make it the new default transport class.
+ * 
  */
 
-(function (Lum)
+Lum.lib(
+{
+  name: 'webservice',
+  deps: ['obj'],
+  assign: 'WebService',
+},
+function (Lum)
 {
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  Lum.lib.need('helpers').lib.mark('webservice');
 
   const {F,O,N,S,B,is_obj} = Lum._;
   
   /**
    * Build a WebService instance.
    */  
-  Lum.WebService = class 
+  class WebService
   {
     constructor (options)
     {
       options = this._loadOptions(options);
   
-      if (typeof options.requestClass !== 'function' 
-        || typeof options.requestClass.prototype.send !== 'function')
+      if (typeof options.requestClass !== F 
+        || typeof options.requestClass.prototype.send !== F)
       {
         throw new Error("Invalid 'requestClass' passed to Webservice");
       }
   
       var transport = options.transportClass;
-      if (typeof transport === 'function')
+      if (typeof transport === F)
       {
         transport = new transport(this);
       }
   
-      if (typeof transport !== 'object' 
-        || typeof transport.sendRequest !== 'function')
+      if (typeof transport !== O 
+        || typeof transport.sendRequest !== F)
       {
         throw new Error("Invalid 'transportClass' passed to Webservice");
       }
@@ -66,7 +73,7 @@
             this._addHTTP(options.customHTTP[m]);
           }
         }
-        else if (typeof options.customHTTP === 'object')
+        else if (typeof options.customHTTP === O)
         { // Any other object should have options specified.
           for (let meth in options.customHTTP)
           {
@@ -81,7 +88,7 @@
       }
 
       if ('useQueryString' in options 
-        && typeof options.useQueryString === 'object'
+        && typeof options.useQueryString === O
         && options.useQueryString.length
       )
       {
@@ -128,7 +135,7 @@
         known.push(name);
       }
 
-      if (typeof options === 'object' && options !== null)
+      if (typeof options === O && options !== null)
       {
         httpOpts[name] = options;
       }
@@ -159,19 +166,19 @@
      */
     _addMethod (method_name, method_handler, save_spec)
     {
-      if (typeof method_handler === 'string')
+      if (typeof method_handler === S)
       { // Adding an alias using the default 'namedAlias' setting.
         return this._addAlias(method_name, method_handler);
       }
-      else if (typeof method_handler === 'object' && method_handler.alias)
+      else if (typeof method_handler === O && method_handler.alias)
       { // Adding an alias with specific settings.
         var target_name, is_named;
-        if (typeof method.handler.alias === 'string')
+        if (typeof method.handler.alias === S)
         { // Using the default 'namedAlias' setting.
           target_name = method_handler.alias;
         }
-        else if (typeof method.handler.alias.name === 'string' 
-          && typeof method.handler.alias.named === 'boolean')
+        else if (typeof method.handler.alias.name === S 
+          && typeof method.handler.alias.named === B)
         { // Using an explicit 'named' option.
           target_name = method_handler.alias.name;
           is_named = method.handler.alias.named;
@@ -214,7 +221,7 @@
      */
     _addAlias (alias_name, target_name, is_named)
     {
-      if (typeof is_named !== 'boolean')
+      if (typeof is_named !== B)
       {
         is_named = this._options.namedAlias;
       }
@@ -238,7 +245,7 @@
       }
       else
       { // Use a simple alias. This maps the function directly.
-        if (typeof this[target_name] !== 'function')
+        if (typeof this[target_name] !== F)
         {
           throw new Error("Tried to create simple alias to non-existent method.");
         }
@@ -326,10 +333,10 @@
         ? request.wrapResponse
         : this._options.wrapResponse;
   
-      if (typeof respClass === 'function')
+      if (typeof respClass === F)
       { 
         var resp_instance = new respClass(transport_response, request, this);
-        if (typeof respFunc === 'function')
+        if (typeof respFunc === F)
         {
           return respFunc.call(this, resp_instance, request);
         }
@@ -340,7 +347,7 @@
       }
       else
       {
-        if (typeof respFunc === 'function')
+        if (typeof respFunc === F)
         {
           return respFunc.call(this, transport_response, request);
         }
@@ -362,7 +369,7 @@
 
   } // class Lum.WebService
 
-  var wsp = Lum.WebService.prototype;
+  var wsp = WebService.prototype;
 
   /**
    * A dataType to MIME-type map. Feel free to populate with more values.
@@ -412,7 +419,7 @@
 
   }
 
-  let join_path = Lum.WebService.join_path;
+  let join_path = WebService.join_path;
 
   /**
    * An object representing a request.
@@ -420,7 +427,7 @@
    * @param object request_opts  An object with a few properties (see below.)
    * @param object webservice  The Webservice instance that spawned us.
    */
-  Lum.WebService.Request = class
+  WebService.Request = class
   {
     constructor (request_opts, webservice)
     {
@@ -454,7 +461,7 @@
   
     _addCallbacks (slot, callbacks)
     {
-      if (typeof this[slot] !== 'object' || !Array.isArray(this[slot]))
+      if (typeof this[slot] !== O || !Array.isArray(this[slot]))
       {
         throw new Error("Invalid slot sent to _addCallback: "+slot);
       }
@@ -465,7 +472,7 @@
           this[slot].push(callbacks);
         }
       }
-      else if (typeof callbacks === 'function')
+      else if (typeof callbacks === F)
       {
         this[slot].push(callbacks);
       }
@@ -536,7 +543,7 @@
         ? wo.useQueryString
         : false;
   
-      if (typeof wo.reqOptions === 'object')
+      if (typeof wo.reqOptions === O)
       { // Add global request options.
         this.setOpts(wo.reqOptions);
       }
@@ -549,7 +556,7 @@
     {
       if (this.cloneData)
       {
-        data = Lum.clone(data, this.preserveClone);
+        data = Lum.obj.clone(data, this.preserveClone);
       }
       this.data = data;
     }
@@ -586,12 +593,12 @@
       {
         var arg = args[i];
         var atype = typeof arg;
-        if (atype === 'object' && Array.isArray(arg))
+        if (atype === O && Array.isArray(arg))
         {
           atype = 'array';
         }
         var ameth = '_parse_'+atype+'_args';
-        if (typeof this[ameth] === 'function')
+        if (typeof this[ameth] === F)
         {
           this[ameth](arg);
         }
@@ -662,12 +669,12 @@
     _parse_spec (spec)
     {
       var stype = typeof spec;
-      if (stype === 'object' && Array.isArray(spec))
+      if (stype === O && Array.isArray(spec))
       {
         stype = 'array';
       }
       var smeth = '_parse_'+stype+'_spec';
-      if (typeof this[smeth] === 'function')
+      if (typeof this[smeth] === F)
       {
         this[smeth](spec);
       }
@@ -687,7 +694,7 @@
       {
         var opt = spec[i];
         var otype = typeof opt;
-        if (otype === 'string')
+        if (otype === S)
         { // A string, might be an HTTP method, or a path.
           if (knownHttp.indexOf(opt) !== -1)
           { // It's a known HTTP method.
@@ -698,7 +705,7 @@
             this.appendPath(opt);
           }
         }
-        else if (otype === 'function')
+        else if (otype === F)
         { // Assume it's an onDone event handler.
           this.done(opt);
         }
@@ -758,7 +765,7 @@
     {
       this.http = http;
       var opts = this.ws._http_method_options;
-      if (typeof opts[http] === 'object')
+      if (typeof opts[http] === O)
       { // Add any extra options specific to this HTTP type.
         this._parse_object_spec(opts[http]);
       }
@@ -794,7 +801,7 @@
   
     _attach_done_handlers (promise)
     {
-      if (this.onDone.length > 0 && typeof promise.done === 'function')
+      if (this.onDone.length > 0 && typeof promise.done === F)
       {
         for (var i = 0; i < this.onDone.length; i++)
         {
@@ -805,7 +812,7 @@
   
     _attach_fail_handlers (promise)
     {
-      if (this.onFail.length > 0 && typeof promise.fail === 'function')
+      if (this.onFail.length > 0 && typeof promise.fail === F)
       {
         for (var i = 0; i < this.onFail.length; i++)
         {
@@ -863,7 +870,7 @@
       {
         var buildOpts = this._get_build_options();
         var buildFunc = "_build_" + this.dataType + "_request_data";
-        if (typeof this[buildFunc] === 'function')
+        if (typeof this[buildFunc] === F)
         {
           return this[buildFunc](buildOpts);
         }
@@ -904,7 +911,7 @@
     _build_json_request_data (options)
     {
       var json;
-      if (typeof this.data === 'string')
+      if (typeof this.data === S)
       { // Assume JSON data.
         json = this.data;
       }
@@ -940,16 +947,13 @@
 
   } // class Lum.WebService.Request
 
-  Lum.WebService.jQueryTransport = class
+  WebService.jQueryTransport = class
   {
     constructor (ws)
     {
-      if (window.jQuery === undefined)
-      {
-        throw new Error("Cannot use jQueryTransport without jQuery");
-      }
+      Lum.jq.need();
       this.ws = ws;
-      this.jq = jQuery;
+      this.jq = Lum.jq.get();
     }
   
     sendRequest (request)
@@ -964,7 +968,7 @@
   
     _build_request_opts (request)
     {
-      var reqopts = Lum.clone(request.opts);
+      var reqopts = Lum.obj.clone(request.opts);
   
       reqopts.type = request.http;
   
@@ -1021,7 +1025,7 @@
   /**
    * Here we set the default 'requestClass' to Lum.WebService.Request
    */
-  wsp._optionDefaults.requestClass = Lum.WebService.Request;
+  wsp._optionDefaults.requestClass = WebService.Request;
 
   /**
    * And we set the default 'transportClass' to Lum.WebService.jQueryTransport
@@ -1029,12 +1033,12 @@
    * In the future we should detect what features are available and auto-select
    * an appropriate transport based on that. Users can always override it.
    */
-  wsp._optionDefaults.transportClass = Lum.WebService.jQueryTransport;
+  wsp._optionDefaults.transportClass = WebService.jQueryTransport;
 
   /**
    * A class to build a WebService instance using a Builder pattern.
    */
-  Lum.WebService.Builder = class
+  WebService.Builder = class
   {
     constructor(opts={})
     {
@@ -1206,4 +1210,6 @@
 
   } // Lum.WebService.Builder
 
-})(self.Lum);
+  return WebService;
+
+});

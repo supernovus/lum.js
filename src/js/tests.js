@@ -1,18 +1,14 @@
-(function(Nano, $)
+Lum.lib(
+{
+  name: 'tests',
+  deps: ['test','hash'],
+  jq: true,
+},
+function(Nano, $)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.needLibs('test','hash');
-  Nano.needJq();
-
-  Nano.markLib('tests');
-
-  var testsInstance; // Private storage for the "global" Tests instance.
+  let testsInstance; // Private storage for the "global" Tests instance.
 
   /**
    * A class representing a Test Suite.
@@ -659,4 +655,4 @@
     }
   } // class NestedDeferred
 
-})(window.Lum, window.jQuery);
+});

@@ -35,11 +35,8 @@ function (Lum, $)
   {
     constructor (options={})
     {
-      if (Lum.lib.has('observable'))
-      {
-        Lum.observable(this, options.observable);
-      }
-
+      Lum.observable(this, options.observable);
+      
       let hasJSON = Lum.jq.has('JSON');
   
       if (options.strings !== undefined)

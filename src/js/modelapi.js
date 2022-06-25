@@ -23,7 +23,6 @@ function(Lum)
    * Internal recommendations:
    *
    *  debug.js
-   *  observable.js
    *
    * Requirements for JSON model sources:
    *
@@ -50,14 +49,12 @@ function(Lum)
         throw new Error("ModelAPI constructor only accepts an object");
       }
 
-      if (Lum.lib.has('observable'))
-      {
-        const obsopts = (conf.observable !== undefined)
-          ? conf.observable
-          : this._default_observable;
-        //console.debug("modelapi observable", conf, obsopts, this);
-        Lum.observable(this, obsopts);
-      }
+
+      const obsopts = (conf.observable !== undefined)
+        ? conf.observable
+        : this._default_observable;
+      //console.debug("modelapi observable", conf, obsopts, this);
+      Lum.observable(this, obsopts);
 
       /**
        * The model property stores our model data and backend services.

@@ -7,6 +7,7 @@ function(Lum)
   "use strict";
 
   const prop = Lum.prop;
+  const {clone} = Lum._;
 
   /**
    * Grid library.
@@ -30,24 +31,8 @@ function(Lum)
       defs.conflictResolution = null;
       defs.resolutionOrder = null;
       this.applySettings(defs, options);
-  
-      // Apply 'observable' trait if available.
-      if (Lum.hasLib('observable'))
-      {
-        Lum.observable(this, options.observable);
-      }
-      else
-      {
-        this.trigger = function ()
-        {
-          return this;
-        }
-        this.on = this.off = this.one = function ()
-        {
-          console.error("Lum observable library wasn't loaded.");
-          return this;
-        }
-      }
+
+      Lum.observable(this, options.observable);
   
       // Create our items array.
       this.items = [];
@@ -82,13 +67,13 @@ function(Lum)
     clone ()
     {
       this.trigger('preClone', this.items, this.settings);
-      var settings = Lum.clone(this.settings);
+      var settings = clone(this.settings);
       for (var s in this._copySettings)
       {
         var setting = this._copySettings;
         settings[setting] = this.settings[setting];
       }
-      settings.items = Lum.clone(this.items);
+      settings.items = clone(this.items);
       this.trigger('postClone', this.items, this.settings);
       return new this.constructor(settings);
     }

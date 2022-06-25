@@ -31,7 +31,11 @@ Dual licensed under the MIT and GPL licenses.
  *   >>> Math.uuid(8, 16) // 8 character ID (base=16)
  *   "098F4D35"
  */
-(function() {
+Lum.lib(
+{
+  name: ['uuid','math.uuid'],
+},
+function() {
   // Private array of chars to use
   var CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split(''); 
 
@@ -89,4 +93,5 @@ Dual licensed under the MIT and GPL licenses.
       return v.toString(16);
     }).toUpperCase();
   };
-})();
+
+});

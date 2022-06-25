@@ -1,18 +1,15 @@
-(function(Nano)
+Lum.lib(
+{
+  name: 'test',
+}, 
+function(Lum)
 {
   "use strict";
-
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.markLib('test');
 
   /**
    * A simple testing library with TAP support.
    */
-  Nano.Test = class
+  Lum.Test = class
   {
     constructor (plan)
     {
@@ -168,7 +165,7 @@
       return out;
     }
 
-  } // class Nano.Test
+  } // class Lum.Test
 
   class Log 
   {
@@ -222,4 +219,6 @@
 
   } // class Log
 
-})(window.Lum);
+  Lum.Test.Log = Log;
+
+});

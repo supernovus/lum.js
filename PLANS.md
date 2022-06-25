@@ -29,6 +29,7 @@ following list is scheduled to be removed in version 5.
 
 ## Files/libraries to be removed
 
+* Any library that was turned into a core module.
 * `deprecated.js`
 * `helpers/extend.js`
 * `polyfill/string_repeat.js`

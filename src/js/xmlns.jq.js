@@ -62,7 +62,7 @@
 //    http://docs.jquery.com/License
 //
 
-(function($) {
+Lum.jq('xmlns', function(Lum, $) {
 
 var jquery_gt_18 = jQuery.fn.jquery >= "1.8";
 //  Some common default namespaces, that are treated specially by browsers.
@@ -439,4 +439,4 @@ $.expr.filter.ATTR = (jquery_gt_18)? filter_attr : function(elem, match) {
 };
 
 
-})(jQuery);
+});

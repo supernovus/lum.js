@@ -259,11 +259,8 @@ function(Lum)
       doc = {};
     var self = this;
 
-    if (Lum.hasLib('observable'))
-    {
-      Lum.observable(doc, this._extend_observable);
-    }
-
+    Lum.observable(doc, this._extend_observable);
+    
     if (self.__ws.watch)
     {
       add_watch_list(doc, 'changed', true);

@@ -1,13 +1,11 @@
-(function(Nano, $)
+Lum.lib(
+{
+  name: 'validation',
+  assign: 'Validation',
+},
+function(Nano, $)
 {
 "use strict";
-
-if (Nano === undefined)
-{
-  throw new Error("Missing Lum core");
-}
-
-Nano.markLib('validation');
 
 const VALID_NS = "validation";
 
@@ -49,7 +47,7 @@ const BUILT_INS =
  * | isIdent   | The field value is an identifier. |
  *
  */
-Nano.Validation = class
+class Validation
 {
   /**
    * Create a Validation object.
@@ -315,7 +313,9 @@ Nano.Validation = class
 
 } // class Nano.Validation
 
-Nano.Validation.TestTypes = BUILT_INS;
+Validation.TestTypes = BUILT_INS;
+
+return Validation;
 
 // End of script namespace.
-})(window.Lum, window.jQuery);
+});

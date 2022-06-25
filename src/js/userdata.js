@@ -1,30 +1,29 @@
 /**
  * Get a bunch of user data.
  */
-(function(Nano)
+Lum.lib(
+{
+  name: 'userdata',
+  ns: 'UserData',
+},
+function(Lum, ns)
 {
   /* jshint asi: true */
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.markLib('userdata');
-
   /**
-   * @namespace Nano.UserData
+   * Userdata related functions.
+   * @namespace Lum.UserData
    */
-  Nano.UserData = {};
 
   /**
    * Get the local time zone offset in seconds.
+   * @method Lum.UserData.getTimezone
    */
-  Nano.UserData.getTimezone = function ()
+  ns._add('getTimezone', function ()
   {
     return (new Date().getTimezoneOffset() * 60) * -1;
-  }
+  });
 
   /**
    * Get a bunch of user information from the browser.
@@ -92,10 +91,12 @@
    * ```
    *
    * You can save this data as JSON in a hidden form field on your login
-   * page if you're using the Nano.php Accesslog feature. Just remember to add
+   * page if you're using the Lum.php Accesslog feature. Just remember to add
    * the appropriate form field to the $request_expand_json property.
+   * 
+   * @method Lum.UserData.getInfo
    */
-  Nano.UserData.getInfo = function (opts)
+  ns._add('getInfo', function (opts)
   {
     var info = 
     {
@@ -162,6 +163,6 @@
       opts.fallbackCallback(info);
     }
     return info;
-  }
+  });
 
-})(window.Lum);
+});

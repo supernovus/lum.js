@@ -1,20 +1,20 @@
-(function(Nano)
+Lum.lib(
+{
+  name: 'tax',
+  assign: 'Tax',
+}, 
+function(Lum)
 {
   "use strict";
 
-  if (Nano === undefined)
-  {
-    throw new Error("Missing Lum core");
-  }
-
-  Nano.markLib('tax');
-
   /**
    * A class to calculate tax values.
+   * 
+   * @class Lum.Tax
    *
    * Can be used as an instance, or statically.
    */
-  Nano.Tax = class
+  return class
   {
     /**
      * Construct a Tax object.
@@ -35,12 +35,12 @@
      * @param {number} subtotal   The total before taxes.
      * @param {boolean} [round]   Override the 'round' property.
      *
-     * @return {number[]}  See {@link Nano.Tax.calculateTaxes} for the output.
+     * @return {number[]}  See {@link Lum.Tax.calculateTaxes} for the output.
      */
     calculateTaxes (subtotal, round)
     {
       if (round === undefined) round = this.round;
-      return Nano.Tax.calculateTaxes(subtotal, this.taxRates, round);
+      return Lum.Tax.calculateTaxes(subtotal, this.taxRates, round);
     }
 
     /**
@@ -50,12 +50,12 @@
      * @param {number} total     The total after taxes.
      * @param {boolean} [round]  Override the 'round' property.
      *
-     * @return {number[]}  See {@link Nano.Tax.extractTaxes} for the output.
+     * @return {number[]}  See {@link Lum.Tax.extractTaxes} for the output.
      */
     extractTaxes (total, round)
     {
       if (round === undefined) round = this.round;
-      return Nano.Tax.extractTaxes(total, this.taxRates, round);
+      return Lum.Tax.extractTaxes(total, this.taxRates, round);
     }
 
     /**
@@ -141,6 +141,6 @@
       return taxes;
     }
 
-  } // class Nano.Tax
+  } // class Lum.Tax
 
-})(window.Lum);
+});

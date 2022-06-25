@@ -658,4 +658,4 @@ function(Lum)
   // Static reference to the helper function.
   Lum.ServiceWorker.urlBase64ToUint8Array = urlBase64ToUint8Array;
 
-}); //(self.Lum);
+});

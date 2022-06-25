@@ -1,49 +1,33 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'viewcontroller',
+  jq: true,
+  assign: 'ViewController',
+},
+function(Lum, $)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  Lum.jq.need().lib.mark('viewcontroller');
-
   const {O,F,S,B,is_obj} = Lum._;
-  const $ = Lum.jq.get();
 
   /**
    * A class to represent a View Controller in a GUI.
    */
-  Lum.ViewController = class 
+  class ViewController
   {
     constructor (conf={})
     {
-      /**
-       * A reference to ourself. If observable() is found, we apply it.
-       */
-      if (Lum.hasLib('observable'))
-      {
-        console.debug("Using observable for ViewController");
-        Lum.observable(this, conf.observable);
-      }
-      else
-      {
-        console.debug("Using readyHandlers for ViewController");
-        this.readyHandlers = [];
-      }
-  
+
+      console.debug("Using observable for ViewController");
+      Lum.observable(this, conf.observable);
+
       this.defaultAttrNamespace = 'nano';
       this.defaultTmplNamespace = 'tmpl';
     }
   
     add (func)
     {
-      if (this.readyHandlers)
-      {
-        this.readyHandlers.push(func);
-      }
-      else
-      {
-        this.on("ready", func);
-      }
+      return this.on("ready", func);
     }
   
     start (modelclass, conf)
@@ -66,19 +50,9 @@
           return;
         }
         self.apiInstance = api;
-        if (self.readyHandlers)
-        {
-          for (var c in self.readyHandlers)
-          {
-            var handler = self.readyHandlers[c];
-            handler.call(self, api);
-          }
-        }
-        else
-        {
-          self.trigger("ready", api);
-        }
-  
+
+        self.trigger("ready", api);
+        
         // Once we've triggered all of our handlers, tell the API.
         if (typeof api.trigger === F)
         {
@@ -93,11 +67,6 @@
   
     getHook (hookname)
     {
-      if (this.readyHandlers)
-      {
-        console.error("getHook requires 'observable' library to be loaded.");
-        return;
-      }
       var self = this;
       var hook = function (evnt)
       {
@@ -164,11 +133,11 @@
         console.error("The 'clone' option requires a 'render' option.", name, def);
         return;
       }
-      else if (Lum.hasLib('render.riot2'))
+      else if (Lum.lib.has('render.riot2'))
       {
         render = Lum.render.riot2;
       }
-      else if (Lum.hasLib('render.riot1'))
+      else if (Lum.lib.has('render.riot1'))
       {
         render = Lum.render.riot1;
       }
@@ -467,5 +436,7 @@
 
   } // class Lum.ViewController
 
-})(self.Lum);
+  return ViewController;
+
+});
 

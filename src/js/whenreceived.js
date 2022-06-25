@@ -1,14 +1,15 @@
-(function(Lum)
+Lum.lib(
+{
+  name: 'whenreceived',
+  assign: 'WhenReceived',
+},
+function(Lum)
 {
   "use strict";
 
-  if (Lum === undefined) throw new Error("Lum core not found");
-
-  const {F,N,U} = Lum._;
-
-  const jq = Lum.jq.get();
+  const {F} = Lum._;
  
-  Lum.WhenReceived = class extends Lum.AbstractClass
+  return class WhenReceived extends Lum.AbstractClass
   {
     construct(delay, attempts)
     {
@@ -117,4 +118,4 @@
 
   } // class WhenReceived
 
-})(self.Lum);
+});

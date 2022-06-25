@@ -7,13 +7,10 @@
  *
  */
 
-(function(Lum)
+Lum.lib('promise', 
+function(Lum)
 { 
   "use strict";
-
-  if (Lum === undefined) throw new Error("Lum core not loaded");
-
-  Lum.lib.mark('promise');
 
   const $ = Lum.jq.get(); // Should return jQuery if it is loaded.
 
@@ -393,5 +390,5 @@
     }, timeout);
   }
 
-})(self.Lum); 
+}); 
 
