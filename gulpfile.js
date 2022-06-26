@@ -1,152 +1,84 @@
 /**
- * Default Nano.js gulpfile for gulp 4.x
+ * Default Lum.js gulpfile for gulp 4.x
  */
 
-const gulp   = require('gulp');
-const babel  = require('gulp-babel');
-const terser = require('gulp-terser');
-const del    = require('del');
-const sass   = require('gulp-sass')(require('sass'));
-const cssmin = require('gulp-clean-css');
-const srcmap = require('gulp-sourcemaps');
-const fcache = require('gulp-file-cache');
-const connect = require('gulp-connect');
+// Load our helper library first.
+const tasks = require('./src/gulp/index.js').getInstance();
+
+// Now get a couple deps from said helper library.
+const {gulp,connect} = tasks.deps;
+
+// Load any extra libraries here.
+
 const transform = require('gulp-transform');
 const rename = require('gulp-rename');
 const jsdoc  = require('gulp-jsdoc3');
 const fs = require('fs');
 
-const es6cfile = '.gulp-cache-es6';
-const es5cfile = '.gulp-cache-es5';
-const ccfile = '.gulp-cache-css';
-const es6cache = new fcache(es6cfile);
-const es5cache = new fcache(es5cfile);
-const csscache = new fcache(ccfile);
+// Define some rules.
 
-const srcjs  = 'src/js/**/*.js';
-const destes6 = 'scripts/nano/';
-const destes5 = 'scripts/nano-es5/';
+const js_sources   = 'src/js/**/*.js';
+const css_sources  = 'src/sass/**/*.scss';
+const test_sources = 'src/tests/';
 
-const srccss  = 'src/sass/**/*.scss';
-const destcss = 'style/nano/';
+const core = require('./src/core/build.json');
 
-const srctests = 'src/tests/'
-const desttests = 'docs/tests/';
+tasks.useBabel(); // Enable the babel extension.
 
-const downloaded_js  = 'scripts/ext';
-const downloaded_css = 'style/ext';
-const downloaded_conf = 'conf/installed_deps.json';
-
-gulp.task('clean-es5', function ()
+tasks.tag('es6').dest('scripts/nano/').cache().addClean().addJS(
 {
-  es5cache.clear();
-  return del([destes5,es5cfile]);
+  name: 'build-core-es6',
+  path: core.path,
+  files: core.sources,
+  script: core.script,
+}).addJS(
+{
+  name: 'build-libs-es6',
+  sources: js_sources,
 });
 
-function clean_es6 ()
+tasks.tag('es5').dest('scripts/nano-es5/').cache().addClean().addJS(
 {
-  es6cache.clear();
-  return del([destes6, es6cfile]);
-}
-gulp.task('clean-es6', clean_es6);
-gulp.task('clean-js',  clean_es6);
-
-gulp.task('clean-all-js', gulp.parallel('clean-es5','clean-es6'));
-
-gulp.task('clean-css', function ()
+  name: 'build-core-es5',
+  babel: true,
+  path: core.path,
+  files: core.sources,
+  script: core.script,
+}).addJS(
 {
-  csscache.clear();
-  return del([destcss,ccfile]);
+  name: 'build-libs-es5',
+  babel: true,
+  sources: js_sources,
 });
 
-gulp.task('clean-tests', function ()
+tasks.tag('css').dest('style/nano/').cache().addClean().addCSS(
 {
-  return del(desttests);
+  sources: css_sources
 });
 
-gulp.task('clean-docs', function ()
-{
-  return del('docs/api');
-});
+tasks.tag('tests').dest('docs/tests/').addClean();
+tasks.tag('docs').dest('docs/api/').addClean();
+tasks.tag('ext-js').dest('scripts/ext').addClean();;
+tasks.tag('ext-css').dest('style/ext').addClean();
+tasks.tag('ext-conf').dest('conf/installed_deps.json').addClean();
+tasks.tag('npm').dest(['package-lock.json','node_modules']).addClean();
 
-const clean_tasks =
-[
-  'clean-js',
-  'clean-css',
-]
+tasks.parallel('clean-deps', 'clean-ext-js', 'clean-ext-css', 'clean-ext-conf');
+tasks.alias('clean-js', 'clean-es6');
+tasks.parallel('clean-all-js', 'clean-es5', 'clean-es6');
+tasks.parallel('clean', 'clean-js', 'clean-css');
+tasks.parallel('clean-all', 'clean-all-js', 'clean-css', 'clean-tests', 'clean-docs');
+tasks.series('distclean', 'clean-all', 'clean-deps', 'clean-npm');
 
-gulp.task('clean', gulp.parallel(clean_tasks));
+tasks.parallel('build-es6', 'build-core-es6', 'build-libs-es6');
 
-const clean_all_tasks =
-[
-  'clean-all-js',
-  'clean-css',
-  'clean-tests',
-  'clean-docs',
-];
+tasks.alias('build-js', 'build-es6');
 
-gulp.task('clean-all', gulp.parallel(clean_all_tasks));
+tasks.parallel('build-es5', 'build-core-es5', 'build-libs-es5');
 
-gulp.task('clean-deps', function ()
-{
-  const cleanitems =
-  [
-    downloaded_js,
-    downloaded_css,
-    downloaded_conf,
-  ];
-  return del(cleanitems);
-});
+tasks.parallel('build-all-js', 'build-es6', 'build-es5');
 
-gulp.task('clean-npm', function ()
-{
-  return del(['package-lock.json','node_modules']);
-});
-
-gulp.task('distclean', gulp.series('clean-all','clean-deps','clean-npm'));
-
-gulp.task('build-es6', function ()
-{
-  return gulp.src(srcjs, {since: gulp.lastRun('build-es6')})
-    .pipe(es6cache.filter())
-    .pipe(srcmap.init())
-    .pipe(terser())
-    .pipe(es6cache.cache())
-    .pipe(srcmap.write('maps'))
-    .pipe(gulp.dest(destes6))
-    .pipe(connect.reload());
-});
-gulp.task('build-js', gulp.series('build-es6'));
-
-gulp.task('build-es5', function ()
-{
-  return gulp.src(srcjs, {since: gulp.lastRun('build-es5')})
-    .pipe(es5cache.filter())
-    .pipe(srcmap.init())
-    .pipe(babel({presets: ['@babel/env']}))
-    .pipe(terser())
-    .pipe(es5cache.cache())
-    .pipe(srcmap.write('maps'))
-    .pipe(gulp.dest(destes5))
-    .pipe(connect.reload());
-});
-
-gulp.task('build-all-js', gulp.parallel('build-es6', 'build-es5'));
-
-gulp.task('build-css', function ()
-{
-  return gulp.src(srccss, {since: gulp.lastRun('build-css')})
-    .pipe(csscache.filter())
-    .pipe(srcmap.init())
-    .pipe(sass())
-    .pipe(cssmin())
-    .pipe(csscache.cache())
-    .pipe(srcmap.write('maps'))
-    .pipe(gulp.dest(destcss))
-    .pipe(connect.reload());
-});
-
-gulp.task('build-tests', function ()
+tasks.add('build-tests', function ()
 { // I'm using a custom template engine utilizing 'transform' here.
   const loadedTemplates = {};
 
@@ -164,7 +96,7 @@ gulp.task('build-tests', function ()
     }
     else
     {
-      template = fs.readFileSync(srctests+config.template, 'utf8');
+      template = fs.readFileSync(test_sources+config.template, 'utf8');
       loadedTemplates[config.template] = template;
     }
 
@@ -177,29 +109,23 @@ gulp.task('build-tests', function ()
     return template;
   }
 
-  return gulp.src(srctests+'*.json')
+  return gulp.src(test_sources+'*.json')
     .pipe(transform('utf8', parseTemplate))
     .pipe(rename({extname: '.html'}))
-    .pipe(gulp.dest(desttests))
+    .pipe(gulp.dest(tasks.dests.tests))
     .pipe(connect.reload());
 });
 
 var server;
 
-gulp.task('build-docs', function (done)
+tasks.add('build-docs', function (done)
 { // Using gulp-jsdoc3 to build API documentation.
   const config = require('./conf/jsdoc.json');
-  gulp.src(['README.md', srcjs], {read: false})
+  gulp.src(['README.md', js_sources], {read: false})
   .pipe(jsdoc(config, done));
 });
 
-const build_tasks =
-[
-  'build-js',
-  'build-css',
-];
-
-gulp.task('build', gulp.parallel(build_tasks)); 
+tasks.parallel('build', 'build-js', 'build-css');
 
 const build_all_tasks =
 [
@@ -208,14 +134,12 @@ const build_all_tasks =
   'build-tests',
   'build-docs',
 ];
+tasks.parallel('build-all', ...build_all_tasks);
 
-gulp.task('build-all', gulp.parallel(build_all_tasks));
+tasks.series('rebuild', 'clean', 'build');
+tasks.series('rebuild-all', 'clean-all', 'build-all');
 
-gulp.task('rebuild', gulp.series('clean', 'build'));
-
-gulp.task('rebuild-all', gulp.series('clean-all', 'build-all'));
-
-gulp.task('webserver', function ()
+tasks.add('webserver', function ()
 {
   server = connect.server(
   {
@@ -225,55 +149,14 @@ gulp.task('webserver', function ()
   });
 });
 
-gulp.task('watch-js', function ()
-{
-  return gulp.watch(srcjs, gulp.series('build-js'));
-});
+tasks.watch('watch-js',     js_sources,       'build-js');
+tasks.watch('watch-all-js', js_sources,       'build-all-js');
+tasks.watch('watch-css',    css_sources,      'build-css');
+tasks.watch('watch-docs',   js_sources,       'build-docs');
+tasks.watch('watch-tests',  test_sources+'*', 'build-tests');
 
-gulp.task('watch-all-js', function ()
-{
-  return gulp.watch(srcjs, gulp.series('build-all-js'));
-});
+tasks.parallel('watch', 'watch-js', 'watch-css', 'watch-tests');
+tasks.parallel('watch-ws', 'webserver', 'watch');
+tasks.parallel('watch-docs-ws', 'webserver', 'watch-docs');
 
-gulp.task('watch-css', function ()
-{
-  return gulp.watch(srccss, gulp.series('build-css'));
-});
-
-gulp.task('watch-docs', function ()
-{
-  return gulp.watch(srcjs, gulp.series('build-docs'));
-});
-
-gulp.task('watch-tests', function ()
-{
-  return gulp.watch(srctests+'*', gulp.series('build-tests'));
-});
-
-const watch_tasks =
-[
-  'watch-js',
-  'watch-css',
-  'watch-tests',
-];
-
-gulp.task('watch', gulp.parallel(watch_tasks));
-
-const watch_ws_tasks =
-[
-  'webserver',
-  'watch',
-];
-
-gulp.task('watch-ws', gulp.parallel(watch_ws_tasks));
-
-const watch_docs_ws_tasks =
-[
-  'webserver',
-  'watch-docs',
-];
-
-gulp.task('watch-docs-ws', gulp.parallel(watch_docs_ws_tasks));
-
-gulp.task('default', gulp.series('build-js'));
-
+tasks.series('default', 'build-js');
