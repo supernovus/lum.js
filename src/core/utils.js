@@ -48,7 +48,7 @@
    *
    * `O, F, S, B, N, U, SY, BI` - the Javascript type names as strings.
    * `ARG, NULL` - Special Javascript types as strings.
-   * `isObj, isNul, notNil, isComplex, isInstance, isArguments` - type checks.
+   * `isObj, isNil, notNil, isComplex, isInstance, isArguments` - type checks.
    * `nonEmptyArray, isScalar` - more type checks.
    * `isEnum, isDescriptor` - Lum specific type checks.
    * `clone, lock, addClone, addLock, cloneIfLocked` - cloning/locking methods.
@@ -104,7 +104,7 @@
     O, F, S, B, N, U, SY, BI, ARG, NULL,
     JS_TYPES, SPECIAL_TYPES,
     // Type checking functions. 
-    isObj, notNil: notNil, isComplex, isInstance, isArguments,
+    isObj, isNil, notNil, isComplex, isInstance, isArguments,
     nonEmptyArray, isScalar, needObj, needType,
     // Low-level object utilities.
     clone, lock, addClone, addLock, cloneIfLocked, ourself, prop,
