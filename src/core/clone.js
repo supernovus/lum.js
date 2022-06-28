@@ -304,6 +304,16 @@
       const def = Object.getOwnPropertyDescriptor(source, prop)
       if (typeof def === U) continue; // Invalid property.
 
+      let overwrite = false;  
+      if (typeof defOverwrite === B)
+      {
+        overwrite = defOverwrite;
+      }
+      else if (isObj(defOverwrite) && typeof defOverwrite[prop] === B)
+      {
+        overwrite = defOverwrite[prop];
+      }
+
       if (isObj(defOverrides[prop]))
       {
         for (const key in defOverrides[prop])
@@ -312,6 +322,7 @@
           def[key] = val;
         }
       }
+
       if (overwrite || target[prop] === undefined)
       { // Property doesn't already exist, let's add it.
         Object.defineProperty(target, prop, def);
