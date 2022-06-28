@@ -52,6 +52,8 @@
    * `nonEmptyArray, isScalar` - more type checks.
    * `isEnum, isDescriptor` - Lum specific type checks.
    * `clone, lock, addClone, addLock, cloneIfLocked` - cloning/locking methods.
+   * `copyProps` - Copy properties between objects in different ways.
+   * `mergeNested, syncNested` - Merge properties between objects recursively.
    * `setFlag, allFlags` - Binary flag manipulation.
    * `getLocale, ucfirst, ucwords` - Locale aware helper functions.
    * `getProperty` - A smart wrapper to get a property descriptor.
@@ -107,7 +109,8 @@
     // Low-level object utilities.
     clone, lock, addClone, addLock, cloneIfLocked, ourself, prop,
     Enum, DESC, CLONE, setFlag, allFlags, ucfirst, ucwords,
-    getLocale, InternalObjectId, unbound, getProperty, NYI,
+    getLocale, InternalObjectId, unbound, getProperty, NYI, copyProps,
+    mergeNested, syncNested,
 
     // A method to extend the '_' property.
     extend(newprops, overwrite=false)

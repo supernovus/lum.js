@@ -41,9 +41,14 @@ function nsArray(ns, name='Namespace')
 }
 
 // Used internally, and exported as `Lum.opt.getPath`
-function getObjectPath(obj, proppath, logerror=false)
+function getObjectPath(obj, proppath, opts={})
 {
   needObj(obj);
+
+  if (typeof opts === B)
+    opts = {log: opts};
+  else if (!isObj(opts))
+    opts = {};
 
   proppath = nsArray(proppath);
 
@@ -52,12 +57,12 @@ function getObjectPath(obj, proppath, logerror=false)
     const propname = proppath[p];
     if (obj[propname] === undefined)
     { // End of search, sorry.
-      if (logerror)
+      if (opts.log)
       {
         console.error("Object property path not found", 
           propname, p, proppath, obj);
       }
-      return undefined;
+      return opts.default;
     }
     obj = obj[propname];
   }
@@ -66,9 +71,9 @@ function getObjectPath(obj, proppath, logerror=false)
 }
 
 // Used internally, and exported as `Lum.ns.get`
-function getNamespace(namespaces, logerror=false)
+function getNamespace(namespaces, opts={})
 {
-  return getObjectPath(root, namespaces, logerror);
+  return getObjectPath(root, namespaces, opts);
 }
 
 //-- core/objectpaths --//

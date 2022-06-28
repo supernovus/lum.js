@@ -28,6 +28,11 @@
    *
    *   No further options for this, just add a lock() method to the clone.
    *
+   * @param {?object} [opts.copy] Call {@link Lum._.copy} on the cloned object.
+   *
+   *   Will pass the original `obj` as the source to copy from.
+   *   Will pass `opts.copy` as the options.
+   *
    * @return {object} - The clone of the object.
    *
    * @method Lum._.clone
@@ -94,6 +99,11 @@
     if (reclone)
     { // Add the clone() method to the clone, with the passed opts as defaults.
       addClone(copy, opts);
+    }
+
+    if (opts.copy)
+    { // Pass the clone through the copy() function as well.
+      copy(obj, copy, opts.copy);
     }
 
     if (relock)
@@ -220,6 +230,163 @@
       return lock(obj, cloneable, cloneOpts, useSeal);
     });
     return Object.defineProperty(obj, 'lock', defDesc);
+  }
+
+  /**
+   * Copy properties from one object to another.
+   *
+   * @param {(object|function)} source - The object to copy properties from.
+   * @param {(object|function)} target - The target to copy properties to.
+   *
+   * @param {object} [propOpts] Options for how to copy properties.
+   * @param {boolean} [propOpts.default=true] Copy only enumerable properties.
+   * @param {boolean} [propOpts.all=false] Copy ALL object properties.
+   * @param {Array} [propOpts.props] A list of specific properties to copy.
+   * @param {object} [propOpts.overrides] Descriptor overrides for properties.
+   * @param {Array} [propOpts.exclude] A list of properties NOT to copy.
+   * @param {*} [propOpts.overwrite=false] Overwrite existing properties.
+   *   If this is a `boolean` value, it will allow or disallow overwriting
+   *   of any and all properties in the target object.
+   *
+   *   If this is an object, it can be an Array of property names to allow
+   *   to be overwritten, or a map of property name to a boolean indicating
+   *   if that property can be overwritten or not.
+   *
+   * @returns {object} The `target` object.
+   */
+  function copyProps(source, target, propOpts)
+  {
+    if (!isComplex(source) || !isComplex(target))
+    {
+      throw new TypeError("source and target both need to be objects");
+    }
+
+    if (!isObj(propOpts))
+      propOpts = {default: true};
+
+    const defOverrides = propOpts.overrides ?? {};
+    const defOverwrite = propOpts.overwrite ?? false;
+
+    const exclude = Array.isArray(propOpts.exclude) ? propOpts.exclude : null;
+
+    let propDefs;
+
+    if (propOpts.props && Array.isArray(propOpts.props))
+    {
+      propDefs = propOpts.props;
+    }
+    else if (propOpts.all)
+    {
+      propDefs = Object.getOwnPropertyNames(source); 
+    }
+    else if (propOpts.default)
+    {
+      propDefs = Object.keys(source);
+    }
+    else if (propOpts.overrides)
+    {
+      propDefs = Object.keys(propOpts.overrides);
+    }
+
+    if (!propDefs)
+    {
+      console.error("Could not determine properties to copy", propOpts);
+      return;
+    }
+
+    // For each propDef found, add it to the target.
+    for (let p = 0; p < propDefs.length; p++)
+    {
+      const prop = propDefs[p];
+      if (exclude && exclude.indexOf(prop) !== -1)
+        continue; // Excluded property.
+
+      const def = Object.getOwnPropertyDescriptor(source, prop)
+      if (typeof def === U) continue; // Invalid property.
+
+      if (isObj(defOverrides[prop]))
+      {
+        for (const key in defOverrides[prop])
+        {
+          const val = defOverrides[prop][key];
+          def[key] = val;
+        }
+      }
+      if (overwrite || target[prop] === undefined)
+      { // Property doesn't already exist, let's add it.
+        Object.defineProperty(target, prop, def);
+      }
+    }
+
+    return target;
+  } // copy()
+
+  /**
+   * Merge two objects recursively.
+   *
+   * This is currently suseptible to circular reference infinite loops,
+   * but given what it's designed for, I'm not too worried about that.
+   *
+   * @param {object} source - The source object we're copying from.
+   * @param {object} target - The target object we're copying into.
+   *
+   * @param {object} [opts] Options that change the behaviour.
+   * @param {boolean} [opts.overwrite=true] Allow overwriting.
+   *   Unlike `copy` which does not allow overwriting by default,
+   *   this method does. It's not designed for the same kind of objects
+   *   as `copy`, but more for JSON structured configuration files.
+   *
+   *   As this is currently the only option, passing the boolean
+   *   as the `opts` argument directly will set this option.
+   *
+   * @returns {object} The `target` object.
+   */
+  function mergeNested(source, target, opts={})
+  {
+    if (typeof opts === B) 
+      opts = {overwrite: opts};
+
+    const overwrite = opts.overwrite ?? true;
+
+    for (const prop in source)
+    {
+      if (isObj(source[prop]) && isObj(to[prop]))
+      { // Nested objects, recurse deeper.
+        mergeNested(source[prop], target[prop], opts);
+      }
+      else if (overwrite || target[prop] === undefined)
+      { // Not tested objects, do a simple assignment.
+        target[prop] = source[prop];
+      }
+    }
+
+    return target;
+  }
+
+  /**
+   * Synchronize two objects.
+   *
+   * Literally just calls `mergeNested` twice, with the two objects swapped.
+   * Probably has all kinds of screwy behaviours because of how it works.
+   *
+   * @param {object} obj1 - The first object.
+   *   Because overwrite mode is on by default, any properties in `obj1` will
+   *   take precedence over the same properties in `obj2`.
+   *
+   * @param {object} obj2 - The second object.
+   *   Any properties in `obj2` that were not already in `obj1` will be added
+   *   to `obj1` thanks to the second merge operation.
+   *
+   * @param {object} [opts1] Options for the first merge operation.
+   *   See `mergeNested` for details on the supported options. 
+   * @param {object} [opts2=opts1] Options for the second merge operation.
+   *   If this is not specified, `opts2` will be the same as `opts1`.
+   *
+   */
+  function syncNested(obj1, obj2, opts1={}, opts2=opts1)
+  {
+    mergeNested(obj1, obj2, opts1)
+    mergeNested(obj2, obj1, opts2);
   }
 
   //-- core/clone --//

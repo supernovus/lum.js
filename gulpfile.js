@@ -2,14 +2,11 @@
  * Default Lum.js gulpfile for gulp 4.x
  */
 
-// Load our helper library first.
-const tasks = require('./src/gulp/index.js').getInstance();
+// Load our libraries first.
 
-// Now get a couple deps from said helper library.
-const {gulp,connect} = tasks.deps;
-
-// Load any extra libraries here.
-
+const tasks = require('lum-gulp-helper').getInstance();
+const gulp = tasks.deps.gulp;
+const connect = require('gulp-connect');
 const transform = require('gulp-transform');
 const rename = require('gulp-rename');
 const jsdoc  = require('gulp-jsdoc3');
@@ -23,14 +20,15 @@ const test_sources = 'src/tests/';
 
 const core = require('./src/core/build.json');
 
-tasks.useBabel(); // Enable the babel extension.
+//console.log("setting up targets", core);
 
 tasks.tag('es6').dest('scripts/nano/').cache().addClean().addJS(
 {
   name: 'build-core-es6',
   path: core.path,
   files: core.sources,
-  script: core.script,
+  concat: core.script,
+  cache: false,
 }).addJS(
 {
   name: 'build-libs-es6',
@@ -43,7 +41,8 @@ tasks.tag('es5').dest('scripts/nano-es5/').cache().addClean().addJS(
   babel: true,
   path: core.path,
   files: core.sources,
-  script: core.script,
+  concat: core.script,
+  cache: false,
 }).addJS(
 {
   name: 'build-libs-es5',

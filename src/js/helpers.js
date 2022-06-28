@@ -7,7 +7,7 @@ function(Lum, objlib)
 {
   "use strict";
 
-  const {O,F,S,B,U,isObj,clone} = Lum._;
+  const {O,F,S,B,U,isObj,clone,copy} = Lum._;
 
   //-- First the stuff that will become the 'obj' library.
   
@@ -160,86 +160,9 @@ function(Lum, objlib)
   });
 
   /**
-   * Copy properties from one object to another.
-   *
-   * @param {object|function} source - The object to copy properties from.
-   * @param {object|function} target - The target to copy properties to.
-   * @param {object} [propOpts] Options for how to copy properties.
-   * @param {boolean} [propOpts.default=true] Copy only enumerable properties.
-   * @param {boolean} [propOpts.all=false] Copy ALL object properties.
-   * @param {Array} [propOpts.props] A list of properties to copy.
-   * @param {object} [propOpts.overrides] Descriptor overrides for properties.
-   * @param {boolean} [propOpts.overwrite=false] Overwrite existing properties.
-   * @param {Array} [propOpts.exclude] A list of properties NOT to copy.
-   * 
-   * If 'props' is set, it overrides all other options for which properties
-   * to copy. If 'all' is true, all properties including special ones will
-   * be copied. If 'default' is true, all enumerable properties will be copied.
-   * If none of those are specified, but 'overrides is set,
-   * only the properties named in the 'overrides' will be copied.
-   *
-   * Be very careful with 'overwrite', it's a dangerous option.
-   *
-   * @return void
+   * This is by default an alias to the `Lum._.copy` function.
    */
-  objlib._add('copy', function (source, target, propOpts)
-  {
-    if (propOpts === null || typeof propOpts !== 'object')
-      propOpts = {default: true};
-
-    var defOverrides = 'overrides' in propOpts ? propOpts.overrides : {};
-    var overwrite    = 'overwrite' in propOpts ? propOpts.overwrite : false;
-
-    var exclude = Array.isArray(propOpts.exclude) ? propOpts.exclude : null;
-
-    var propDefs;
-
-    if (propOpts.props && Array.isArray(propOpts.props))
-    {
-      propDefs = propOpts.props;
-    }
-    else if (propOpts.all)
-    {
-      propDefs = Object.getOwnPropertyNames(source); 
-    }
-    else if (propOpts.default)
-    {
-      propDefs = Object.keys(source);
-    }
-    else if (propOpts.overrides)
-    {
-      propDefs = Object.keys(propOpts.overrides);
-    }
-
-    if (!propDefs)
-    {
-      console.error("Could not determine properties to copy", propOpts);
-      return;
-    }
-
-    // For each propDef found, add it to the target.
-    for (var p = 0; p < propDefs.length; p++)
-    {
-      var prop = propDefs[p];
-      if (exclude && exclude.indexOf(prop) !== -1)
-        continue; // Excluded property.
-      var def = Object.getOwnPropertyDescriptor(source, prop)
-      if (typeof def === U) continue; // Invalid property.
-      if (prop in defOverrides && typeof defOverrides[prop] === 'object')
-      {
-        for (var key in defOverrides[prop])
-        {
-          var val = defOverrides[prop][key];
-          def[key] = val;
-        }
-      }
-      if (overwrite || target[prop] === undefined)
-      { // Property doesn't already exist, let's add it.
-        Object.defineProperty(target, prop, def);
-      }
-    }
-
-  });
+  objlib._add('copy', copy);
 
   /**
    * Clone a simple object, using the {@link Lum._.clone} function.
@@ -270,19 +193,16 @@ function(Lum, objlib)
       cloneOpts = {mode: clone.MODE.JSON};
     }
 
-    //console.debug("Lum.obj.clone", object, copyProperties, cloneOpts);
-
-    let copy = clone(object, cloneOpts);
-
-    //console.debug("Lum.obj.clone:copy", copy);
-
     if (copyProperties)
     {
-      objlib.copy(object, copy, copyProperties);
+      cloneOpts.copy = copyProperties;
     }
 
-    return copy;
-  });
+    //console.debug("Lum.obj.clone", object, copyProperties, cloneOpts);
+
+    return clone(object, cloneOpts);
+
+  }); // obj.clone
 
   Lum.lib.onLoad('wrapper', function()
   {
