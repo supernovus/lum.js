@@ -14,10 +14,14 @@ A bunch of deprecated aliases are going to go away as well.
 
 The `Nano` global alias that has been exported will be nuked. It's `Lum` now.
 
-## Methods and properties to be removed
+## Scheduled for deprecation
 
-Everything using `wrap.add()`, regardless of file will go. In addition the
-following list is scheduled to be removed in version 5.
+* `promise.js`: This whole library will be deprecated, but not removed.
+* `tests/promise.js`: The test for the above library, also deprecated.
+
+## Scheduled for removal
+
+The following list is scheduled to be *removed* in version 5.
 
 * From `core.js`:
   * `Lum._.DESC_*` contants; use `Lum._.DESC.*` factory properties instead.
@@ -26,29 +30,31 @@ following list is scheduled to be removed in version 5.
 * From `arrayutils.js`:
   * `Lum.array.indexOf` method; use `Array.indexOf()` instead.
   * `Lum.array.contains` method; use `Array.includes()` instead.
-
-## Files/libraries to be removed
-
-* Any library that was turned into a core module.
-* `deprecated.js`
-* `helpers/extend.js`
-* `polyfill/string_repeat.js`
-* `promise.js`
-* `webservice/compat.js`
-* `tests/helpers_extend.js`
-* `tests/promise.js`
+* Libraries moved to core modules:
+  * `dynamic_functions.js`
+  * `load.js`
+  * `observable.js`
+* `deprecated.js`: ironically this is deprecated
+* `helpers/extend.js`: long deprecated, time to die
+* `polyfill/string_repeat.js`: bye bye
+* `webservice/compat.js`: long deprecated as well.
+* `tests/helpers_extend.js`: test for removed library.
 
 ## Overhauls
 
+* Everything using `wrap.add()` will be moved into `compat/v4-wrappers.js`.
+* The `Lum.Wrapper` library will be moved out of the core, into `wrappers.js`.
 * Rename `helpers.js` to `obj.js`.
-* Extract `Lum.Mask` out of `modal.js` into `mask.js`
-* Finish the long shelved `tabs.js`, which will replace `tabpanes.js`.
 * Move `*.jq.js` to a `jq` subfolder and remove `.jq` from the filename.
 * Update all the tests to work with the new versions.
 
 ## Further down the road
 
+Since this library set will be only a compatibility layer, these items will
+have to be done in the new `@lumjs` NPM libraries.
+
 * Standardize all jsdoc comments using JSDoc 3 format.
 * Make jQuery optional anywhere possible.
 * Standardize debugging using a revamped `debug` library.
+* Finish the long shelved `tabs.js`, which will supplement `tabpanes.js`.
 

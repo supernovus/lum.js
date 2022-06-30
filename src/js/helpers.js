@@ -7,7 +7,7 @@ function(Lum, objlib)
 {
   "use strict";
 
-  const {O,F,S,B,U,isObj,clone,copy} = Lum._;
+  const {O,F,S,B,U,isObj,clone,copyProps} = Lum._;
 
   //-- First the stuff that will become the 'obj' library.
   
@@ -160,9 +160,9 @@ function(Lum, objlib)
   });
 
   /**
-   * This is by default an alias to the `Lum._.copy` function.
+   * This is by default an alias to the `Lum._.copyProps` function.
    */
-  objlib._add('copy', copy);
+  objlib._add('copy', copyProps);
 
   /**
    * Clone a simple object, using the {@link Lum._.clone} function.

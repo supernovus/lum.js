@@ -1,5 +1,14 @@
 # Lum.js (Nano.js) v4
 
+## v4 is now in maintanence mode
+
+No further features will be added to this branch, only bug fixes.
+All future development is going into the new `@lumjs` libraries which
+will be available on NPM, as well as the `v5` branch of this project which
+will aim to be a compatibility layer for all legacy apps using the scripts
+in this style, as well as a few projects which may not use any of these 
+scripts directly, but which use a similar resource style. 
+
 ## Summary
 
 A bunch of client-side Javascript stuff for my projects that makes life easier.
