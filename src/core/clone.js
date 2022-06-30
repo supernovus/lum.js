@@ -102,8 +102,8 @@
     }
 
     if (opts.copy)
-    { // Pass the clone through the copy() function as well.
-      copy(obj, copy, opts.copy);
+    { // Pass the clone through the copyProps() function as well.
+      copyProps(obj, copy, opts.copy);
     }
 
     if (relock)
@@ -330,7 +330,7 @@
     }
 
     return target;
-  } // copy()
+  } // copyProps()
 
   /**
    * Merge two objects recursively.
