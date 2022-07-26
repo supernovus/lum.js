@@ -21,6 +21,7 @@
 Lum.lib(
 {
   name: 'notifications',
+  jq: true,
 },
 function (Lum, $)
 {

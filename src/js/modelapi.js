@@ -3,7 +3,7 @@ Lum.lib(
   name: 'modelapi',
   jq: true,
 },
-function(Lum)
+function(Lum, $)
 {
   "use strict";
 
