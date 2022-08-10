@@ -48,19 +48,19 @@ The modules that made up the `core.js` will now be split off into **4** standalo
   - [x] `prop.js` → `core.prop`
   - [x] `lazy.js` → `core.lazy`
   - [x] `observable.js` → `core.observable`
-- [ ] [@lumjs/global-object]
-  - [ ] `header.js` → `global-object:`
-  - [ ] `lum-self.js` → `global-object:`
-  - [ ] `footer.js` → `global-object:`
-  - [ ] `ns.js` → `global-object.ns:`
-  - [ ] `utils.js` → `global-object:utils._`
-  - [ ] `loadtracker.js` → `global-object.LoadTracker`
-  - [ ] `lib.js` → `global-object.lib:`
-  - [ ] `jq.js` → `global-object.jq:`
-- [ ] [@lumjs/simple-loader]
-  - [ ] `load.js` → `simple-loader`
-- [ ] [@lumjs/wrapper]
-  - [ ] `wrapper.js` → `wrapper`
+- [x] [@lumjs/global-object]
+  - [x] `header.js` → `global-object:`
+  - [x] `lum-self.js` → `global-object:`
+  - [x] `footer.js` → `global-object:`
+  - [x] `ns.js` → `global-object.ns:`
+  - [x] `utils.js` → `global-object:utils._`
+  - [x] `loadtracker.js` → `global-object.LoadTracker`
+  - [x] `lib.js` → `global-object.lib:`
+  - [x] `jq.js` → `global-object.jq:`
+- [x] [@lumjs/simple-loader]
+  - [x] `load.js` → `simple-loader`
+- [x] [@lumjs/wrapper]
+  - [x] `wrapper.js` → `wrapper`
 
 ## Standalone libraries
 
@@ -88,10 +88,8 @@ instead of our own.
   - `grid.js` → `grid:` ← Just the `Grid` class.
 - [ ] [@lumjs/oquery]
   - `oquery.js` → `oquery`
-- [ ] [@lumjs/arrays]
-  - `arrayutils.js` → `arrays`
-  - A few methods like `indexOf`, `contains`, and `extends` will be removed.
-  - Some new methods ported from the corresponding PHP library will be added.
+- [x] [@lumjs/arrays]
+  - Moving a couple functions to `@lumjs/core/arrays` and leaving the rest here.
 - [ ] [@lumjs/encode]
   - `encode.js` → `encode:`
 - [ ] [@lumjs/webservice]
@@ -105,14 +103,14 @@ instead of our own.
   - Also planning on adding a JS `tests.Harness` class like the PHP version.
 - [ ] [@lumjs/tests-browser]
   - `tests.js` -> `tests-browser`
-  - This class is weird and may need some rewriting.
+  - This class is weird and may need s
+  - Moving a couple functions to `@lumjs/core/arrays` and leaving the rest here.ome rewriting.
 - [ ] [@lumjs/service-worker-context]
-  - `service_worker.js` → `service-worker-context:` ← All `ServiceWorkerGlobalContext` features.
-- [ ] [@lumjs/service-worker-window]
-  - `service_worker.js` → `service-worker-window:` ← All `window` context features.
+  - `service_worker.js` → `service-worker.context:` ← All `ServiceWorkerGlobalContext` features.
+  - `service_worker.js` → `service-worker.window:` ← All `window` context features.
 - [ ] [@lumjs/web-view-controller]
   - `viewcontroller.js` → `web-view-controller:`
-- [ ] [@lumjs/web-data]
+- [ ] [@lumjs/web-user-data]
   - `userdata.js` -> `web-data:`
 - [ ] [@lumsj/web-tabs]
   - `tabpanes.js` -> `web-tabs.Panes`
@@ -129,13 +127,13 @@ instead of our own.
   - `contextmenu.js` → `web-context-menu`
 - [ ] [@lumjs/web-input-validation]
   - `validation.js` → `web-input-validation`
+- [ ] [@lumjs/web-notifications]
   - `notifications.js` → `web-notifications:`
+  - Will be enhanced with support for HTML 5 Notifications.
 - [ ] [@lumjs/web-listing]
   - `listing.js` → `web-listing:`
 - [ ] [@lumjs/web-element-editor]
   - `elementeditor.js` → `web-element-editor:`
-- [ ] [@lumjs/web-code-editor]
-  - `editor.js` → `web-code-editor:`
 - [ ] [@lumjs/web-grid]
   - `grid.js` → `web-grid:` ← Just the `DisplayGrid` class.
 - [ ] [@lumjs/jquery-ui-grid]
@@ -146,7 +144,6 @@ instead of our own.
   - `selectboxes.jq.js` → `jquery-plugins:select-boxes`
   - `change_type.jq.js` → `jquery-plugins:change-type`
   - `json.jq.js` → `jquery-plugins:json-elements`
-  - `xmlns.jq.js` → `jquery-plugins:xmlns`
   - To enable plugins: `jquery-plugins.enable(name1, name2, ...)`
   - To disable plugins: `jquery-plugins.disable(name1, ...)`
   - There will be an API to add more plugins from other libraries.
@@ -173,6 +170,8 @@ backwards compatibility reasons, but will no longer be updated or supported.
  - `./render/riot1.js`
  - `./helpers.js`
  - `./promise.js`
+ - `./editor.js`
+ - `./xmlns.js`
  - `./webservice/compat.js`
  - `./modelapi/ws_model.js`
 
@@ -187,7 +186,7 @@ library set will have evolved into its final form. All future work will
 be done in the standalone libraries.
 
 [@lumjs/core]: https://github.com/supernovus/lum.core.js
-[@lumjs/global-object]: https://github.com/supernovus/lum.global-object.js
+[@lumjs/global-object]: https://github.com/supernovus/lum.js/tree/v5/src/pkg/@lumjs/global-object
 [@lumjs/simple-loader]: https://github.com/supernovus/lum.simple-loader.js
 [@lumjs/wrapper]: https://github.com/supernovus/lum.wrapper.js
 

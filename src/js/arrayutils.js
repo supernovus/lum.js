@@ -10,6 +10,8 @@ function (Lum, arr)
 {
   "use strict";
 
+  core = require('@lumjs/core');
+
   /**
    * Find the index of a value in an array.
    *
@@ -22,7 +24,7 @@ function (Lum, arr)
    */
   arr.indexOf = function (array, value)
   {
-    console.warn("Deprecated: use ");
+    console.warn("Deprecated: use Array.indexOf()");
     var index  = -1,
         length = array.length;
 
@@ -48,6 +50,7 @@ function (Lum, arr)
    */
   arr.contains = function (array, value)
   {
+    console.warn("Deprecated: use Array.includes()");
     var index  = -1,
         length = array.length;
 
@@ -61,43 +64,13 @@ function (Lum, arr)
     return false;
   }
 
-  /**
-   * Return a Powerset of values in the array.
-   *
-   * @param {Array} array  The array to make the powerset from.
-   *
-   * @return {Array}  The powerset.
-   */
-  arr.powerset = function (array) 
-  {
-    var ps = new Array(new Array());
-    for (var i=0; i < array.length; i++) 
-    {
-      // we modify the ps array in the next loop,
-      // so can't use the ps.length property directly in the loop condition.
-      var current_length = ps.length;
-      for (var j = 0; j < current_length; j++) 
-      {
-        ps.push(ps[j].concat(array[i]));
-      }
-    }
-    return ps;
-  }
-
-  /**
-   * Get a random element from an array.
-   *
-   * @param {Array} array  The array to get an item from.
-   *
-   * @return {mixed}  The randomly selected item.
-   */
-  arr.random = function (array)
-  {
-    return array[Math.floor(Math.random()*array.length)];
-  }
+  arr.powerset = core.arrays.powerset;
+  arr.random = core.arrays.random;
 
   /**
    * Add a bound version of a arr method to an array itself.
+   *
+   * @deprecated This is just weird and unnecessary.
    *
    * @param {Array} array  The array to add the method to.
    * @param {string} method  The name of the arr method to add.
