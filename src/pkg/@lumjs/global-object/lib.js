@@ -1,6 +1,6 @@
 
 const core = require('@lumjs/core');
-const LoadTracker = require('./loadtracker');
+const LoadTracker = require('@lumjs/compat/v4/loadtracker');
 const {ourself,Lum} = require('./self');
 const {Enum,def} = core;
 const {S,F,isObj,isComplex,notNil,isNil,isArray} = core.types;

@@ -29,7 +29,7 @@ In the last few releases of `v4` the monolithic `core.js` was split into
 a bunch of smaller files to make it more manageable, but they were all
 still compiled into a single file.
 
-The modules that made up the `core.js` will now be split off into **4** standalone libraries. 
+The modules that made up the `core.js` will now be split off into a few standalone libraries. 
 
 - [x] [@lumjs/core]
   - [x] `typechecks.js` → `core.types:` → `def()`
@@ -40,27 +40,30 @@ The modules that made up the `core.js` will now be split off into **4** standalo
   - [x] `clone.js` → `core.obj:clone`, `core.obj:lock`, `core.obj:merge` ← Split up further.
   - [x] `strings.js` → `core.strings:`
   - [x] `flags.js` → `core.flags:`
-  - [x] `descriptors.js` → `core.descriptors:` → `DESC`
   - [x] `opt.js` → `core.opt:`
   - [x] `objectid.js` → `core:objectid` → `InternalObjectId`, `randomNumber()`
   - [x] `meta.js` → `core:meta` → `stacktrace()`, `AbstractClass`, `Functions`
   - [x] `enum.js` → `core.Enum`
-  - [x] `prop.js` → `core.prop`
   - [x] `lazy.js` → `core.lazy`
   - [x] `observable.js` → `core.observable`
-- [x] [@lumjs/global-object]
+  - [x] `arrays.js` → `core.arrays:` ← Only `powerset()` and `random()`, the rest remain here.
+  - Introduces new `def()` method that is a simpler replacement for `prop()`.
+- [x] [@lumjs/simple-loader]
+  - [x] `load.js` → `simple-loader`
+- [x] [@lumjs/wrapper]
+  - [x] `wrapper.js` → `wrapper`
+- [x] [@lumjs/compat]
+  - [x] `prop.js` → `compat:v4:meta.prop`
+  - [x] `descriptors.js` → `compat:v4:meta.descriptors`
+  - [x] `loadtracker.js` → `compat:v4:loadtracker`
+- [x] [@lumjs/global-object] (package-local; not available in `npm`)
   - [x] `header.js` → `global-object:`
   - [x] `lum-self.js` → `global-object:`
   - [x] `footer.js` → `global-object:`
   - [x] `ns.js` → `global-object.ns:`
   - [x] `utils.js` → `global-object:utils._`
-  - [x] `loadtracker.js` → `global-object.LoadTracker`
   - [x] `lib.js` → `global-object.lib:`
   - [x] `jq.js` → `global-object.jq:`
-- [x] [@lumjs/simple-loader]
-  - [x] `load.js` → `simple-loader`
-- [x] [@lumjs/wrapper]
-  - [x] `wrapper.js` → `wrapper`
 
 ## Standalone libraries
 
@@ -101,10 +104,9 @@ instead of our own.
   - `test.js` → `tests.Test`, `tests:log`
   - Added a `tests.functional` feature similar to the PHP version.
   - Also planning on adding a JS `tests.Harness` class like the PHP version.
-- [ ] [@lumjs/tests-browser]
-  - `tests.js` -> `tests-browser`
-  - This class is weird and may need s
-  - Moving a couple functions to `@lumjs/core/arrays` and leaving the rest here.ome rewriting.
+- [ ] [@lumjs/tests-dom]
+  - A new class that will replace the *in-browser* tests with *virtual-DOM* tests.
+  - This will replace `tests.js` entirely.
 - [ ] [@lumjs/service-worker-context]
   - `service_worker.js` → `service-worker.context:` ← All `ServiceWorkerGlobalContext` features.
   - `service_worker.js` → `service-worker.window:` ← All `window` context features.
@@ -138,15 +140,19 @@ instead of our own.
   - `grid.js` → `web-grid:` ← Just the `DisplayGrid` class.
 - [ ] [@lumjs/jquery-ui-grid]
   - `grid.js` → `jquery-ui-grid:` ← Just the `UIGrid` class.
-- [ ] [@lumjs/jquery-plugins]
-  - `exists.jq.js` → `jquery-plugins:exists`
-  - `disabled.jq.js` → `jquery-plugins:disabled`
-  - `selectboxes.jq.js` → `jquery-plugins:select-boxes`
-  - `change_type.jq.js` → `jquery-plugins:change-type`
-  - `json.jq.js` → `jquery-plugins:json-elements`
+- [x] [@lumjs/jquery-plugins]
+  - `exists.jq.js` → `jquery-plugins:plugin:exists`
+  - `disabled.jq.js` → `jquery-plugins:plugin:disabled`
+  - `selectboxes.jq.js` → `jquery-plugins:plugin:select-boxes`
+  - `change_type.jq.js` → `jquery-plugins:plugin:change-type`
+  - `json.jq.js` → `jquery-plugins:plugin:json-elements`
   - To enable plugins: `jquery-plugins.enable(name1, name2, ...)`
   - To disable plugins: `jquery-plugins.disable(name1, ...)`
   - There will be an API to add more plugins from other libraries.
+- [x] [@lumjs/compat]
+  - `helpers.js` → `compat:v4:object-helpers`
+  - `deprecated.js` → `compat:v4:deprecated`
+  - `promise.js` → `compat:v4:promise`
 
 ## Replaced by NPM library
 
@@ -156,20 +162,23 @@ versions available in the NPM repositories.
  - `./render/riot2.js` ⇒ `riot-tmpl`
  - `./uuid.js` ⇒  `math.uuid`
 
+## Tests
+
+All of the tests formerly in the `tests` folder and using the weird `tests.js`
+will be moved to the appropriate packages, and will use the new `tests-dom` 
+library which will simply use a *virtual-DOM* for testing instead of requiring
+the tests be ran inside a browser.
+
 ## Left in the `v5` repo
 
 Finally, there are a few libraries I am simply not going to bother trying to
-migrate as they've been deprecated for some time now and there's no reason
-to continue maintaining them. So they'll stay in this collection for
-backwards compatibility reasons, but will no longer be updated or supported.
+migrate as there is no reason to continue maintaining them. 
+So they'll stay in this collection for backwards compatibility reasons, 
+but will no longer be updated or supported.
 
- - `./docs/core.js`
  - `./helpers/extend.js`
  - `./momental.js`
- - `./deprecated.js`
  - `./render/riot1.js`
- - `./helpers.js`
- - `./promise.js`
  - `./editor.js`
  - `./xmlns.js`
  - `./webservice/compat.js`
@@ -204,7 +213,7 @@ be done in the standalone libraries.
 [@lumjs/webservice]: https://github.com/supernovus/lum.webservice.js
 
 [@lumjs/tests]: https://github.com/supernovus/lum.tests.js
-[@lumjs/tests-browser]: https://github.com/supernovus/lum.tests-browser.js
+[@lumjs/tests-dom]: https://github.com/supernovus/lum.tests-dom.js
 
 [@lumjs/web-view-controller]: https://github.com/supernovus/lum.web-view-controller.js
 [@lumjs/web-data]: https://github.com/supernovus/lum.web-data.js
@@ -225,3 +234,5 @@ be done in the standalone libraries.
 [@lumjs/service-worker-window]: https://github.com/supernovus/lum.service-worker-window.js
 
 [@lumjs/jquery-plugins]: https://github.com/supernovus/lum.jquery-plugins.js
+
+[@lumjs/compat]: https://github.com/supernovus/lum.compat.js

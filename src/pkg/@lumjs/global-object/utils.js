@@ -1,7 +1,7 @@
 // The `_` helper definition.
 const core = require('@lumjs/core'); 
 const {B,isObj,isComplex,notNil,isInstance,def} = core.types;
-const {prop,descriptors} = require('@lumjs/compat/v4-meta');
+const {prop,descriptors} = require('@lumjs/compat/v4/meta');
 
 /**
  * The Lum._ property is a collection of useful

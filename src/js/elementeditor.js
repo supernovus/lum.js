@@ -1,7 +1,6 @@
 Lum.lib(
 {
   name: 'elementeditor',
-  deps: ['observable'],
   jq: true,
 },
 function(Lum, $)

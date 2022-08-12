@@ -17,7 +17,7 @@ const add = def(Lum, true);
 
 // First off the def() and prop() methods.
 add('def', def);
-add('prop', require('@lumjs/compat/v4-meta').prop);
+add('prop', require('@lumjs/compat/v4/meta').prop);
 
 // A bunch of stuff from the core.
 const fromCore = 
@@ -30,7 +30,7 @@ for (const coreMod of fromCore)
 }
 
 // Now all the main modules.
-add('LoadTracker', require('./loadtracker'));
+add('LoadTracker', require('@lumjs/compat/v4/loadtracker'));
 add('opt', require('./opt'));
 add('ns', {value: require('./ns')});
 add('lib', require('./lib'));

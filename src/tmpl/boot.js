@@ -130,7 +130,7 @@ theTemplate.getTemplate('df.js');
 
       while (pkgPaths.length > 0)
       {
-        modPaths.push(pkgPaths.pop())
+        modPaths.splice(1, 0, pkgPaths.pop())
         mod = modPaths.join(P);
         pkg = pkgPaths.join(P);
         if (isModule())

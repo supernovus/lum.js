@@ -4,8 +4,5 @@ Lum.lib(
 }, 
 function(Lum)
 {
-  "use strict";
-
   Lum.Test = require('@lumjs/tests/test');
-
 });

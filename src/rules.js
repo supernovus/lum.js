@@ -1,4 +1,21 @@
-// Build rules.
+// This is the main configuration file for the custom build system.
+
+// First we'll import a few helper functions.
+const 
+{ 
+  npm, lum, jqplugin, v4compat,
+  globalPackageInfo,
+} = require('./build/rule-fun');
+
+// @lumjs modules bundled in the core script.
+// This list is simply for the global-object metadata.
+const bundled = 
+[
+  'core', 'compat', 'wrapper', 'simple-loader',
+  'jquery-plugins',
+];
+
+// Now we define the rules themselves.
 module.exports =
 {
   global: '$$LUM_V5$$',   // Global variable for the loader environment.
@@ -56,16 +73,16 @@ module.exports =
           ],
         },
         '@lumjs/compat':
-        {
-          package: false,
+        { // Bits of the compat library used by the global object.
           exports:
           {
-            './v4-meta': './lib/v4-meta.js',
+            './v4/meta': './lib/v4/meta.js',
+            './v4/loadtracker': './lib/v4/loadtracker.js',
           },
           anon:
           [
-            './lib/descriptors.js',
-            './lib/prop.js',
+            './lib/v4/descriptors.js',
+            './lib/v4/prop.js',
           ],
         },
         '@lumjs/wrapper':
@@ -76,16 +93,28 @@ module.exports =
         {
           package: true,
         },
+        '@lumjs/jquery-plugins':
+        { // Just the core bits of this, individual plugins not included.
+          exports:
+          {
+            '.': './lib/index.js',
+            './util': './lib/util.js',
+            './plugin': './lib/plugin/index.js',
+          },
+          anon:
+          [
+            './lib/jqerror.js',
+          ],
+        },
         '@lumjs/global-object':
-        {
+        { // An internal package, not found in npm.
           root: './src/pkg',
-          package: false,
+          package: {info: globalPackageInfo(bundled)},
           exports: {'.':'./index.js'},
           anon:
           [
             './jq.js',
             './lib.js',
-            './loadtracker.js',
             './ns.js',
             './opt.js',
             './self.js',
@@ -96,7 +125,70 @@ module.exports =
       },
     }, // core.js
 
-    // TODO: the rest of the scripts here.
+    'arrayutils.js': {},
+    'change_type.jq.js': jqplugin('change-type'),
+    //'contextmenu.js': lum('web-context-menu'),
+    //'css.js': lum('web-css'),
+    //'debug.js': lum('debug'),
+    'deprecated.js': v4compat('deprecated'),
+    'disabled.jq.js': jqplugin('disabled'),
+    'editor.js': {},
+    //'elementeditor.js': lum('web-element-editor'),
+    //'encode.js': lum('encode'),
+    'exists.jq.js': jqplugin('exists'),
+    //'expression.js': lum('expressions'),
+    //'format_json.js': lum('format-json'),
+    //'format_xml.js': lum('format-xml'),
+    /*
+    'grid.js':
+    {
+      deps:
+      {
+        '@lumjs/grid': {package: true},
+        '@lumjs/web-grid': {package: true},
+        '@lumjs/jquery-ui-grid': {package: true},
+      }
+    },
+    */
+    //'hash.js': lum('web-url-hash'),
+    'helpers.js': v4compat('object-helpers'),
+    'helpers/extend.js': {},
+    'json.jq.js': jqplugin('json-elements'),
+    //'listing.js': lum('web-listing'),
+    'load.js': {},
+    //'modal.js': lum('web-modal'),
+    //'modelapi.js': lum('model-base'),
+    'modelapi/ws_model.js': {},
+    'momental.js': {},
+    //'notifications.js': lum('web-notifications'),
+    'observable.js': {},
+    'oquery.js': lum('oquery'),
+    //'pager.js': lum('web-pager'),
+    'promise.js': v4compat('promise'),
+    'render/riot1.js': {},
+    'render/riot2.js': npm('riot-tmpl'),
+    'selectboxes.jq.js': jqplugin('select-boxes'),
+    //'service_worker': lum('service-worker'),
+    //'tabpanes.js': lum('web-tabs'),
+    //'tax.js': lum('tax'),
+    'test.js': lum('tests'),
+    //'userdata.js': lum('web-user-data'),
+    'uuid.js': npm('math.uuid'),
+    //'validation.js': lum('web-input-validation'),
+    //'viewcontroller.js': lum('web-view-controller'),
+    //'webservice.js': lum('webservice'),
+    /*
+    'whenready.js': lum('when-events', 
+    {
+      exports: {'./ready':'./lib/ready.js'},
+    }),
+    'whenreceived.js': lum('when-events', 
+    {
+      package: false, 
+      exports: {'./received':'./lib/received.js'},
+    }),
+    */
+    'xmlns.jq.js': {},
 
   }, // scripts
 }; // module.exports

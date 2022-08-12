@@ -14,16 +14,6 @@
 Lum.jq('json', 
 function(Lum, $) 
 {
-  $.fn.JSON = $.fn.json = function (obj, rep, space)
-  {
-    if (obj === undefined)
-    {
-      return JSON.parse(this.val());
-    }
-    else
-    {
-      return this.val(JSON.stringify(obj, rep, space));
-    }
-  };
+  require('@lumjs/jquery-plugins/plugin/json-elements').enable($);
 });
 

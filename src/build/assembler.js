@@ -2,15 +2,18 @@ const fs = require('fs');
 const Path = require('path');
 
 const core = require('@lumjs/core');
-const {S,N,needObj,needType,isObj,nonEmptyArray} = core.types;
+const {S,N,B,needObj,needType,isObj,nonEmptyArray} = core.types;
 
 const {loadFile} = require('./sources');
 const Template = require('./template');
+
+const {minify} = require('terser');
 
 const ENC = 'utf8';
 
 const MOD = 'module.js';
 const SCR = 'script.js';
+const JSN = 'json.js';
 
 const RESERVED = ['source', 'prepend', 'append', 'output'];
 
@@ -153,6 +156,31 @@ class Assembler
     return exps;
   }
 
+  buildPackageJson(pkg, info, opts={})
+  {
+    needType(S, pkg, 'package name must be a string');
+    
+    if (!isObj(info))
+    {
+      info = this.getPackageInfo(pkg, opts);
+    }
+
+    const safeFields = 
+    [ // An minimal set of fields to copy.
+      'name', 'version', 'dependencies',
+    ];
+
+    const pi = {};
+    for (const field of safeFields)
+    {
+      pi[field] = info[field];
+    }
+
+    const text = JSON.stringify(pi);
+
+    return this.tmpl.getTemplate(JSN, {pkg, mod: PKGINFO, path: PKGINFO, text});
+  }
+
   /**
    * Get a wrapped script.
    * @param {string} file 
@@ -165,11 +193,12 @@ class Assembler
   }
 
   /**
-   * Get a wrapped module.
+   * Get a wrapped module from a package.
    * @param {string} pkg
    * @param {?string} mod 
    * @param {string} path
    * @param {?string} [srcPkg=pkg]
+   * @param {?string} [root]
    * @returns {string}
    */
   getModule(pkg, mod, path, srcPkg=pkg, root)
@@ -188,6 +217,19 @@ class Assembler
   {
     const self = this;
     let out = '';
+
+    let pkgExports = false, pkgJson = true, pkgInfo;
+
+    if (isObj(def.package))
+    { // A way to set individual setttings.
+      pkgExports = def.package.exports ?? false;
+      pkgJson    = def.package.json    ?? true;
+      pkgInfo    = def.package.info;
+    }
+    else if (typeof def.package === B)
+    { // A way to set both settings at once.
+      pkgExports = pkgJson = def.package;
+    }
 
     const srcPkg = def.use ?? pkg;
 
@@ -219,17 +261,27 @@ class Assembler
       addExports(def.exports);
     }
 
-    if (def.package)
-    { // We're going to get a list of exports from the 'package.json'.
-      const exps = this.getExports(srcPkg, def);
-      if (isObj(exps))
-      {
-        addExports(exps);
+    if (pkgExports || pkgJson)
+    { // Something requiring the package.json is being used.
+      const info = pkgInfo ?? this.getPackageInfo(srcPkg, def);
+
+      if (pkgExports)
+      { // We're going to get a list of exports from the 'package.json'.
+        const exps = this.getExports(info, def);
+        if (isObj(exps))
+        {
+          addExports(exps);
+        }
+      }
+
+      if (pkgJson)
+      { // Include a super-minimalist version of the package.json
+        out += this.buildPackageJson(pkg, info, def);
       }
     }
 
     if (nonEmptyArray(def.anon))
-    { // Non-exported modules.
+    { // Non-exported (package-local) modules.
       for (const path of def.anon)
       {
         out += this.getModule(pkg, null, path, srcPkg, def.root);
@@ -284,13 +336,16 @@ class Assembler
     return out;
   }
 
-  compile(opts)
+  async compile(opts)
   {
-    if (isObj(opts) && typeof opts.verbose === N)
+    let minOpts = null;
+    if (isObj(opts))
     {
-      this.verbose = opts.verbose;
+      if (typeof opts.verbose === N)
+        this.verbose = opts.verbose;
+      if (isObj(opts.minify))
+        minOpts = opts.minify;
     }
-    fs.mkdirSync(this.outDir, {recursive: true});
     for (const name in this.conf.scripts)
     {
       if (RESERVED.includes(name)) continue;
@@ -301,9 +356,25 @@ class Assembler
         if (this.verbose > 2) info.def = def;
         console.log(info);
       }
-      const content = this.buildScript(name, def);
+
       const outfile = Path.join(this.outDir, name);
+      const outdir = Path.dirname(outfile);
+      if (!fs.existsSync(outdir))
+        fs.mkdirSync(outdir, {recursive: true});
+
+      let content = this.buildScript(name, def);
+
+      if (isObj(minOpts))
+      {
+        const minified = await minify(content, minOpts);
+        if (minified && minified.code)
+        { // Use the minified version.
+          content = minified.code;
+        }
+      }
+
       fs.writeFileSync(outfile, content, ENC);
+      
       if (this.verbose > 0)
       {
         const info = {wrote: outfile};
