@@ -72,7 +72,7 @@ new standalone libraries. There's a few exceptions in cases where the library
 is deprecated entirely, or there's already an implementation that can be used
 instead of our own.
 
-- [ ] [@lumjs/when-events]
+- [x] [@lumjs/when-events]
   - `whenreceived.js` → `when-events.WhenReceived`
   - `whenready.js` → `when-events.WhenReady`
 - [ ] [@lumjs/model-base]
@@ -89,7 +89,7 @@ instead of our own.
   - `expression.js` → `expressions:`
 - [ ] [@lumjs/grid]
   - `grid.js` → `grid:` ← Just the `Grid` class.
-- [ ] [@lumjs/oquery]
+- [x] [@lumjs/oquery]
   - `oquery.js` → `oquery`
 - [x] [@lumjs/arrays]
   - Moving a couple functions to `@lumjs/core/arrays` and leaving the rest here.
@@ -100,13 +100,6 @@ instead of our own.
   - This will be split up into modules.
   - A new `FetchTransport` class will be default for the npm library.
   - The `v5` wrapper library will still use `JQueryTransport` as its default. 
-- [x] [@lumjs/tests]
-  - `test.js` → `tests.Test`, `tests:log`
-  - Added a `tests.functional` feature similar to the PHP version.
-  - Also planning on adding a JS `tests.Harness` class like the PHP version.
-- [ ] [@lumjs/tests-dom]
-  - A new class that will replace the *in-browser* tests with *virtual-DOM* tests.
-  - This will replace `tests.js` entirely.
 - [ ] [@lumjs/service-worker-context]
   - `service_worker.js` → `service-worker.context:` ← All `ServiceWorkerGlobalContext` features.
   - `service_worker.js` → `service-worker.window:` ← All `window` context features.
@@ -165,9 +158,11 @@ versions available in the NPM repositories.
 ## Tests
 
 All of the tests formerly in the `tests` folder and using the weird `tests.js`
-will be moved to the appropriate packages, and will use the new `tests-dom` 
+will be moved to the appropriate packages, and will use the new [@lumjs/tests-dom] 
 library which will simply use a *virtual-DOM* for testing instead of requiring
-the tests be ran inside a browser.
+the tests be ran inside a browser. That library is an extension of a whole
+new version of the [@lumjs/tests] library, which is no longer part of this
+package at all.
 
 ## Left in the `v5` repo
 
@@ -186,6 +181,16 @@ but will no longer be updated or supported.
 
 Plus any of the former standalone libraries that were moved into the `core`
 will remain with the deprecation warnings they've had since moving.
+
+## External Dependencies
+
+I'm going to migrate as much as I can to use `bower` to install any external
+dependencies that were expected to have their own scripts in the
+`./scripts/ext/` folder. In the case that a package is not available in
+`bower`, I'll add it to a small, simplified download list.
+
+A bunch of dependencies I haven't used in ages or never got around to using,
+I'm just dropping from the collection entirely. Bye bye.
 
 ## That's all folks
 

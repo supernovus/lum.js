@@ -1,5 +1,5 @@
-const fs = require('fs');
-const Path = require('path');
+const fs = require('node:fs');
+const Path = require('node:path');
 
 const core = require('@lumjs/core');
 const {S,N,B,needObj,needType,isObj,nonEmptyArray} = core.types;
@@ -14,6 +14,7 @@ const ENC = 'utf8';
 const MOD = 'module.js';
 const SCR = 'script.js';
 const JSN = 'json.js';
+const EXT = 'external.js';
 
 const RESERVED = ['source', 'prepend', 'append', 'output'];
 
@@ -215,6 +216,20 @@ class Assembler
    */
   buildPackage(pkg, def)
   {
+    if (isObj(def.external))
+    { // External libraries use a different template.
+      const extDef = def.external;
+      needType(S, extDef.ns, 'external.ns must be a string');
+      const extScope =
+      {
+        pkg,
+        ns:   extDef.ns,
+        mod:  extDef.mod  ?? '.',
+        path: extDef.path ?? null,
+      }
+      return this.tmpl.getTemplate(EXT, extScope);
+    }
+
     const self = this;
     let out = '';
 

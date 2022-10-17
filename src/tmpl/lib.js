@@ -39,22 +39,7 @@
           id: `${this.pkg}/${this.mod}`,
           filename: this.path,
           require: this.createRequire(),
-          createRequire: function(rlib)
-          {
-            const mlib = this.$lib;
-            const env  = mlib.env;
-
-            if (typeof rlib === S)
-            { // Load a requested module.
-              rlib = env.get(rlib, mlib);
-            }
-            else if (typeof rlib !== O || rlib === null)
-            { // Use the current module.
-              rlib = mlib;
-            }
-
-            return rlib.createRequire();
-          },
+          createRequire: Lib.$createRequire,
           $lib: this,
         };
         this.$cached = module;
@@ -74,4 +59,22 @@
       }
     }
 
-  }
+    static $createRequire(rlib)
+    {
+      const mlib = this.$lib;
+      const env  = mlib.env;
+
+      if (typeof rlib === S)
+      { // Load a requested module.
+        rlib = env.get(rlib, mlib);
+      }
+      else if (typeof rlib !== O || rlib === null)
+      { // Use the current module.
+        rlib = mlib;
+      }
+
+      return rlib.createRequire();
+    }
+
+  } // Lib class
+

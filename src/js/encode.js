@@ -1,27 +1,3 @@
-/**
- * A few encoding functions originally part of my Passy app.
- * Thought they might be useful elsewhere, so moving them here.
- *
- * Some functions/classes may require extra libraries such as:
- *
- *  Lum.Base64 and Lum.Safe64:
- *
- *    - scripts/crypto/components/core-min.js
- *    - scripts/crypto/components/enc-base64-min.js
- *
- *  Lum.Hashifier:
- *  
- *    - Everything from Lum.Base64
- *    - scripts/crypto/components/sha256-min.js
- *    - scripts/ext/base91.js
- *
- *    Other agorithms may be used, SHA256 is simply the default.
- *    You'll need to load the corresponding CryptoJS components for each
- *    of the desired algorithms.
- *
- * TODO: write tests for this.
- * POSSIBLE TODO: move all of these into an 'encode' sub-namespace?
- */
 Lum.lib(
 {
   name: 'encode'

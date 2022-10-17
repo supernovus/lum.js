@@ -7,6 +7,7 @@
  */
 (function(Lum)
 {
+  //console.log("In core.js init", Lum);
   Lum.initWrapper().ns.$self();
 })(require('@lumjs/global-object'));
 

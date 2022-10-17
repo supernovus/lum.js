@@ -1,4 +1,6 @@
 // A few helper functions for the rules.js configuration file.
+const core = require('@lumjs/core');
+const {needObj} = core.types;
 
 // A package in npm.
 function npm(name, opts={})
@@ -56,4 +58,30 @@ exports.globalPackageInfo = function(bundled)
   }
   
   return pi;
+}
+
+function cryptoModule(deps, name, subns)
+{
+  const mod  = (name === '.' ? '' : './')+name;
+  const path = (name === '.' ? './index.js' : `./${name}.js`);
+  const ns = 'CryptoJS'+subns;
+  const pkgName = 'crypto-js/'+name;
+  deps[pkgName] = 
+  {
+    external: {ns, mod, path}
+  }
+}
+
+exports.cryptoJS = function(deps, modList)
+{
+  needObj(deps, 'deps must be an object');
+  needObj(modList, 'modList must be an object');
+
+  for (const modName in modList)
+  {
+    const modProp = modList[modName];
+    cryptoModule(deps, modName, modProp);
+  }
+
+  return deps;
 }

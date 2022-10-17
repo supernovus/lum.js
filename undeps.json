@@ -1,0 +1,3 @@
+{
+  "scripts/ext/luxon.js": "https://moment.github.io/luxon/global/luxon.min.js"
+}

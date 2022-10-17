@@ -81,7 +81,7 @@ function (Lum, arr)
     { 
       if (array[method] === undefined && typeof this[method] === 'function')
       {
-        Lum.prop(array, method, this[method].bind(this, array));
+        core.def(array, method, this[method].bind(this, array));
       }
       else
       {

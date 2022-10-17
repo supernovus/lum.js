@@ -4,7 +4,7 @@
 const 
 { 
   npm, lum, jqplugin, v4compat,
-  globalPackageInfo,
+  globalPackageInfo, cryptoJS,
 } = require('./build/rule-fun');
 
 // @lumjs modules bundled in the core script.
@@ -12,7 +12,7 @@ const
 const bundled = 
 [
   'core', 'compat', 'wrapper', 'simple-loader',
-  'jquery-plugins',
+  'jquery-plugins', 'dom',
 ];
 
 // Now we define the rules themselves.
@@ -54,7 +54,6 @@ module.exports =
           anon: 
           [
             './lib/objectid.js',
-            './lib/lazy.js',
             './lib/obj/clone.js',
             './lib/obj/copyall.js',
             './lib/obj/copyprops.js',
@@ -64,6 +63,7 @@ module.exports =
             './lib/obj/ns.js',
             './lib/types/basics.js',
             './lib/types/def.js',
+            './lib/types/lazy.js',
             './lib/types/isa.js',
             './lib/types/js.js',
             './lib/types/needs.js',
@@ -76,14 +76,13 @@ module.exports =
         { // Bits of the compat library used by the global object.
           exports:
           {
-            './v4/meta': './lib/v4/meta.js',
+            './v4': './lib/v4/index.js',
+            './v4-meta': './lib/v4/index.js',
+            './v4/meta': './lib/v4/index.js',
             './v4/loadtracker': './lib/v4/loadtracker.js',
+            './v4/descriptors': './lib/v4/descriptors.js',
+            './v4/prop': './lib/v4/prop.js',
           },
-          anon:
-          [
-            './lib/v4/descriptors.js',
-            './lib/v4/prop.js',
-          ],
         },
         '@lumjs/wrapper':
         {
@@ -106,6 +105,10 @@ module.exports =
             './lib/jqerror.js',
           ],
         },
+        '@lumjs/dom':
+        {
+          package: true,
+        },
         '@lumjs/global-object':
         { // An internal package, not found in npm.
           root: './src/pkg',
@@ -122,6 +125,10 @@ module.exports =
             './wrapper.js',
           ],
         },
+        'jquery':
+        { // Will be provided by bower
+          external: {ns: 'jQuery'},
+        },
       },
     }, // core.js
 
@@ -134,7 +141,84 @@ module.exports =
     'disabled.jq.js': jqplugin('disabled'),
     'editor.js': {},
     //'elementeditor.js': lum('web-element-editor'),
-    //'encode.js': lum('encode'),
+    'encode.js': lum('encode', 
+    {
+      anon:
+      [
+        './lib/safe64/common.js',
+        './lib/safe64/settings.js',
+      ],
+      deps: cryptoJS(
+      { // First the regular list of dependencies.
+        '@shelacek/ubjson':
+        {
+          package: true,
+        },
+        'php-serialize':
+        {
+          exports: {'.': './lib/cjs/index.js'},
+          anon:
+          [
+            './lib/cjs/helpers.js',
+            './lib/cjs/isSerialized.js',
+            './lib/cjs/parser.js',
+            './lib/cjs/serialize.js',
+            './lib/cjs/unserialize.js',
+          ],
+        },
+      },
+      { // Now the list of crytoJS modules. Load them externally.
+        // The only ones we use explicitly are marked with //*
+        'aes': '.AES',
+        'cipher-core': '',
+        'core': '', //*
+        'crypto-js': '',
+        'enc-base64': '.enc.Base64', //*
+        'enc-latin1': '.enc.Latin1',
+        'enc-hex': '.enc.Hex',
+        'enc-utf8': '.enc.Utf8', //*
+        'enc-utf16': '.enc.Utf16',
+        'evpkdf': '.EvpKDF',
+        'format-hex': '.format.Hex',
+        'format-openssl': '.format.OpenSSL',
+        'hmac': '',
+        'hmac-md5': '.HmacMD5',
+        'hmac-ripemd160': '.HmacRIPEMD160',
+        'hmac-sha1': '.HmacSHA1',
+        'hmac-sha224': '.HmacSHA224',
+        'hmac-sha256': '.HmacSHA256',
+        'hmac-sha384': '.HmacSHA384',
+        'hmac-sha3': '.HmacSHA3',
+        'hmac-sha512': '.HmacSHA512',
+        'index': '',
+        'lib-typedarrays': '.lib.WordArray',
+        'md5': '.MD5',
+        'mode-cfb': '.mode.CFB',
+        'mode-ctr-gladman': '.mode.CTRGladman',
+        'mode-ctr': '.mode.CTR',
+        'mode-ecb': '.mode.ECB',
+        'mode-ofb': '.mode.OFB',
+        'pad-ansix923': '.pad.Ansix923',
+        'pad-iso10126': '.pad.Iso10126',
+        'pad-iso97971': '.pad.Iso97971',
+        'pad-nopadding': '.pad.NoPadding',
+        'pad-pkcs7': '.pad.Pkcs7',
+        'pad-zeropadding': '.pad.ZeroPadding',
+        'pbkdf2': '.PBKDF2',
+        'rabbit': '.Rabbit',
+        'rabbit-legacy': '.RabbitLegacy',
+        'rc4': '.RC4',
+        'ripemd160': '.RIPEMD160',
+        'sha1': '.SHA1',
+        'sha224': '.SHA224',
+        'sha256': '.SHA256', //*
+        'sha384': '.SHA384',
+        'sha3': '.SHA3',
+        'sha512': '.SHA512',
+        'tripledes': '.TripleDES',
+        'x64-core': '',
+      }),
+    }),
     'exists.jq.js': jqplugin('exists'),
     //'expression.js': lum('expressions'),
     //'format_json.js': lum('format-json'),
@@ -171,7 +255,6 @@ module.exports =
     //'service_worker': lum('service-worker'),
     //'tabpanes.js': lum('web-tabs'),
     //'tax.js': lum('tax'),
-    'test.js': lum('tests'),
     //'userdata.js': lum('web-user-data'),
     'uuid.js': npm('math.uuid'),
     //'validation.js': lum('web-input-validation'),

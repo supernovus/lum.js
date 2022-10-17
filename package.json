@@ -9,17 +9,18 @@
     "url": "https://github.com/supernovus/nano.js.git"
   },
   "dependencies": {
-    "@lumjs/core": "^1.2.0",
-    "@lumjs/compat": "^1.1.0",
+    "@lumjs/core": "^1.7.0",
+    "@lumjs/compat": "^1.3.0",
+    "@lumjs/dom": "^1.1.0",
     "@lumjs/wrapper": "^1.0.0",
     "@lumjs/simple-loader": "^1.0.0",
-    "@lumjs/tests": "^1.4.0",
     "@lumjs/jquery-plugins": "^1.0.0",
     "@lumjs/oquery": "^1.0.0",
+    "@lumjs/encode": "^1.0.0",
+
     "@ungap/global-this": "^0.4.4",
     "math.uuid": "^1.4.0",
     "riot-tmpl": "^3.0.8",
-
     "path-browserify": "^1.0.1",
 
     "compare-versions": "^4.1.1",

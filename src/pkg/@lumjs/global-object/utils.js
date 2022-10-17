@@ -1,7 +1,7 @@
 // The `_` helper definition.
 const core = require('@lumjs/core'); 
 const {B,isObj,isComplex,notNil,isInstance,def} = core.types;
-const {prop,descriptors} = require('@lumjs/compat/v4/meta');
+const {prop,descriptors} = require('@lumjs/compat/v4');
 
 /**
  * The Lum._ property is a collection of useful
@@ -92,7 +92,6 @@ _.extend(core.types, core.obj, core.flags, core.strings, core.meta,
   TYPE_LIST: core.types.TYPES.list,
   DESC: descriptors.DESC,
   Enum: core.Enum,
-  lazy: core.lazy,
 });
 
 // First lets make compatibility wrappers for each of the old DESC_* properties.
