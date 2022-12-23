@@ -17,7 +17,7 @@
  */
 
 Lum.jq('selectboxes', 
-function($) 
+function(Lum, $) 
 {
  
 /*
