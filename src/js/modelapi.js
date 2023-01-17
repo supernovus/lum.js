@@ -263,7 +263,7 @@ function(Lum, $)
     {
       if (this.debug)
       {
-        return this.debug.is.apply(this.debug, arguments);
+        return this.debug.is(...arguments);
       }
     }
   
@@ -271,7 +271,7 @@ function(Lum, $)
     {
       if (this.debug)
       {
-        return this.debug.when.apply(this.debug, arguments);
+        return this.debug.when(...arguments);
       }
     }
     

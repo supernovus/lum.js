@@ -14,6 +14,7 @@
       'NS',
       'JQ',
       'ARGS',
+      'WRPR',
     ], 
     {
       strings: true
@@ -60,6 +61,7 @@
      *   - `Lum.lib.TYPE.NS`   -- The `ns` object (if `opts.ns` was used).
      *   - `Lum.lib.TYPE.JQ`   -- The jQuery object (if `opts.jq` was used).
      *   - `Lum.lib.TYPE.ARGS` -- The `arguments` passed.
+     *   - `Lum.lib.TYPE.WRPR` -- The `Wrapper` instance.
      * 
      *   Default is `NS ?? SELF`.
      * 
@@ -137,6 +139,9 @@
       let thisObj = nsObj ?? ourself();
   
       const libArgs = arguments;
+
+      const wrapper = Lum.getWrapper();
+      const wrapped = (isComplex(wrapper)) ? wrapper.wrap() : undefined;
   
       function getThis(thisType, def)
       {
@@ -149,7 +154,7 @@
           case LIB_TYPES.LUM:
             return Lum;
           case LIB_TYPES.WRAP:
-            return wrap;
+             return wrapped;
           case LIB_TYPES.ROOT:
             return root;
           case LIB_TYPES.NS:
@@ -158,6 +163,8 @@
             return $;
           case LIB_TYPES.ARGS:
             return libArgs;
+          case LIB_TYPES.WRPR:
+            return wrapper;
           default:
             return def;
         }

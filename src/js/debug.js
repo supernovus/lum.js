@@ -20,20 +20,14 @@ function (Lum, $)
 {
   "use strict";
 
-  //const $ = Lum.jq.need().jq.get();
-
   /**
    * A class to help with debugging.
    *
-   * With the optional URL Hash setting, you can use:
+   * If the Hash library is loaded, you can use URL hash values:
    *
    *  #debug               Turns on ALL debugging ('*' flag.)
    *  #debug=flag          Turn on a single flag.
    *  #debug=flag1=flag2   Turn on multiple flags.
-   * 
-   * If you specify the 'hash.json' config option, you can also use:
-   *
-   *  #debug={"flag1":true,"flag2":false}
    * 
    */
   Lum.Debug = class
@@ -43,9 +37,6 @@ function (Lum, $)
       this.showFlag = (typeof opts.showFlag === 'boolean') 
         ? opts.showFlag 
         : false;
-
-      // Call the method to initialize or update our flags.
-      this.update(opts.flags);
 
       if (Lum.lib.has('hash'))
       {
@@ -66,7 +57,11 @@ function (Lum, $)
         }
       }
 
+      // Set up observable methods on this object.
       Lum.observable(this, opts.observable);
+
+      // Call the method to initialize or update our flags.
+      this.update(opts.flags);
     }
 
     toggle(flag, toggle)
@@ -132,7 +127,7 @@ function (Lum, $)
       {
         var slicePos = this.showFlag ? 0 : 1;
         var args = Array.prototype.slice.call(arguments, slicePos);
-        console.debug.apply(console, args);
+        console.debug(...args);
         this.trigger('when', flag, args);
       }
     }

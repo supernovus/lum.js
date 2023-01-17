@@ -9,18 +9,18 @@
    *
    * @property {boolean} $ourselfUnwrapped - Whether `ourself()` returns the
    *                                         raw `Lum` object, or the wrapped
-   *                                         `Proxy` instance. Default: `true`;
+   *                                         `Proxy` instance. 
+   *                                         Default: `false`;
    *
    * @property {boolean} $nsSelfUnwrapped - Whether `Lum.ns.$self()` uses the
    *                                        raw or wrapped `Lum` object when
    *                                        exporting global variables.
-   *                                        Default is `true` on Node.js and
-   *                                        `false` anywhere else.
+   *                                        Default: `false`;
    */
    const Lum = 
    {
-     $ourselfUnwrapped: true,
-     $nsSelfUnwrapped:  init.node,
+     $ourselfUnwrapped: false,
+     $nsSelfUnwrapped:  false,
      $jqPluginSuffix:   '.jq',
      $wrapBackupPrefix: 'orig$',
    };

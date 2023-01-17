@@ -2,6 +2,7 @@ Lum.lib(
 {
   name: 'validation',
   assign: 'Validation',
+  jq: true,
 },
 function(Nano, $)
 {
