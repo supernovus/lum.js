@@ -34,14 +34,6 @@ There are several branches of Nano.js:
 * v4 was the first release with the new name, and introduced the new Lum core object and a bunch of features to make handling libraries easier.
 * v5 is this version, which tries to be as close to `v4` as possible, while using the new `@lumjs` npm packages behind the scenes.
 
-## Why the custom build script?
-
-There's so many different bundlers out there, but none of them could bundle
-things in a way that would be backwards compatible with the original scripts
-included in this collection. So I wrote one that is super simplistic, requires
-inside knowledge of the modules being bundled, and will never be used for
-anything outside of this collection.
-
 ## Authors
 
 Some libraries were borrowed from other sources:

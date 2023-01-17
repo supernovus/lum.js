@@ -5,8 +5,14 @@ const {ourself,Lum} = require('./self');
 const {Enum,def} = core;
 const {S,F,isObj,isComplex,notNil,isNil,isArray} = core.types;
 const {clone} = core.obj;
+const root = core.context.root;
 
-const loaded = new LoadTracker({type: 'library', types: 'libraries'});
+const loaded = new LoadTracker(
+{
+  self: ourself(),
+  type: 'library', 
+  types: 'libraries'
+});
 
 const LIB_TYPES = Enum(
 [
@@ -18,6 +24,7 @@ const LIB_TYPES = Enum(
   'NS',
   'JQ',
   'ARGS',
+  'WRPR',
 ], 
 {
   strings: true
@@ -64,6 +71,7 @@ const LIB_TYPES = Enum(
  *   - `Lum.lib.TYPE.NS`   -- The `ns` object (if `opts.ns` was used).
  *   - `Lum.lib.TYPE.JQ`   -- The jQuery object (if `opts.jq` was used).
  *   - `Lum.lib.TYPE.ARGS` -- The `arguments` passed.
+ *   - `Lum.lib.TYPE.WRPR` -- The `Wrapper` instance.
  * 
  *   Default is `NS ?? SELF`.
  * 
@@ -142,6 +150,9 @@ function lib(opts, func)
 
   const libArgs = arguments;
 
+  const wrapper = Lum.getWrapper();
+  const wrapped = (isComplex(wrapper)) ? wrapper.wrap() : undefined;
+
   function getThis(thisType, def)
   {
     switch(thisType)
@@ -153,7 +164,7 @@ function lib(opts, func)
       case LIB_TYPES.LUM:
         return Lum;
       case LIB_TYPES.WRAP:
-        return wrap;
+        return wraped;
       case LIB_TYPES.ROOT:
         return root;
       case LIB_TYPES.NS:
@@ -162,6 +173,8 @@ function lib(opts, func)
         return $;
       case LIB_TYPES.ARGS:
         return libArgs;
+      case LIB_TYPES.WRPR:
+        return wrapper;
       default:
         return def;
     }

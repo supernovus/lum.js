@@ -1,4 +1,4 @@
-(function()
+//(function()
 { // Lum.js v5 wrapped external library.
   globalThis[theTemplate.getConf('global')].define(
     theTemplate.getVar('pkg'), 
@@ -9,5 +9,6 @@
     module.exports = theTemplate.getVar('ns', true);
   });
   
-})();
+}
+//)();
 

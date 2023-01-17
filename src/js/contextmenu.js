@@ -7,7 +7,7 @@ Lum.lib(
   name: 'contextmenu',
   assign: 'ContextMenu',
 },
-function(Lum)
+function()
 {
   return require('@lumjs/web-context-menu');
 });

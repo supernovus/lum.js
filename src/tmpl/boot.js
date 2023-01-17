@@ -34,6 +34,26 @@ theTemplate.getTemplate('df.js');
   // Build a new library wrapper object.
   df(Env, 'define', function(pkg, mod, path)
   {
+    //console.debug('define()', {pkg, mod, path});
+    if (typeof mod === S && libs[pkg] && libs[pkg].mods[mod])
+    { // Cannot overwrite existing modules.
+      throw new Error(`Cannot overwrite existing module ${pkg}:${mod}`);
+    }
+
+    if (typeof path === S && libs[pkg] && libs[pkg].paths[path])
+    { // There's already a module for this path.
+      //console.debug("existing module with the same path found");
+      if (typeof mod === S)
+      { // There's a module name, and its not registered yet.
+        return libs[pkg].mods[mod] = libs[pkg].paths[path];
+      }
+      else
+      { // We're not going to add a duplicate.
+        throw new Error(`Cannot overwrite existing module ${pkg}::${path}`);
+      }
+    }
+
+    //console.debug("Registering new Lib");
     const lib = new Lib(Env, pkg, mod, path);
     if (libs[pkg] === undefined)
       libs[pkg] = {mods:{}, paths:{}};

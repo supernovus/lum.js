@@ -38,7 +38,7 @@ add('jq', require('./jq'));
 add('_', {value: require('./utils')});
 
 // Next the simple loader.
-add('load', require('@lumjs/simple-loader'));
+add('load', require('@lumjs/simple-loader/default'));
 
 // Finally, the Wrapper stuff after the rest of the modules are loaded.
 const wrap = require('./wrapper');

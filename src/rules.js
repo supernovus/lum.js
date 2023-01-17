@@ -234,7 +234,7 @@ module.exports =
       }
     },
     */
-    //'hash.js': lum('web-url-hash'),
+    'hash.js': lum('web-url-hash'),
     'helpers.js': v4compat('object-helpers'),
     'helpers/extend.js': {},
     'json.jq.js': jqplugin('json-elements'),

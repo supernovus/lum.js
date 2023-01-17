@@ -10,3 +10,5 @@
 /.gulp-cache*
 /package-lock.json
 /dev-*
+/src/js/diff.sh
+

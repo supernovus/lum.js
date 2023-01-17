@@ -78,7 +78,7 @@ instead of our own.
 - [ ] [@lumjs/model-base]
   - `modelapi.js` → `model-base`
 - [ ] [@lumjs/debug]
-  - `debug.js` → `debug:`
+  - `debug.js` → `debug:` ← A basic `Debug` class only depends on `core`.
 - [ ] [@lumjs/format-json]
   - `format_json.js` → `format-json`
 - [ ] [@lumjs/format-xml]
@@ -100,7 +100,7 @@ instead of our own.
   - This will be split up into modules.
   - A new `FetchTransport` class will be default for the npm library.
   - The `v5` wrapper library will still use `JQueryTransport` as its default. 
-- [ ] [@lumjs/service-worker-context]
+- [ ] [@lumjs/service-worker]
   - `service_worker.js` → `service-worker.context:` ← All `ServiceWorkerGlobalContext` features.
   - `service_worker.js` → `service-worker.window:` ← All `window` context features.
 - [ ] [@lumjs/web-view-controller]
@@ -114,6 +114,9 @@ instead of our own.
   - `modal.js` → `web-modal`
 - [ ] [@lumjs/web-url-hash] 
   - `hash.js` → `web-url-hash:`
+- [ ] [@lumjs/web-debug]
+  - `debug.js` → `web-debug:` ← Extension of `debug` with `web-url-hash` support.
+  - `debug.js` → `web-debug.elements:` ← The `Debug.Elements` class.
 - [ ] [@lumjs/web-pager]
   - `pager.js` → `web-pager`
 - [ ] [@lumjs/web-css]
@@ -225,6 +228,7 @@ be done in the standalone libraries.
 [@lumsj/web-tabs]: https://github.com/supernovus/lum.web-tabs.js
 [@lumjs/web-modal]: https://github.com/supernovus/lum.web-modal.js
 [@lumjs/web-url-hash]: https://github.com/supernovus/lum.web-url-hash.js
+[@lumjs/web-debug]: https://github.com/supernovus/lum.web-debug.js
 [@lumjs/web-pager]: https://github.com/supernovus/lum.web-pager.js
 [@lumjs/web-css]: https://github.com/supernovus/lum.web-css.js
 [@lumjs/web-context-menu]: https://github.com/supernovus/lum.web-context-menu.js
@@ -235,8 +239,7 @@ be done in the standalone libraries.
 [@lumjs/web-element-editor]: https://github.com/supernovus/lum.web-element-editor.js
 [@lumjs/web-code-editor]: https://github.com/supernovus/lum.web-code-editor.js
 
-[@lumjs/service-worker-context]: https://github.com/supernovus/lum.service-worker-context.js
-[@lumjs/service-worker-window]: https://github.com/supernovus/lum.service-worker-window.js
+[@lumjs/service-worker]: https://github.com/supernovus/lum.service-worker.js
 
 [@lumjs/jquery-plugins]: https://github.com/supernovus/lum.jquery-plugins.js
 

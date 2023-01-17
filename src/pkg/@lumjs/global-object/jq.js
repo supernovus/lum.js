@@ -4,6 +4,7 @@ const LoadTracker = require('@lumjs/compat/v4/loadtracker');
 const {ourself,Lum} = require('./self');
 const {Enum,def} = core;
 const {S,F,isObj,isComplex,notNil} = core.types;
+const root = core.context.root;
 
 // A tag for jQuery if it's missing.
 const JQTAG = 'jQuery';
@@ -12,6 +13,7 @@ const JQTAG = 'jQuery';
 // But with some custom tests.
 const jqLoaded = new LoadTracker(
 {
+  self: ourself(),
   type:  'jQuery library',
   types: 'jQuery libraries',
   or: function(name)

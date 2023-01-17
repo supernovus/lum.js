@@ -15,6 +15,7 @@ const MOD = 'module.js';
 const SCR = 'script.js';
 const JSN = 'json.js';
 const EXT = 'external.js';
+const AKA = 'alias.js';
 
 const RESERVED = ['source', 'prepend', 'append', 'output'];
 
@@ -42,6 +43,8 @@ class Assembler
     this.appendAll = conf.scripts.append ?? [];
     
     this.tmpl = new Template(conf); // Top-level template.
+
+    this.moduleCache = {};
 
     this.verbose = conf.verbose ?? 1;
   }
@@ -204,6 +207,18 @@ class Assembler
    */
   getModule(pkg, mod, path, srcPkg=pkg, root)
   {
+    const hasPath = (typeof path === S);
+
+    if (hasPath && this.moduleCache[`${pkg}::${path}`])
+    { // We've seen this path already.
+      return this.tmpl.getTemplate(AKA, {pkg, mod, path});
+    }
+
+    if (hasPath)
+    {
+      this.moduleCache[`${pkg}::${path}`] = (mod ?? '.');
+    }
+
     const text = this.loadModule(srcPkg, path, root);
     return this.tmpl.getTemplate(MOD, {pkg, mod, path, text});
   }

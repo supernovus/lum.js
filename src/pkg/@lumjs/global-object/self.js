@@ -11,7 +11,8 @@ const {isObj,def} = core.types;
  *
  * @property {boolean} $ourselfUnwrapped - Whether `ourself()` returns the
  *                                         raw `Lum` object, or the wrapped
- *                                         `Proxy` instance. Default: `true`;
+ *                                         `Proxy` instance. 
+ *                                         Default: `false`;
  *
  * @property {boolean} $nsSelfUnwrapped - Whether `Lum.ns.$self()` uses the
  *                                        raw or wrapped `Lum` object when
@@ -21,7 +22,7 @@ const {isObj,def} = core.types;
  */
 const Lum = 
 {
-  $ourselfUnwrapped: true,
+  $ourselfUnwrapped: false,
   $nsSelfUnwrapped:  false,
   $jqPluginSuffix:   '.jq',
 };
@@ -55,3 +56,4 @@ exports.ourself = ourself;
  * A read-only accessor that returns the output of {@link Lum._.ourself}
  */
 def(Lum, 'self', {get: ourself});
+
