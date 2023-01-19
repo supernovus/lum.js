@@ -1,6 +1,6 @@
 const core = require('@lumjs/core');
 
-const {isObj,def} = core.types;
+const {isObj,def,F} = core.types;
 
 /**
  * The core Lum namespace.
@@ -43,7 +43,7 @@ exports.Lum = Lum;
  */
 function ourself(raw=Lum.$ourselfUnwrapped)
 {
-  if (raw) return Lum;
+  if (raw || typeof Lum.getWrapper !== F) return Lum;
   const wrapper = Lum.getWrapper();
   return (isObj(wrapper)) ? wrapper.wrap() : Lum;
 }

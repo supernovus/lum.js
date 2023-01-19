@@ -52,11 +52,13 @@
     createRequire()
     {
       const plib = this;
-      return function(id)
+      const lumV5require = function(id)
       {
         const clib = plib.env.get(id, plib);
         return clib.load();
       }
+      df(lumV5require, '$scope', plib);
+      return lumV5require;
     }
 
     static $createRequire(rlib)

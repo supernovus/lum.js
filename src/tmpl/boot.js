@@ -2,8 +2,8 @@
 { // Bootstrap for the Lum.js v5 environment. 
   'use strict';
 
-theTemplate.getTemplate('lib.js');
 theTemplate.getTemplate('df.js');
+theTemplate.getTemplate('lib.js');
 
   const E_NO_MODULE = 'Invalid module specified: ';
   class ModuleError extends Error 

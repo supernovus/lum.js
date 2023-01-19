@@ -1,6 +1,6 @@
 {
   "name": "lum.js",
-  "version": "5.20230116.1325",
+  "version": "5.20230119.1440",
   "license": "MIT",
   "description": "A set of client-side libraries.",
   "homepage": "https://github.com/supernovus/nano.js",
@@ -9,7 +9,7 @@
     "url": "https://github.com/supernovus/nano.js.git"
   },
   "dependencies": {
-    "@lumjs/core": "^1.8.2",
+    "@lumjs/core": "^1.10.0",
     "@lumjs/compat": "^1.4.0",
     "@lumjs/dom": "^1.2.0",
     "@lumjs/wrapper": "^1.0.0",

@@ -1,6 +1,0 @@
-{
-  "template": "testsuite.html",
-  "title": "Nano.js ES5 Test Suite",
-  "scriptdir": "scripts/nano-es5/",
-  "polyfill": "<script src=\"https://polyfill.io/v3/polyfill.min.js\"></script>"
-}

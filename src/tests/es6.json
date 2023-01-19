@@ -1,6 +1,0 @@
-{
-  "template": "testsuite.html",
-  "title": "Nano.js ES6 Test Suite",
-  "scriptdir": "scripts/nano/",
-  "polyfill": "<!-- No polyfill needed in ES6 mode -->"
-}

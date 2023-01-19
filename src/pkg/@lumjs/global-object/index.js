@@ -29,6 +29,9 @@ for (const coreMod of fromCore)
   add(coreMod, core[coreMod]);
 }
 
+// The rest of core because we can.
+add('core', core);
+
 // Now all the main modules.
 add('LoadTracker', require('@lumjs/compat/v4/loadtracker'));
 add('opt', require('./opt'));

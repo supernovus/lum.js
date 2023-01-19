@@ -1,6 +1,0 @@
-{
-  "template": "nanogrid.html",
-  "title": "Nano Grid (ES5) Demo",
-  "scriptdir": "scripts/nano-es5/",
-  "polyfill": "<script src=\"../../scripts/nano-es5/string_repeat.js\"></script>\n<script src=\"https://polyfill.io/v3/polyfill.min.js\"></script>"
-}

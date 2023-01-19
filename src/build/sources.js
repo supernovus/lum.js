@@ -1,6 +1,4 @@
 const fs = require('fs');
-const path = require('path');
-
 const ENC = 'utf8';
 
 // A global static registry of templates for re-use.

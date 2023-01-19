@@ -54,6 +54,7 @@ module.exports =
           anon: 
           [
             './lib/objectid.js',
+
             './lib/obj/clone.js',
             './lib/obj/copyall.js',
             './lib/obj/copyprops.js',
@@ -61,11 +62,14 @@ module.exports =
             './lib/obj/lock.js',
             './lib/obj/merge.js',
             './lib/obj/ns.js',
+
             './lib/types/basics.js',
+            './lib/types/console.js',
             './lib/types/def.js',
-            './lib/types/lazy.js',
+            './lib/types/dt.js',
             './lib/types/isa.js',
             './lib/types/js.js',
+            './lib/types/lazy.js',
             './lib/types/needs.js',
             './lib/types/root.js',
             './lib/types/stringify.js',
