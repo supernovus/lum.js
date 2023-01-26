@@ -1,23 +1,26 @@
 {
   "name": "lum.js",
-  "version": "5.20230119.1440",
+  "version": "5.20230125.1345",
   "license": "MIT",
   "description": "A set of client-side libraries.",
   "homepage": "https://github.com/supernovus/nano.js",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/supernovus/nano.js.git"
   },
   "dependencies": {
-    "@lumjs/core": "^1.10.0",
     "@lumjs/compat": "^1.4.0",
-    "@lumjs/dom": "^1.2.0",
-    "@lumjs/wrapper": "^1.0.0",
-    "@lumjs/simple-loader": "^2.1.0",
+    "@lumjs/core": "^1.11.0",
+    "@lumjs/debug": "^1.0.0",
+    "@lumjs/dom": "^1.2.0", 
+    "@lumjs/encode": "^1.2.0",
     "@lumjs/jquery-plugins": "^1.0.0",
     "@lumjs/oquery": "^1.0.0",
-    "@lumjs/encode": "^1.2.0",
+    "@lumjs/simple-loader": "^2.1.0",
+    "@lumjs/web-debug": "1.1.0",
     "@lumjs/web-url-hash": "^1.0.0",
+    "@lumjs/wrapper": "^1.0.0",
 
     "@ungap/global-this": "^0.4.4",
     "math.uuid": "^1.4.0",

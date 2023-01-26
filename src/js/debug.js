@@ -19,177 +19,21 @@ Lum.lib(
 function (Lum, $)
 {
   "use strict";
-
+  
   /**
    * A class to help with debugging.
-   *
-   * If the Hash library is loaded, you can use URL hash values:
-   *
-   *  #debug               Turns on ALL debugging ('*' flag.)
-   *  #debug=flag          Turn on a single flag.
-   *  #debug=flag1=flag2   Turn on multiple flags.
    * 
+   * As of Nano.js v5 the underlying class returned here depends
+   * on if the `hash` library is loaded.
+   * 
+   * If it is, this will be the `@lumjs/web-debug` class.
+   * If it isn't, this will be the `@lumjs/debug` class.
    */
-  Lum.Debug = class
-  {
-    constructor(opts={})
-    {
-      this.showFlag = (typeof opts.showFlag === 'boolean') 
-        ? opts.showFlag 
-        : false;
-
-      if (Lum.lib.has('hash'))
-      {
-        if (typeof opts.hash === 'object')
-        { // Might be options to build a Hash instance, or a Hash instance.
-          if (opts.hash instanceof Lum.Hash)
-          { // It's an existing instance.
-            this.hash = opts.hash;
-          }
-          else
-          { // Assume it's options for creating an instance.
-            this.hash = new Lum.Hash(opts.hash);
-          }
-        }
-        else
-        { // Create a default Hash instance with the 'shortOpt' option.
-          this.hash = new Lum.Hash({shortOpt: true});
-        }
-      }
-
-      // Set up observable methods on this object.
-      Lum.observable(this, opts.observable);
-
-      // Call the method to initialize or update our flags.
-      this.update(opts.flags);
-    }
-
-    toggle(flag, toggle)
-    {
-      if (!flag)
-      { // If flag is ommitted, toggle everything.
-        for (var key in this.flags)
-        {
-          this.toggle(key, toggle);
-        }
-      }
-      else if (Array.isArray(flag))
-      { // An array of flags, recurse it.
-        for (var t in flag)
-        {
-          this.toggle(flag[t], toggle);
-        }
-      }
-      else if (typeof flag === 'string')
-      { // A single flag that we're toggling.
-        if (toggle === undefined || toggle === null)
-        { // Invert the current setting.
-          toggle = this.flags[flag] ? false : true;
-        }
+  Lum.Debug 
+    = Lum.lib.has('hash') 
+    ? require('@lumjs/web-debug') 
+    : require('@lumjs/debug');
   
-        // Update the flag setting.
-        this.flags[flag] = toggle;
-
-        this.trigger('toggle', flag, toggle);
-      }
-    }
-
-    is (flag)
-    {
-      if ('*' in this.flags && this.flags['*'])
-      { // Wildcard flag was set, all debugging is enabled.
-        return true;
-      }
-      
-      if (Array.isArray(flag))
-      { // Check one of a bunch of flags.
-        for (var t in flag)
-        {
-          if (this.is(flag[t]))
-          { // One of the flags matched, we're good!
-            return true;
-          }
-        }
-        // None of the flags matched.
-        return false;
-      }
-      else if (typeof flag === 'string' && 
-          flag in this.flags && this.flags[flag])
-      { // Explicit flag matched.
-        return true;
-      }
-      return false;
-    }
-
-    when (flag)
-    {
-      if (this.is(flag))
-      {
-        var slicePos = this.showFlag ? 0 : 1;
-        var args = Array.prototype.slice.call(arguments, slicePos);
-        console.debug(...args);
-        this.trigger('when', flag, args);
-      }
-    }
-
-    update (flags)
-    {
-      if (flags !== undefined)
-      { // Use the pre-determined values.
-        this.flags = flags;
-      }
-      else
-      { // Start with a fresh slate.
-        this.flags = {};
-      }
-
-      if (!this.hash) return;
-  
-      var debugFlags = this.hash.getOpt('debug');
-  
-      if (debugFlags === undefined)
-      { // Nothing found, we don't do anything.
-        return; 
-      }
-  
-      if (debugFlags === null)
-      { // The null value means #debug was passed, which is an alias for '*'
-        console.debug("Enabling global debugging.");
-        this.toggle('*', true);
-        return;
-      }
-  
-      if (typeof debugFlags === 'string')
-      { // A single flag was passed.
-        this.toggle(debugFlags, true);
-        return;
-      }
-  
-      if (Array.isArray(debugFlags))
-      { // Output was an array of debug flags.
-        for (var k in debugFlags)
-        {
-          var keyword = debugFlags[k];
-          console.debug("Enabling debugging on", keyword);
-          this.toggle(keyword, true);
-        }
-        return;
-      }
-  
-      if (typeof debugFlags === 'object')
-      { // Advanced use, probably not super useful.
-        for (var key in debugFlags)
-        {
-          var val = debugFlags[key];
-          console.debug("Settings debug flag", key, val);
-          this.toggle(key, val);
-        }
-        return;
-      }
-    } // update()
-
-  } // Lum.Debug
-
   /**
    * A class meant for making debugging UIs.
    *
@@ -424,9 +268,7 @@ function (Lum, $)
     element_fallback_spaces: 2,
   };
 
-  // Finally, a quick alias for limited backwards compatibility.
-  // Not guaranteed to stick around forever, but it's here for now.
+  // Finally, a quick old alias for limited backwards compatibility.
   Lum.debug = Lum.Debug.Elements;
 
 });
-

@@ -1,23 +1,52 @@
 // A few helper functions for the rules.js configuration file.
 const core = require('@lumjs/core');
-const {needObj} = core.types;
+const {needObj,isObj,def} = core.types;
+
+// Make a library def.
+function lib(ld)
+{
+  if (!ld.$setup)
+  { 
+    if (!isObj(ld.deps)) ld.deps = {};
+
+    def(ld, 'npm', (name, dd, wd) => npm(name, dd, ld, wd));
+    def(ld, 'lum', (name, dd, wd) => lum(name, dd, ld, wd));
+
+    def(ld, '$setup', true);
+  }
+  return ld;
+}
+
+// Make a dependency def.
+function dep(dd, ld)
+{
+  if (!dd.$lib)
+  {
+    if (dd.package === undefined) 
+      dd.package = true;
+
+    def(dd, 'npm', (name, nd) => ld.npm(name, nd));
+    def(dd, 'lum', (name, nd) => ld.lum(name, nd));
+
+    def(dd, '$lib', ld);
+  }
+  return dd;
+}
 
 // A package in npm.
-function npm(name, opts={})
+function npm(name, ddef={}, ldef={}, wantdep=false)
 {
-  const libdef = {deps: (opts.deps ?? {})};
-  const depdef = {package: (opts.package ?? true)};
-  if ('exports' in opts) depdef.exports = opts.exports;
-  if ('anon' in opts) depdef.anon = opts.anon;
-  libdef.deps[name] = depdef;
-  return libdef;
+  lib(ldef);
+  dep(ddef, ldef);
+  ldef.deps[name] = ddef;
+  return wantdep ? ddef : ldef;
 }
 exports.npm = npm;
 
 // A single new @lumjs library replaced the old script library.
-function lum(name, opts={})
+function lum(name, ...args)
 {
-  return npm('@lumjs/'+name, opts);
+  return npm('@lumjs/'+name, ...args);
 }
 exports.lum = lum;
 

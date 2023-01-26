@@ -139,89 +139,91 @@ module.exports =
     'arrayutils.js': {},
     'change_type.jq.js': jqplugin('change-type'),
     //'contextmenu.js': lum('web-context-menu'),
-    //'css.js': lum('web-css'),
-    //'debug.js': lum('debug'),
+    'css.js': lum('web-css'),
+    'debug.js': lum('web-debug').lum('debug'),
     'deprecated.js': v4compat('deprecated'),
     'disabled.jq.js': jqplugin('disabled'),
     'editor.js': {},
     //'elementeditor.js': lum('web-element-editor'),
     'encode.js': lum('encode', 
-    {
+    { // @lumjs/encode dep info
       anon:
       [
         './lib/safe64/common.js',
         './lib/safe64/settings.js',
       ],
+    },
+    { // The rest of the CryptoJS dependencies
       deps: cryptoJS(
-      { // First the regular list of dependencies.
-        '@shelacek/ubjson':
-        {
-          package: true,
+        { // First the regular list of dependencies.
+          '@shelacek/ubjson':
+          {
+            package: true,
+          },
+          'php-serialize':
+          {
+            exports: {'.': './lib/cjs/index.js'},
+            anon:
+            [
+              './lib/cjs/helpers.js',
+              './lib/cjs/isSerialized.js',
+              './lib/cjs/parser.js',
+              './lib/cjs/serialize.js',
+              './lib/cjs/unserialize.js',
+            ],
+          },
         },
-        'php-serialize':
-        {
-          exports: {'.': './lib/cjs/index.js'},
-          anon:
-          [
-            './lib/cjs/helpers.js',
-            './lib/cjs/isSerialized.js',
-            './lib/cjs/parser.js',
-            './lib/cjs/serialize.js',
-            './lib/cjs/unserialize.js',
-          ],
-        },
-      },
-      { // Now the list of crytoJS modules. Load them externally.
-        // The only ones we use explicitly are marked with //*
-        'aes': '.AES',
-        'cipher-core': '',
-        'core': '', //*
-        'crypto-js': '',
-        'enc-base64': '.enc.Base64', //*
-        'enc-latin1': '.enc.Latin1',
-        'enc-hex': '.enc.Hex',
-        'enc-utf8': '.enc.Utf8', //*
-        'enc-utf16': '.enc.Utf16',
-        'evpkdf': '.EvpKDF',
-        'format-hex': '.format.Hex',
-        'format-openssl': '.format.OpenSSL',
-        'hmac': '',
-        'hmac-md5': '.HmacMD5',
-        'hmac-ripemd160': '.HmacRIPEMD160',
-        'hmac-sha1': '.HmacSHA1',
-        'hmac-sha224': '.HmacSHA224',
-        'hmac-sha256': '.HmacSHA256',
-        'hmac-sha384': '.HmacSHA384',
-        'hmac-sha3': '.HmacSHA3',
-        'hmac-sha512': '.HmacSHA512',
-        'index': '',
-        'lib-typedarrays': '.lib.WordArray',
-        'md5': '.MD5',
-        'mode-cfb': '.mode.CFB',
-        'mode-ctr-gladman': '.mode.CTRGladman',
-        'mode-ctr': '.mode.CTR',
-        'mode-ecb': '.mode.ECB',
-        'mode-ofb': '.mode.OFB',
-        'pad-ansix923': '.pad.Ansix923',
-        'pad-iso10126': '.pad.Iso10126',
-        'pad-iso97971': '.pad.Iso97971',
-        'pad-nopadding': '.pad.NoPadding',
-        'pad-pkcs7': '.pad.Pkcs7',
-        'pad-zeropadding': '.pad.ZeroPadding',
-        'pbkdf2': '.PBKDF2',
-        'rabbit': '.Rabbit',
-        'rabbit-legacy': '.RabbitLegacy',
-        'rc4': '.RC4',
-        'ripemd160': '.RIPEMD160',
-        'sha1': '.SHA1',
-        'sha224': '.SHA224',
-        'sha256': '.SHA256', //*
-        'sha384': '.SHA384',
-        'sha3': '.SHA3',
-        'sha512': '.SHA512',
-        'tripledes': '.TripleDES',
-        'x64-core': '',
-      }),
+        { // Now the list of crytoJS modules. Load them externally.
+          // The only ones we use explicitly are marked with //*
+          'aes': '.AES',
+          'cipher-core': '',
+          'core': '', //*
+          'crypto-js': '',
+          'enc-base64': '.enc.Base64', //*
+          'enc-latin1': '.enc.Latin1',
+          'enc-hex': '.enc.Hex',
+          'enc-utf8': '.enc.Utf8', //*
+          'enc-utf16': '.enc.Utf16',
+          'evpkdf': '.EvpKDF',
+          'format-hex': '.format.Hex',
+          'format-openssl': '.format.OpenSSL',
+          'hmac': '',
+          'hmac-md5': '.HmacMD5',
+          'hmac-ripemd160': '.HmacRIPEMD160',
+          'hmac-sha1': '.HmacSHA1',
+          'hmac-sha224': '.HmacSHA224',
+          'hmac-sha256': '.HmacSHA256',
+          'hmac-sha384': '.HmacSHA384',
+          'hmac-sha3': '.HmacSHA3',
+          'hmac-sha512': '.HmacSHA512',
+          'index': '',
+          'lib-typedarrays': '.lib.WordArray',
+          'md5': '.MD5',
+          'mode-cfb': '.mode.CFB',
+          'mode-ctr-gladman': '.mode.CTRGladman',
+          'mode-ctr': '.mode.CTR',
+          'mode-ecb': '.mode.ECB',
+          'mode-ofb': '.mode.OFB',
+          'pad-ansix923': '.pad.Ansix923',
+          'pad-iso10126': '.pad.Iso10126',
+          'pad-iso97971': '.pad.Iso97971',
+          'pad-nopadding': '.pad.NoPadding',
+          'pad-pkcs7': '.pad.Pkcs7',
+          'pad-zeropadding': '.pad.ZeroPadding',
+          'pbkdf2': '.PBKDF2',
+          'rabbit': '.Rabbit',
+          'rabbit-legacy': '.RabbitLegacy',
+          'rc4': '.RC4',
+          'ripemd160': '.RIPEMD160',
+          'sha1': '.SHA1',
+          'sha224': '.SHA224',
+          'sha256': '.SHA256', //*
+          'sha384': '.SHA384',
+          'sha3': '.SHA3',
+          'sha512': '.SHA512',
+          'tripledes': '.TripleDES',
+          'x64-core': '',
+        }),
     }),
     'exists.jq.js': jqplugin('exists'),
     //'expression.js': lum('expressions'),
@@ -264,9 +266,9 @@ module.exports =
     //'validation.js': lum('web-input-validation'),
     //'viewcontroller.js': lum('web-view-controller'),
     //'webservice.js': lum('webservice'),
-    /*
     'whenready.js': lum('when-events', 
     {
+      package: false,
       exports: {'./ready':'./lib/ready.js'},
     }),
     'whenreceived.js': lum('when-events', 
@@ -274,8 +276,7 @@ module.exports =
       package: false, 
       exports: {'./received':'./lib/received.js'},
     }),
-    */
     'xmlns.jq.js': {},
-
+    'test.js': {}, // A script specific to the index.html in this repo.
   }, // scripts
 }; // module.exports

@@ -2,29 +2,41 @@
   <head>
     <title>Lum.js (Nano.js) v5 Test Page</title>
     <script src="scripts/nano/core.js"></script>
+    <script src="scripts/nano/test.js"></script>
     <script>
-      console.log("Lum[V5] global object loaded", Lum);
+      console.log("Lum[V5] loaded", {Lum, lt});
     </script>
   </head>
   <body>
     <h1>Lum[V5] Test</h1>
+
     <p>
     Testing must be done via the JS console.
     The <code>global-object</code> compatibility library is available as the
-    <code>Lum</code> global variable. It includes the following modular
-    libraries, wrapped in an object emulating the v4 implementation:
+    <code>Lum</code> global variable, and a custom library testing helper is 
+    available as the <code>lt</code> global variable.
     </p>
+
     <p>
-    <code>core, wrapper, simple-loader, jquery-plugins, dom, compat/v4</code>.
+    Use <code>l.lum(...libs)</code> to load more <em>Lum.js</em> libraries.
     </p>
+
     <p>
-    Use <code>Lum.load</code> to load more libraries.
     In addition to the main libraries in <code>scripts/nano</code>, there are
-    also several scripts available in <code>scripts/ext</code>:
+    also several external scripts available in <code>scripts/ext</code> that 
+    can be loaded using <code>l.ext(...libs)</code>:
     </p>
+
     <p>
     <code>clipboard, easel, feature, jquery, jquery-ui, luxon, moment,
     require, sprintf, stacktrace</code>.
     </p>
+
+    <p>
+    The Crypto-JS libraries can be loaded using <code>lt.cjs(...libs)</code>, 
+    and the ACE editor can be loaded using <code>lt.ace()</code> 
+    (no arguments for that one, as further ACE features are loaded on-demand.)
+    </p>
+
   </body>
 </html>
