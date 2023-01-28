@@ -1,0 +1,1 @@
+../../node_modules/stacktrace-js/dist/stacktrace.min.js

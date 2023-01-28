@@ -18,13 +18,22 @@
     </p>
 
     <p>
-    Use <code>l.lum(...libs)</code> to load more <em>Lum.js</em> libraries.
+    Use <code>lt(...libs)</code> to load any other libraries you might want.
+    If you want a full list, <code>lt()</code> will give that to you.
+    Omit the directory, and the <code>.js</code> extension, as it's supplied 
+    for you.
+    </p>
+
+    <p>
+    Use <code>lt.lum(...libs)</code> to load more <em>Lum.js</em> libraries,
+    which is anything in the <code>scripts/nano</code> folder. 
+    Omit the <code>.js</code> file extension, it's supplied for you.
     </p>
 
     <p>
     In addition to the main libraries in <code>scripts/nano</code>, there are
     also several external scripts available in <code>scripts/ext</code> that 
-    can be loaded using <code>l.ext(...libs)</code>:
+    can be loaded using <code>lt.ext(...libs)</code>:
     </p>
 
     <p>
@@ -33,9 +42,17 @@
     </p>
 
     <p>
-    The Crypto-JS libraries can be loaded using <code>lt.cjs(...libs)</code>, 
-    and the ACE editor can be loaded using <code>lt.ace()</code> 
-    (no arguments for that one, as further ACE features are loaded on-demand.)
+    The <strong>Crypto-JS</strong> libraries can be loaded using 
+    <code>lt.cjs(...libs)</code>; if you don't know the exact library, 
+    omitting any arguments will load the `crypto-js` bundle which 
+    includes every major library in one file.
+    </p>
+
+    <p>
+    The <strong>ACE Editor</strong> can be loaded using <code>lt.ace()</code>; 
+    no arguments needed, as further ACE features are loaded on-demand,
+    using an <em>package-local</em> version of RequireJS that won't 
+    conflict with the version provided by <code>lt.ext()</code>.
     </p>
 
   </body>

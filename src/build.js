@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Custom build script.
 
-const info = require('./package.json');
-const rules = require('./src/rules.js');
-const Assembler = require('./src/build/assembler.js');
+const info = require('../package.json');
+const rules = require('./rules.js');
+const Assembler = require('./build/assembler.js');
 
 const yargs = require('yargs/yargs')
 const {hideBin} = require('yargs/helpers')

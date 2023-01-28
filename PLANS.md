@@ -187,10 +187,8 @@ will remain with the deprecation warnings they've had since moving.
 
 ## External Dependencies
 
-I'm going to migrate as much as I can to use `bower` to install any external
-dependencies that were expected to have their own scripts in the
-`./scripts/ext/` folder. In the case that a package is not available in
-`bower`, I'll add it to a small, simplified download list.
+I'm installing all external dependencies via `npm`, and for backwards compatibility,
+am making symbolic links to the browser bundle in the old `scripts/ext` location. 
 
 A bunch of dependencies I haven't used in ages or never got around to using,
 I'm just dropping from the collection entirely. Bye bye.

@@ -1,7 +1,0 @@
-{
-  "@metadata":
-  {
-    "description": "A meta-suite that includes all other suites",
-    "includes": ["main","extras","jqcompat","deprecated"]
-  }
-}

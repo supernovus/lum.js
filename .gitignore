@@ -1,13 +1,9 @@
 /sync*
 /.sync/*
 /scripts/nano/*
-/scripts/ext/*
-/style/ext/*
 /docs/*
 /node_modules/*
-/bower_components/*
 /npm-debug.log
-/.gulp-cache*
 /package-lock.json
 /dev-*
 /src/js/diff.sh

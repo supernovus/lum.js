@@ -7,6 +7,9 @@ const
   globalPackageInfo, cryptoJS,
 } = require('./build/rule-fun');
 
+
+const cryptoList = require('./pkg/@lumjs/crypto-js-list');
+
 // @lumjs modules bundled in the core script.
 // This list is simply for the global-object metadata.
 const bundled = 
@@ -172,58 +175,7 @@ module.exports =
               './lib/cjs/unserialize.js',
             ],
           },
-        },
-        { // Now the list of crytoJS modules. Load them externally.
-          // The only ones we use explicitly are marked with //*
-          'aes': '.AES',
-          'cipher-core': '',
-          'core': '', //*
-          'crypto-js': '',
-          'enc-base64': '.enc.Base64', //*
-          'enc-latin1': '.enc.Latin1',
-          'enc-hex': '.enc.Hex',
-          'enc-utf8': '.enc.Utf8', //*
-          'enc-utf16': '.enc.Utf16',
-          'evpkdf': '.EvpKDF',
-          'format-hex': '.format.Hex',
-          'format-openssl': '.format.OpenSSL',
-          'hmac': '',
-          'hmac-md5': '.HmacMD5',
-          'hmac-ripemd160': '.HmacRIPEMD160',
-          'hmac-sha1': '.HmacSHA1',
-          'hmac-sha224': '.HmacSHA224',
-          'hmac-sha256': '.HmacSHA256',
-          'hmac-sha384': '.HmacSHA384',
-          'hmac-sha3': '.HmacSHA3',
-          'hmac-sha512': '.HmacSHA512',
-          'index': '',
-          'lib-typedarrays': '.lib.WordArray',
-          'md5': '.MD5',
-          'mode-cfb': '.mode.CFB',
-          'mode-ctr-gladman': '.mode.CTRGladman',
-          'mode-ctr': '.mode.CTR',
-          'mode-ecb': '.mode.ECB',
-          'mode-ofb': '.mode.OFB',
-          'pad-ansix923': '.pad.Ansix923',
-          'pad-iso10126': '.pad.Iso10126',
-          'pad-iso97971': '.pad.Iso97971',
-          'pad-nopadding': '.pad.NoPadding',
-          'pad-pkcs7': '.pad.Pkcs7',
-          'pad-zeropadding': '.pad.ZeroPadding',
-          'pbkdf2': '.PBKDF2',
-          'rabbit': '.Rabbit',
-          'rabbit-legacy': '.RabbitLegacy',
-          'rc4': '.RC4',
-          'ripemd160': '.RIPEMD160',
-          'sha1': '.SHA1',
-          'sha224': '.SHA224',
-          'sha256': '.SHA256', //*
-          'sha384': '.SHA384',
-          'sha3': '.SHA3',
-          'sha512': '.SHA512',
-          'tripledes': '.TripleDES',
-          'x64-core': '',
-        }),
+        }, cryptoList),
     }),
     'exists.jq.js': jqplugin('exists'),
     //'expression.js': lum('expressions'),
@@ -277,6 +229,17 @@ module.exports =
       exports: {'./received':'./lib/received.js'},
     }),
     'xmlns.jq.js': {},
-    'test.js': {}, // A script specific to the index.html in this repo.
+    'test.js': 
+    {
+      deps:
+      {
+        '@lumjs/crypto-js-list':
+        {
+          root: './src/pkg',
+          package: false,
+          exports: {'.':'./index.js'},
+        },
+      }
+    }, // A script specific to the index.html in this repo.
   }, // scripts
 }; // module.exports
