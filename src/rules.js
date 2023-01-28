@@ -7,7 +7,6 @@ const
   globalPackageInfo, cryptoJS,
 } = require('./build/rule-fun');
 
-
 const cryptoList = require('./pkg/@lumjs/crypto-js-list');
 
 // @lumjs modules bundled in the core script.
