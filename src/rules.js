@@ -3,7 +3,7 @@
 // First we'll import a few helper functions.
 const 
 { 
-  npm, lum, jqplugin, v4compat,
+  npm, lum, jqplugin, v4compat, part,
   globalPackageInfo, cryptoJS,
 } = require('./build/rule-fun');
 
@@ -16,6 +16,9 @@ const bundled =
   'core', 'compat', 'wrapper', 'simple-loader',
   'jquery-plugins', 'dom',
 ];
+
+const fmtJSON = {'./json': './lib/json.js'};
+const fmtXML  = {'./xml':  './lib/xml.js'};
 
 // Now we define the rules themselves.
 module.exports =
@@ -157,39 +160,33 @@ module.exports =
     },
     { // The rest of the CryptoJS dependencies
       deps: cryptoJS(
-        { // First the regular list of dependencies.
-          '@shelacek/ubjson':
-          {
-            package: true,
-          },
-          'php-serialize':
-          {
-            exports: {'.': './lib/cjs/index.js'},
-            anon:
-            [
-              './lib/cjs/helpers.js',
-              './lib/cjs/isSerialized.js',
-              './lib/cjs/parser.js',
-              './lib/cjs/serialize.js',
-              './lib/cjs/unserialize.js',
-            ],
-          },
-        }, cryptoList),
+      {
+        '@shelacek/ubjson':
+        {
+          package: true,
+        },
+        'php-serialize':
+        {
+          exports: {'.': './lib/cjs/index.js'},
+          anon:
+          [
+            './lib/cjs/helpers.js',
+            './lib/cjs/isSerialized.js',
+            './lib/cjs/parser.js',
+            './lib/cjs/serialize.js',
+            './lib/cjs/unserialize.js',
+          ],
+        },
+      }, cryptoList),
     }),
     'exists.jq.js': jqplugin('exists'),
-    //'expression.js': lum('expressions'),
-    //'format_json.js': lum('format-json'),
-    //'format_xml.js': lum('format-xml'),
+    'expression.js': lum('expressions'),
+    'format_json.js': lum('formatting', part(fmtJSON))
+      .lum('jquery-formatting', part(fmtJSON)),
+    'format_xml.js': lum('formatting', part(fmtXML))
+      .lum('jquery-formatting', part(fmtXML)),
     /*
-    'grid.js':
-    {
-      deps:
-      {
-        '@lumjs/grid': {package: true},
-        '@lumjs/web-grid': {package: true},
-        '@lumjs/jquery-ui-grid': {package: true},
-      }
-    },
+    'grid.js': lum('grid').lum('web-grid').lum('jquery-ui-grid'),
     */
     'hash.js': lum('web-url-hash'),
     'helpers.js': v4compat('object-helpers'),
@@ -218,15 +215,9 @@ module.exports =
     //'viewcontroller.js': lum('web-view-controller'),
     //'webservice.js': lum('webservice'),
     'whenready.js': lum('when-events', 
-    {
-      package: false,
-      exports: {'./ready':'./lib/ready.js'},
-    }),
+      part({'./ready':'./lib/ready.js'})),
     'whenreceived.js': lum('when-events', 
-    {
-      package: false, 
-      exports: {'./received':'./lib/received.js'},
-    }),
+      part({'./received':'./lib/received.js'})),
     'xmlns.jq.js': {},
     'test.js': 
     {

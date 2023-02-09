@@ -1,6 +1,7 @@
 // A few helper functions for the rules.js configuration file.
 const core = require('@lumjs/core');
-const {needObj,isObj,def} = core.types;
+const {needObj,isObj,def,B} = core.types;
+const {copyAll} = core.obj;
 
 // Make a library def.
 function lib(ld)
@@ -25,8 +26,8 @@ function dep(dd, ld)
     if (dd.package === undefined) 
       dd.package = true;
 
-    def(dd, 'npm', (name, nd) => ld.npm(name, nd));
-    def(dd, 'lum', (name, nd) => ld.lum(name, nd));
+    def(dd, 'npm', (name, nd, wd) => ld.npm(name, nd, wd));
+    def(dd, 'lum', (name, nd, wd) => ld.lum(name, nd, wd));
 
     def(dd, '$lib', ld);
   }
@@ -34,28 +35,53 @@ function dep(dd, ld)
 }
 
 // A package in npm.
-function npm(name, ddef={}, ldef={}, wantdep=false)
+function npm(name, ddef={}, ldef={}, wantdep=true)
 {
+  if (typeof ddef === B)
+  {
+    wantdep = ddef;
+    ddef = {};
+  }
+  else if (typeof ldef === B)
+  {
+    wantdep = ldef;
+    ldef = {};
+  }
+
   lib(ldef);
   dep(ddef, ldef);
   ldef.deps[name] = ddef;
+
   return wantdep ? ddef : ldef;
 }
 exports.npm = npm;
 
-// A single new @lumjs library replaced the old script library.
+// A new @lumjs library.
 function lum(name, ...args)
 {
   return npm('@lumjs/'+name, ...args);
 }
 exports.lum = lum;
 
+// A function for quickly defining partial exports.
+function part(exports, dd={})
+{
+  if (dd.package === undefined)
+    dd.package = false;
+  if (dd.exports === undefined)
+    dd.exports = exports;
+  else
+    copyAll(dd.exports, exports);
+  return dd;
+}
+exports.part = part;
+
 // A jQuery plugin moved to the `@lumjs/jquery-plugins` package.
 exports.jqplugin = function(name)
 {
   const exps = {};
   exps['./plugin/'+name] = `./lib/plugin/${name}.js`;
-  return lum('jquery-plugins', {package: false, exports: exps});
+  return lum('jquery-plugins', part(exps));
 }
 
 // An exported module moved to the @lumjs/compat[/v4] package.

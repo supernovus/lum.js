@@ -77,15 +77,14 @@ instead of our own.
   - `whenready.js` → `when-events.WhenReady`
 - [ ] [@lumjs/model-base]
   - `modelapi.js` → `model-base`
-- [ ] [@lumjs/debug]
+- [x] [@lumjs/debug]
   - `debug.js` → `debug:` ← A basic `Debug` class only depends on `core`.
-- [ ] [@lumjs/format-json]
-  - `format_json.js` → `format-json`
-- [ ] [@lumjs/format-xml]
-  - `format_xml.js` → `format-xml`
+- [ ] [@lumjs/formatting]
+  - `format_json.js` → `json` ← Just the `formatJSON()` function.
+  - `format_xml.js` → `xml` ← Just the `formatXML()` function.
 - [ ] [@lumjs/tax]
   `tax.js` → `tax`
-- [ ] [@lumjs/expressions]
+- [x] [@lumjs/expressions]
   - `expression.js` → `expressions:`
 - [ ] [@lumjs/grid]
   - `grid.js` → `grid:` ← Just the `Grid` class.
@@ -93,7 +92,7 @@ instead of our own.
   - `oquery.js` → `oquery`
 - [x] [@lumjs/arrays]
   - Moving a couple functions to `@lumjs/core/arrays` and leaving the rest here.
-- [ ] [@lumjs/encode]
+- [x] [@lumjs/encode]
   - `encode.js` → `encode:`
 - [ ] [@lumjs/webservice]
   - `webservice.js` → `webservice:`
@@ -105,16 +104,16 @@ instead of our own.
   - `service_worker.js` → `service-worker.window:` ← All `window` context features.
 - [ ] [@lumjs/web-view-controller]
   - `viewcontroller.js` → `web-view-controller:`
-- [ ] [@lumjs/web-user-data]
+- [x] [@lumjs/web-user-data]
   - `userdata.js` -> `web-data:`
 - [ ] [@lumsj/web-tabs]
   - `tabpanes.js` -> `web-tabs.Panes`
   - `tabs.js` -> `web-tabs.Tabs` ← Previously unfinished library.
 - [ ] [@lumjs/web-modal]
   - `modal.js` → `web-modal`
-- [ ] [@lumjs/web-url-hash] 
+- [x] [@lumjs/web-url-hash] 
   - `hash.js` → `web-url-hash:`
-- [ ] [@lumjs/web-debug]
+- [x] [@lumjs/web-debug]
   - `debug.js` → `web-debug:` ← Extension of `debug` with `web-url-hash` support.
   - `debug.js` → `web-debug.elements:` ← The `Debug.Elements` class.
 - [ ] [@lumjs/web-pager]
@@ -145,6 +144,9 @@ instead of our own.
   - To enable plugins: `jquery-plugins.enable(name1, name2, ...)`
   - To disable plugins: `jquery-plugins.disable(name1, ...)`
   - There will be an API to add more plugins from other libraries.
+- [ ] [@lumjs/jquery-formatting]
+  - `format_json.js` → `json` ← Just the `$.fn.formatJSON` plugin.
+  - `format_xml.js` → `xml` ← Just the `$.fn.formatXML` plugin.
 - [x] [@lumjs/compat]
   - `helpers.js` → `compat:v4:object-helpers`
   - `deprecated.js` → `compat:v4:deprecated`
@@ -208,8 +210,7 @@ be done in the standalone libraries.
 [@lumjs/when-events]: https://github.com/supernovus/lum.when-events.js
 [@lumjs/model-base]: https://github.com/supernovus/lum.model-base.js
 [@lumjs/debug]: https://github.com/supernovus/lum.debug.js
-[@lumjs/format-json]: https://github.com/supernovus/lum.format-json.js
-[@lumjs/format-xml]: https://github.com/supernovus/lum.format-xml.js
+[@lumjs/formatting]: https://github.com/supernovus/lum.formatting.js
 [@lumjs/tax]: https://github.com/supernovus/lum.tax.js
 [@lumjs/expressions]: https://github.com/supernovus/lum.expressions.js
 [@lumjs/grid]: https://github.com/supernovus/lum.grid.js
@@ -240,5 +241,6 @@ be done in the standalone libraries.
 [@lumjs/service-worker]: https://github.com/supernovus/lum.service-worker.js
 
 [@lumjs/jquery-plugins]: https://github.com/supernovus/lum.jquery-plugins.js
+[@lumjs/jquery-formatting]: https://github.com/supernovus/lum.jquery-formatting.js
 
 [@lumjs/compat]: https://github.com/supernovus/lum.compat.js
