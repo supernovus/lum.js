@@ -75,8 +75,6 @@ instead of our own.
 - [x] [@lumjs/when-events]
   - `whenreceived.js` → `when-events.WhenReceived`
   - `whenready.js` → `when-events.WhenReady`
-- [ ] [@lumjs/model-base]
-  - `modelapi.js` → `model-base`
 - [x] [@lumjs/debug]
   - `debug.js` → `debug:` ← A basic `Debug` class only depends on `core`.
 - [ ] [@lumjs/formatting]
@@ -102,8 +100,13 @@ instead of our own.
 - [ ] [@lumjs/service-worker]
   - `service_worker.js` → `service-worker.context:` ← All `ServiceWorkerGlobalContext` features.
   - `service_worker.js` → `service-worker.window:` ← All `window` context features.
-- [ ] [@lumjs/web-view-controller]
-  - `viewcontroller.js` → `web-view-controller:`
+- [ ] [@lumjs/web-app]
+  - A new library that replaces the old `ModelAPI` and `ViewController`
+    classes with a much simpler, yet more flexible foundation.
+  - Any reusable bits from `modelapi.js` and `viewcontroller.js` will make
+    their way into modules of this new library.
+  - The original `ModelAPI` and `ViewController` libraries will be moved into
+    the `compat` library, and like the rest of the *compat* libraries, will have no further features added.
 - [x] [@lumjs/web-user-data]
   - `userdata.js` -> `web-data:`
 - [ ] [@lumsj/web-tabs]
@@ -144,13 +147,16 @@ instead of our own.
   - To enable plugins: `jquery-plugins.enable(name1, name2, ...)`
   - To disable plugins: `jquery-plugins.disable(name1, ...)`
   - There will be an API to add more plugins from other libraries.
-- [ ] [@lumjs/jquery-formatting]
+- [x] [@lumjs/jquery-formatting]
   - `format_json.js` → `json` ← Just the `$.fn.formatJSON` plugin.
   - `format_xml.js` → `xml` ← Just the `$.fn.formatXML` plugin.
 - [x] [@lumjs/compat]
   - `helpers.js` → `compat:v4:object-helpers`
   - `deprecated.js` → `compat:v4:deprecated`
   - `promise.js` → `compat:v4:promise`
+  - `modelapi.js` → `compat:modelapi:`
+  - `modelapi/ws_model.js` → `compat:modelapi:ws-data`
+  - `viewcontroller.js` → `compat:viewcontroller`
 
 ## Replaced by NPM library
 
@@ -176,13 +182,12 @@ migrate as there is no reason to continue maintaining them.
 So they'll stay in this collection for backwards compatibility reasons, 
 but will no longer be updated or supported.
 
+ - `./editor.js`
  - `./helpers/extend.js`
  - `./momental.js`
  - `./render/riot1.js`
- - `./editor.js`
- - `./xmlns.js`
  - `./webservice/compat.js`
- - `./modelapi/ws_model.js`
+ - `./xmlns.js`
 
 Plus any of the former standalone libraries that were moved into the `core`
 will remain with the deprecation warnings they've had since moving.
@@ -208,7 +213,6 @@ be done in the standalone libraries.
 [@lumjs/wrapper]: https://github.com/supernovus/lum.wrapper.js
 
 [@lumjs/when-events]: https://github.com/supernovus/lum.when-events.js
-[@lumjs/model-base]: https://github.com/supernovus/lum.model-base.js
 [@lumjs/debug]: https://github.com/supernovus/lum.debug.js
 [@lumjs/formatting]: https://github.com/supernovus/lum.formatting.js
 [@lumjs/tax]: https://github.com/supernovus/lum.tax.js
@@ -222,7 +226,7 @@ be done in the standalone libraries.
 [@lumjs/tests]: https://github.com/supernovus/lum.tests.js
 [@lumjs/tests-dom]: https://github.com/supernovus/lum.tests-dom.js
 
-[@lumjs/web-view-controller]: https://github.com/supernovus/lum.web-view-controller.js
+[@lumjs/web-app]: https://github.com/supernovus/lum.web-app.js
 [@lumjs/web-data]: https://github.com/supernovus/lum.web-data.js
 [@lumsj/web-tabs]: https://github.com/supernovus/lum.web-tabs.js
 [@lumjs/web-modal]: https://github.com/supernovus/lum.web-modal.js

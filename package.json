@@ -20,7 +20,7 @@
     "@lumjs/grid": "^1.0.0",
     "@lumjs/jquery-formatting": "^1.0.0",
     "@lumjs/jquery-plugins": "^1.1.0",
-    "@lumjs/jquery-ui-grid": "^1.0.0",
+    "@lumjs/jquery-ui-grid": "^1.0.0-beta.1",
     "@lumjs/oquery": "^1.0.0",
     "@lumjs/simple-loader": "^2.1.0",
     "@lumjs/web-css": "^1.0.0",
