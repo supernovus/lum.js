@@ -1,6 +1,6 @@
 {
   "name": "lum.js",
-  "version": "5.20230203.0740",
+  "version": "5.20230331.1313",
   "license": "MIT",
   "description": "A set of client-side libraries.",
   "homepage": "https://github.com/supernovus/nano.js",
@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@lumjs/compat": "^1.4.0",
-    "@lumjs/core": "^1.12.0",
+    "@lumjs/compat-modelapi": "^1.0.0",
+    "@lumjs/compat-viewcontroller": "^1.0.0",
+    "@lumjs/core": "^1.12.1",
     "@lumjs/debug": "^1.0.0",
     "@lumjs/dom": "^1.2.0", 
     "@lumjs/encode": "^1.2.0",
@@ -21,8 +23,10 @@
     "@lumjs/jquery-formatting": "^1.0.0",
     "@lumjs/jquery-plugins": "^1.1.0",
     "@lumjs/jquery-ui-grid": "^1.0.0-beta.1",
+    "@lumjs/uuid": "^2.0.0",
     "@lumjs/oquery": "^1.0.0",
     "@lumjs/simple-loader": "^2.1.0",
+    "@lumjs/webservice": "^1.0.0",
     "@lumjs/web-css": "^1.0.0",
     "@lumjs/web-debug": "1.1.0",
     "@lumjs/web-grid": "^1.0.0",
@@ -32,7 +36,6 @@
     "@lumjs/wrapper": "^1.0.0",
 
     "@ungap/global-this": "^0.4.4",
-    "math.uuid": "^1.4.0",
     "riot-tmpl": "^3.0.8",
     "path-browserify": "^1.0.1",
 

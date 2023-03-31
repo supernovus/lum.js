@@ -25,8 +25,6 @@ const PKGINFO = './package.json';
 const NEED_O = ' must be an object';
 const NEED_P = ' must be a path to a directory';
 
-// TODO: support for minifying with terser.
-
 class Assembler
 {
   constructor(conf)

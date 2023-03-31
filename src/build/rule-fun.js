@@ -35,7 +35,7 @@ function dep(dd, ld)
 }
 
 // A package in npm.
-function npm(name, ddef={}, ldef={}, wantdep=true)
+function npm(name, ddef={}, ldef={}, wantdep=false)
 {
   if (typeof ddef === B)
   {

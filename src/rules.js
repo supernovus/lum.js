@@ -210,7 +210,7 @@ module.exports =
     //'tabpanes.js': lum('web-tabs'),
     //'tax.js': lum('tax'),
     //'userdata.js': lum('web-user-data'),
-    'uuid.js': npm('math.uuid'),
+    'uuid.js': lum('uuid'),
     //'validation.js': lum('web-input-validation'),
     //'viewcontroller.js': lum('web-view-controller'),
     //'webservice.js': lum('webservice'),

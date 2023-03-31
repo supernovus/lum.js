@@ -100,13 +100,17 @@ instead of our own.
 - [ ] [@lumjs/service-worker]
   - `service_worker.js` → `service-worker.context:` ← All `ServiceWorkerGlobalContext` features.
   - `service_worker.js` → `service-worker.window:` ← All `window` context features.
+- [x] [@lumjs/uuid]
+  - A port of the `math-uuid` library to CommonJS format.
+  - `uuid.js` → exports all three functions for backwards compatibility.
 - [ ] [@lumjs/web-app]
   - A new library that replaces the old `ModelAPI` and `ViewController`
     classes with a much simpler, yet more flexible foundation.
   - Any reusable bits from `modelapi.js` and `viewcontroller.js` will make
     their way into modules of this new library.
   - The original `ModelAPI` and `ViewController` libraries will be moved into
-    the `compat` library, and like the rest of the *compat* libraries, will have no further features added.
+    `compat-*` packages, and like the rest of the *compat* libraries, will be 
+    considered deprecated and have no further features added.
 - [x] [@lumjs/web-user-data]
   - `userdata.js` -> `web-data:`
 - [ ] [@lumsj/web-tabs]
@@ -154,9 +158,11 @@ instead of our own.
   - `helpers.js` → `compat:v4:object-helpers`
   - `deprecated.js` → `compat:v4:deprecated`
   - `promise.js` → `compat:v4:promise`
-  - `modelapi.js` → `compat:modelapi:`
-  - `modelapi/ws_model.js` → `compat:modelapi:ws-data`
-  - `viewcontroller.js` → `compat:viewcontroller`
+- [x] [@lumjs/compat-modelapi]
+  - `modelapi.js` → `compat-modelapi:`
+  - `modelapi/ws_model.js` → `compat-modelapi:ws-data`
+- [ ] [@lumjs/compat-viewcontroller]
+  - `viewcontroller.js` → `compat-viewcontroller:`
 
 ## Replaced by NPM library
 
@@ -164,7 +170,8 @@ A few of the libraries that were in `v4` have been replaced with the official
 versions available in the NPM repositories.
 
  - `./render/riot2.js` ⇒ `riot-tmpl`
- - `./uuid.js` ⇒  `math.uuid`
+
+ I am planning to support other rendering engines in addition to `riot-tmpl`.
 
 ## Tests
 
@@ -199,6 +206,26 @@ am making symbolic links to the browser bundle in the old `scripts/ext` location
 
 A bunch of dependencies I haven't used in ages or never got around to using,
 I'm just dropping from the collection entirely. Bye bye.
+
+## Bundler Future
+
+I'm considering splitting off the core functionality of the custom bundler 
+into a standalone package, with a few changes to make it more generic.
+
+While it's quite similar to Webpack, Browserify, and other existing bundlers,
+it's also different enough that it could be useful in some cases as its own
+package.
+
+This would consist of *most* of `src/build/`, `src/tmpl/`, and `src/build.js`, 
+with anything specific to the Lum.js compatibility wrappers left in here.
+
+The `src/build/rule-fun.js` would be refactored into a more generic set of 
+DSL-like functions with a simple extension API to add more features as needed.
+
+Likewise I'd likely change how the `src/rules.js` is implemented.
+Instead of exporting the *rules object* directly, it could export a
+function that would be passed the `rule-fun` object to use the functions
+defined there (or added via extensions), and then would return the rules.
 
 ## That's all folks
 

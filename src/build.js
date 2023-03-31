@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Custom build script.
 
-const info = require('../package.json');
 const rules = require('./rules.js');
 const Assembler = require('./build/assembler.js');
+
+//console.log("build.js",JSON.stringify({rules}, undefined, 2));
 
 const yargs = require('yargs/yargs')
 const {hideBin} = require('yargs/helpers')
