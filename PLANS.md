@@ -209,7 +209,7 @@ I'm just dropping from the collection entirely. Bye bye.
 
 ## Bundler Future
 
-I'm considering splitting off the core functionality of the custom bundler 
+I'm *considering* splitting off the core functionality of the custom bundler 
 into a standalone package, with a few changes to make it more generic.
 
 While it's quite similar to Webpack, Browserify, and other existing bundlers,
@@ -222,7 +222,7 @@ with anything specific to the Lum.js compatibility wrappers left in here.
 The `src/build/rule-fun.js` would be refactored into a more generic set of 
 DSL-like functions with a simple extension API to add more features as needed.
 
-Likewise I'd likely change how the `src/rules.js` is implemented.
+I'd likely also change how the `src/rules.js` is implemented.
 Instead of exporting the *rules object* directly, it could export a
 function that would be passed the `rule-fun` object to use the functions
 defined there (or added via extensions), and then would return the rules.
@@ -253,8 +253,10 @@ be done in the standalone libraries.
 [@lumjs/tests]: https://github.com/supernovus/lum.tests.js
 [@lumjs/tests-dom]: https://github.com/supernovus/lum.tests-dom.js
 
+[@lumjs/uuid]: https://github.com/supernovus/lum.uuid.js
+
 [@lumjs/web-app]: https://github.com/supernovus/lum.web-app.js
-[@lumjs/web-data]: https://github.com/supernovus/lum.web-data.js
+[@lumjs/web-user-data]: https://github.com/supernovus/lum.web-user-data.js
 [@lumsj/web-tabs]: https://github.com/supernovus/lum.web-tabs.js
 [@lumjs/web-modal]: https://github.com/supernovus/lum.web-modal.js
 [@lumjs/web-url-hash]: https://github.com/supernovus/lum.web-url-hash.js
@@ -273,5 +275,8 @@ be done in the standalone libraries.
 
 [@lumjs/jquery-plugins]: https://github.com/supernovus/lum.jquery-plugins.js
 [@lumjs/jquery-formatting]: https://github.com/supernovus/lum.jquery-formatting.js
+[@lumjs/jquery-ui-grid]: https://github.com/supernovus/lum.jquery-ui-grid.js
 
 [@lumjs/compat]: https://github.com/supernovus/lum.compat.js
+[@lumjs/compat-modelapi]: https://github.com/supernovus/lum.compat-modelapi.js
+[@lumjs/compat-viewcontroller]: https://github.com/supernovus/lum.viewcontroller.js

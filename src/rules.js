@@ -135,7 +135,7 @@ module.exports =
           ],
         },
         'jquery':
-        { // Will be provided by bower
+        { // Will be provided by npm
           external: {ns: 'jQuery'},
         },
       },
@@ -185,9 +185,7 @@ module.exports =
       .lum('jquery-formatting', part(fmtJSON)),
     'format_xml.js': lum('formatting', part(fmtXML))
       .lum('jquery-formatting', part(fmtXML)),
-    /*
     'grid.js': lum('grid').lum('web-grid').lum('jquery-ui-grid'),
-    */
     'hash.js': lum('web-url-hash'),
     'helpers.js': v4compat('object-helpers'),
     'helpers/extend.js': {},
@@ -195,7 +193,7 @@ module.exports =
     //'listing.js': lum('web-listing'),
     'load.js': {},
     //'modal.js': lum('web-modal'),
-    //'modelapi.js': lum('model-base'),
+    'modelapi.js': lum('compat-modelapi'),
     'modelapi/ws_model.js': {},
     'momental.js': {},
     //'notifications.js': lum('web-notifications'),
@@ -208,11 +206,11 @@ module.exports =
     'selectboxes.jq.js': jqplugin('select-boxes'),
     //'service_worker': lum('service-worker'),
     //'tabpanes.js': lum('web-tabs'),
-    //'tax.js': lum('tax'),
+    'tax.js': lum('tax'),
     //'userdata.js': lum('web-user-data'),
     'uuid.js': lum('uuid'),
     //'validation.js': lum('web-input-validation'),
-    //'viewcontroller.js': lum('web-view-controller'),
+    //'viewcontroller.js': lum('compat-viewcontroller'),
     //'webservice.js': lum('webservice'),
     'whenready.js': lum('when-events', 
       part({'./ready':'./lib/ready.js'})),

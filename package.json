@@ -26,6 +26,7 @@
     "@lumjs/uuid": "^2.0.0",
     "@lumjs/oquery": "^1.0.0",
     "@lumjs/simple-loader": "^2.1.0",
+    "@lumjs/tax": "^1.0.0",
     "@lumjs/webservice": "^1.0.0",
     "@lumjs/web-css": "^1.0.0",
     "@lumjs/web-debug": "1.1.0",
