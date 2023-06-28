@@ -6,20 +6,20 @@
   "jquery.js":
   {
     "uglify": false,
-    "version": "3.6.0",
-    "url": "https://code.jquery.com/jquery-3.6.0.min.js"
+    "version": "3.7.0",
+    "url": "https://code.jquery.com/jquery-3.7.0.min.js"
   },
   "jquery-ui.js":
   {
     "uglify": false,
-    "version": "1.13.0",
-    "url": "http://code.jquery.com/ui/1.13.0/jquery-ui.min.js"
+    "version": "1.13.2",
+    "url": "http://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
   },
   "jquery-ui.css":
   {
     "css": true,
-    "version": "1.13.0",
-    "url": "http://code.jquery.com/ui/1.13.0/themes/smoothness/jquery-ui.css"
+    "version": "1.13.2",
+    "url": "http://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css"
   },
   "luxon.js":
   {
