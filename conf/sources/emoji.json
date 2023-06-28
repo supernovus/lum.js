@@ -1,0 +1,14 @@
+{
+  "@metadata":
+  {
+    "description": "Emojis"
+  },
+  "emojimart.js":
+  {
+    "url": "https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"
+  },
+  "emojimart-data.json":
+  {
+    "url": "https://cdn.jsdelivr.net/npm/@emoji-mart/data"
+  }
+}
