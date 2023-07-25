@@ -15,6 +15,7 @@ npm modules in the `@lumjs` namespace.
   * https://www.npmjs.com/package/@lumjs/tests
   * https://www.npmjs.com/package/@lumjs/tests-dom
   * https://www.npmjs.com/package/@lumjs/web-debug
+  * https://www.npmjs.com/package/@lumjs/webpack-helper
 * Compatibility
   * https://www.npmjs.com/package/@lumjs/compat
   * https://www.npmjs.com/package/@lumjs/wrapper
