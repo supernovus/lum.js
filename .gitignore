@@ -1,7 +1,7 @@
 /sync*
 /.sync/*
 /scripts/nano/*
-/docs/*
+/docs/tests/*
 /node_modules/*
 /npm-debug.log
 /package-lock.json
