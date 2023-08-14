@@ -28,11 +28,11 @@ return class
   {
     var self = this;
   
-  //  console.log("Building Listing item", options);
+  //  console.debug("Building Listing item", options);
   
     if (options === undefined || typeof options.getData !== F)
     {
-      console.log("Invalid or missing 'getData' parameter, cannot continue.");
+      console.error("Invalid or missing 'getData' parameter, cannot continue.");
       return false;
     }
 
@@ -310,7 +310,7 @@ return class
       }
     }
   
-  //  console.log({pagerOpts: pagerOpts});
+  //  console.debug({pagerOpts: pagerOpts});
     if (typeof this.reloadSort === F)
       this.reloadSort();
     if (typeof this.reloadSearch === F)
@@ -461,20 +461,20 @@ return class
     var self = this;
     $(selector).on('click', function (e)
     {
-  //    console.log('sort was clicked');
+  //    console.debug('sort was clicked');
       var $this = $(this);
       var wantcol = $this.parent().attr(self.sortAttr);
       if (!wantcol) return; // No sort attribute.
       var curcol = self.sortBy;
-  //    console.log('wantcol', wantcol, 'curcol', curcol);
+  //    console.debug('wantcol', wantcol, 'curcol', curcol);
       if (wantcol == curcol)
       {
-  //      console.log('they are the same, changing orientation.');
+  //      console.debug('they are the same, changing orientation.');
         self.sortDesc = self.sortDesc ? false : true;
       }
       else
       {
-  //      console.log('they are different, changing');
+  //      console.debug('they are different, changing');
         self.sortDesc = false;
         self.sortBy = wantcol;
         $this.parent().parent().find('.arrow').toggle(false);
@@ -498,7 +498,7 @@ return class
   // A simple search method.
   registerSearch (selector, unified, islist)
   {
-  //  console.log("registerSearch("+selector+','+(unified?'true':'false')+")");
+  //  console.debug("registerSearch("+selector+','+(unified?'true':'false')+")");
     var self = this;
     if (islist)
     {
@@ -588,7 +588,7 @@ return class
   // Register changing the search toggle. Only used in unified searching.
   registerSearchToggle (selector, evname, getcol)
   {
-    //console.log("registerSearchToggle", selector, evname, getcol);
+    //console.debug("registerSearchToggle", selector, evname, getcol);
     var self = this;
 
     if (typeof getcol !== F)
@@ -600,7 +600,7 @@ return class
     {
       e.preventDefault();
       var searchcol = getcol.call(this, e);
-  //    console.log("searchcol", searchcol);
+  //    console.debug("searchcol", searchcol);
       if (searchcol)
       {
         self.searchBy = searchcol;
@@ -627,15 +627,15 @@ return class
   
   search (col, find)
   {
-  //  console.log("search", col, find);
+  //  console.debug("search", col, find);
     if (find === null)
     {
-  //    console.log("removing");
+  //    console.debug("removing");
       delete this.searches[col];
     }
     else
     {
-  //    console.log("adding");
+  //    console.debug("adding");
       this.searches[col] = find;
     }
     this.refresh();
@@ -702,7 +702,7 @@ return class
   
   refresh_data (rawdata)
   {
-  //  console.log(rawdata, this.sortBy, this.searches);
+  //  console.debug(rawdata, this.sortBy, this.searches);
     this.rawData = rawdata;
     if (this.sortBy === null && Object.keys(this.searches).length === 0)
     {
@@ -789,7 +789,7 @@ return class
       }
       if (sortdata.length > 0 && this.sortBy)
       { // Sort by a column.
-  //      console.log("sorting by",this.sortBy);
+  //      console.debug("sorting by",this.sortBy);
         col = this.sortBy;
         let desc = this.sortDesc;
         if (typeof this.sortCol[col] === F)
@@ -824,7 +824,7 @@ return class
           }
           var sort_num_asc = function (a, b)
           {
-  //          console.log('a - b', a[col], b[col])
+  //          console.debug('a - b', a[col], b[col])
             var bcol = get_col(b);
             if (bcol === undefined || bcol === null)
               return -1;
@@ -835,7 +835,7 @@ return class
           }
           var sort_num_desc = function (a, b)
           {
-  //          console.log('b - a', b[col], a[col]);
+  //          console.debug('b - a', b[col], a[col]);
             var bcol = get_col(b);
             if (bcol === undefined || bcol === null)
               return 1;
@@ -902,7 +902,7 @@ return class
           }
           var coldata = get_col(sortdata[0], col);
           var whatisit = typeof coldata;
-    //      console.log("it is a ",whatisit, col, desc);
+    //      console.debug("it is a ",whatisit, col, desc);
           if (whatisit === S)
           {
             if (desc)
@@ -918,12 +918,12 @@ return class
           {
             if (desc)
             {
-    //          console.log("sorting number descending");
+    //          console.debug("sorting number descending");
               sortdata.sort(sort_num_desc);
             }
             else
             {
-    //          console.log("sorting number ascending");
+    //          console.debug("sorting number ascending");
               sortdata.sort(sort_num_asc);
             }
           }
@@ -945,12 +945,12 @@ return class
           {
             if (desc)
             {
-    //          console.log("sorting other descending");
+    //          console.debug("sorting other descending");
               sortdata.sort(sort_other_desc);
             }
             else
             {
-    //          console.log("sorting other ascending");
+    //          console.debug("sorting other ascending");
               sortdata.sort(sort_other_asc);
             }
           }
@@ -966,10 +966,10 @@ return class
   
   showPage (page)
   {
-  //  console.log("showPage("+page+")");
+  //  console.debug("showPage("+page+")");
     var data = this.displayData;
     var dlen = data.length;
-  //  console.log(data, dlen);
+  //  console.debug(data, dlen);
   
     var list = this.element;
     list.empty();
@@ -993,15 +993,15 @@ return class
     if (start < 0) start = 0;
     if (end > dlen) end = dlen;
 
-  //  console.log("sse:", show, start, end);
-  //  console.log({tmpl: tmpl, list: list});
+  //  console.debug("sse:", show, start, end);
+  //  console.debug({tmpl: tmpl, list: list});
   
     for (var i = start; i < end; i++)
     {
-  //    console.log("data["+i+"]");
+  //    console.debug("data["+i+"]");
       if (i >= dlen) break; // Partial page.
       var obj  = data[i];
-  //    console.log("  == ", obj);
+  //    console.debug("  == ", obj);
       if (typeof this.preRender === F)
         this.preRender(obj);
       var item = this._render(obj);
@@ -1021,7 +1021,11 @@ return class
   // Internal method to render.
   _render(obj)
   {
-    console.log("listing._render()", obj, this.template, this);
+    console.debug("listing._render()", 
+    {
+      obj, tmpl: this.template, listing: this
+    });
+
     if (typeof this.template === F)
     { // Using a template function
       return this.template(obj);
