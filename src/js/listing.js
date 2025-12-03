@@ -1021,10 +1021,10 @@ return class
   // Internal method to render.
   _render(obj)
   {
-    console.debug("listing._render()", 
+    /*console.debug("listing._render()", 
     {
       obj, tmpl: this.template, listing: this
-    });
+    });*/
 
     if (typeof this.template === F)
     { // Using a template function
